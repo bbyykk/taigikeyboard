@@ -38,37 +38,37 @@ struct LayoutConverter {
     private func keyDefToAction(_ keyDef: KeyDef, typesFullWidth: Bool) -> KeyboardAction {
         switch keyDef {
         case let .char(char, fullWidth):
-            return .character(typesFullWidth ? (fullWidth ?? char) : char)
+            .character(typesFullWidth ? (fullWidth ?? char) : char)
 
         case .shift:
-            return .shift(context.keyboardCase)
+            .shift(context.keyboardCase)
 
         case .backspace:
-            return .backspace
+            .backspace
 
         case .space:
-            return .space
+            .space
 
         case .return:
-            return .primary(.return)
+            .primary(.return)
 
         case .translate:
-            return .custom(named: "translate")
+            .custom(named: "translate")
 
         case .numeric:
-            return .keyboardType(.numeric)
+            .keyboardType(.numeric)
 
         case .symbolic:
-            return .keyboardType(.symbolic)
+            .keyboardType(.symbolic)
 
         case .alphabetic:
-            return .keyboardType(.alphabetic)
+            .keyboardType(.alphabetic)
 
         case .globe:
-            return .nextKeyboard
+            .nextKeyboard
 
         case .emoji:
-            return .keyboardType(.emojis)
+            .keyboardType(.emojis)
         }
     }
 
