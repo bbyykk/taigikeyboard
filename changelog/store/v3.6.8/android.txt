@@ -1,7 +1,7 @@
-Improved: the candidate strip responds faster to each keystroke.
-New: 候選詞顯示 picker — 漢羅對應, 漢羅濫 (漢字 and 羅馬字 as separate cells), or 羅馬字 only.
+New: 候選詞顯示 picker — 漢羅對應, 漢羅濫 (漢字 and 羅馬字 as separate cells), or 羅馬字 only; predictions follow it.
 New: 顯示當咧拍的字 — what you type is offered as the first candidate; on by default.
-Fixed: POJ tone marks — 落 is la̍uh, not lau̍h; ere and iri mark the final vowel.
-Fixed: POJ o͘ⁿ spelling finds 好 and 呼; double-tapped oo then nn folds both.
+Fixed: the first key after an app or keyboard switch is no longer lost.
+Fixed: POJ tone marks — 落 is la̍uh, not lau̍h; o͘ⁿ finds 好 and 呼.
 Fixed: a romanized word gets its automatic space in 漢字 mode.
-Improved: no duplicate candidates in 漢羅濫 or 羅馬字.
+Improved: 文/A switches punctuation width under 漢羅濫; faster candidates.
+Updated: dictionary refreshed from 教典.

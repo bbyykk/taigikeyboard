@@ -3,13 +3,14 @@
 
 enum VersionHistory {
     static let entries: [(version: String, date: String, changes: [String])] = [
-        ("3.6.8", "2026/09/12", [
-            "New: 候選詞顯示 picker — 漢羅對應, 漢羅濫 (漢字 and 羅馬字 as separate cells), or 羅馬字 only.",
-            "New: 顯示當咧拍的字 — what you are typing is offered as the first candidate; on by default.",
-            "Fixed: POJ tone marks — 落 is la̍uh, not lau̍h; ere and iri mark the last vowel.",
-            "Fixed: POJ o͘ⁿ spelling finds 好 and 呼; double-tapping oo then nn folds both.",
+        ("3.6.8", "2026/09/14", [
+            "New: 候選詞顯示 picker — 漢羅對應, 漢羅濫 (漢字 and 羅馬字 as separate cells), or 羅馬字 only; predictions follow it.",
+            "New: 顯示當咧拍的字 — what you type is offered as the first candidate; on by default.",
+            "Fixed: POJ tone marks — 落 is la̍uh, not lau̍h; o͘ⁿ finds 好 and 呼.",
             "Fixed: a romanized word gets its automatic space in 漢字 mode too.",
-            "Improved: no duplicate candidates under 漢羅濫 or 羅馬字; 文/A hides when it has nothing to swap.",
+            "Improved: 文/A switches punctuation width under 漢羅濫; TPS is always full-width.",
+            "Changed: the default font is now the system font.",
+            "Updated: dictionary refreshed from 教典.",
         ]),
         ("3.6.5", "2026/08/25", [
             "Fixed: the spacebar no longer stops responding after you drag it to move the cursor.",
