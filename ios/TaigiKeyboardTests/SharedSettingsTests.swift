@@ -382,6 +382,20 @@ final class SharedSettingsTests: XCTestCase {
         XCTAssertFalse(settings.isFullWidthPunctuation, "羅馬字 is always half-width")
     }
 
+    /// TPS types Chinese: every page is full-width whatever the stored swap or
+    /// display mode says, and the stored swap is untouched for the way back.
+    func test_tpsLayout_isAlwaysFullWidthPunctuation() {
+        settings.storedIsTranslateSwapped = false
+        settings.candidateDisplayMode = .romanOnly
+        settings.keyboardLayoutType = .tps
+
+        XCTAssertTrue(settings.isFullWidthPunctuation, "TPS forces full-width")
+        XCTAssertFalse(settings.storedIsTranslateSwapped, "stored swap untouched")
+
+        settings.keyboardLayoutType = .phahTaigi
+        XCTAssertFalse(settings.isFullWidthPunctuation, "leaving TPS restores the derived width")
+    }
+
     func test_candidateDisplayMode_storageContract_keyAndRawValues() {
         XCTAssertEqual(settings.candidateDisplayMode, .sideBySide, "descriptor default")
 

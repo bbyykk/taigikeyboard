@@ -593,10 +593,12 @@ class PrefHelper(
         get() = candidateDisplayMode.effectiveOutputBothScripts(storedOutputBothScripts)
 
     // EFFECTIVE punctuation width — the stored swap under SIDE_BY_SIDE /
-    // COMBINED, never under ROMAN_ONLY. Read by the layout (`LayoutManager`),
+    // COMBINED, never under ROMAN_ONLY, always under TPS (Chinese on every
+    // page; the key is hidden there). Read by the layout (`LayoutManager`),
     // the 文/A active state and the `、` slot; never by the engine.
+    // CROSS-PLATFORM INVARIANT — mirrors ios SharedSettings.isFullWidthPunctuation (tps || …).
     val isFullWidthPunctuation: Boolean
-        get() = candidateDisplayMode.effectiveFullWidthPunctuation(storedIsTranslateSwapped)
+        get() = isTpsLayout || candidateDisplayMode.effectiveFullWidthPunctuation(storedIsTranslateSwapped)
 
     // §34/S22: engine-facing alias for the Android `literalRomanCandidateEnabled`
     // pref (kept un-renamed because the settings UI reads it directly).

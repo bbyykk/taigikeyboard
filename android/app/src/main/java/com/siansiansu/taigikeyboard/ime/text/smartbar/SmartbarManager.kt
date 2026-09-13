@@ -520,12 +520,13 @@ class SmartbarManager(
      * 文/A key + overlay control button. Flips the STORED swap: under
      * SIDE_BY_SIDE that flips the lead script and the punctuation width, under
      * COMBINED only the punctuation width (each cell commits its own script).
-     * Inert under ROMAN_ONLY, where the key is hidden (`LayoutManager` /
+     * Inert under ROMAN_ONLY (always half-width) and TPS (always full-width,
+     * hanji-first), where the key is hidden (`LayoutManager` /
      * `CandidateOverlayContent`); the guard keeps any other caller safe.
      * Both caches re-derive from the stored flag.
      */
     fun toggleTranslateSwapped() {
-        if (!prefs.candidateDisplayMode.allowsSwapToggle) return
+        if (!prefs.candidateDisplayMode.allowsSwapToggle || prefs.isTpsLayout) return
         prefs.storedIsTranslateSwapped = !prefs.storedIsTranslateSwapped
         refreshScriptFlagCache()
         refreshSurfacesForScriptFlags()

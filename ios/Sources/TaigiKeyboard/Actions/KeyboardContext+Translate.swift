@@ -13,7 +13,7 @@ public extension KeyboardContext {
     }
 
     /// Whether the character / symbol layouts type full-width punctuation —
-    /// the stored swap under 並排 / 漢羅濫, never under 羅馬字.
+    /// the stored swap under 並排 / 漢羅濫, never under 羅馬字, always under TPS.
     var isFullWidthPunctuation: Bool {
         SharedSettings.shared.isFullWidthPunctuation
     }
@@ -31,12 +31,13 @@ public extension KeyboardContext {
 
     /// Flips the STORED swap. Under 並排 that flips the lead script and the
     /// punctuation width; under 漢羅濫 only the punctuation width (each cell
-    /// already commits its own script). Inert under 羅馬字 — romanization
-    /// takes half-width marks — where the key is hidden anyway
-    /// (`LayoutConverter` / `ExpandedCandidateOverlay`); the guard keeps any
-    /// other caller safe.
+    /// already commits its own script). Inert under 羅馬字 (always half-width)
+    /// and TPS (always full-width, hanji-first) — where the key is hidden
+    /// anyway (`LayoutConverter` / `ExpandedCandidateOverlay`); the guard keeps
+    /// any other caller safe.
     func toggleTranslateSwapped() {
-        guard candidateDisplayMode.allowsSwapToggle else { return }
+        guard candidateDisplayMode.allowsSwapToggle,
+              SharedSettings.shared.keyboardLayoutType != .tps else { return }
         SharedSettings.shared.storedIsTranslateSwapped.toggle()
         notifyDisplayChange()
     }

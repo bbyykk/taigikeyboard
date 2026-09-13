@@ -380,10 +380,10 @@ class LayoutManager(
 
         val result = mergeLayouts(keyboardMode, subtype, main, modifier, extension)
 
-        // 文/A is dropped under 羅馬字 (always half-width, nothing to flip) from
-        // every mode's rows (characters + symbols mods all carry it) and SPACE
-        // (flexGrow 1) takes the freed width.
-        if (!prefs.candidateDisplayMode.allowsSwapToggle) {
+        // 文/A is dropped where it could flip nothing — 羅馬字 (always half-width)
+        // and TPS (always full-width) — from every mode's rows (characters +
+        // symbols mods all carry it) and SPACE (flexGrow 1) takes the freed width.
+        if (!prefs.candidateDisplayMode.allowsSwapToggle || prefs.isTpsLayout) {
             result.arrangement.forEach { row -> row.removeAll { it.code == KeyCode.TRANSLATE } }
         }
 

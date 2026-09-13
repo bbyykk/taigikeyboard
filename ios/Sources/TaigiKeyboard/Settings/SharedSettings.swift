@@ -701,8 +701,12 @@ extension SharedSettings: EngineSettings {
     }
 
     /// Effective punctuation width — same seam, read by the layout + 文/A icon.
+    /// TPS types Chinese and is always full-width on every page (character,
+    /// numeric, symbolic), whatever is stored; the key is hidden there.
+    // CROSS-PLATFORM INVARIANT — mirrors android PrefHelper.isFullWidthPunctuation (isTpsLayout || …).
     var isFullWidthPunctuation: Bool {
-        candidateDisplayMode.effectiveFullWidthPunctuation(stored: storedIsTranslateSwapped)
+        keyboardLayoutType == .tps
+            || candidateDisplayMode.effectiveFullWidthPunctuation(stored: storedIsTranslateSwapped)
     }
 
     /// Effective 括號標註 — same seam, same rule owner.

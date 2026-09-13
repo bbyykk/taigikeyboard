@@ -7,13 +7,13 @@ struct LayoutConverter {
     let config: KeyboardLayoutConfiguration
 
     /// Entry point: converts [[KeyDef]] to KeyboardLayout. The 文/A key is
-    /// dropped under 羅馬字 (always half-width, nothing to flip); `.space` is
-    /// `.available`, so it takes the freed width.
+    /// dropped where it could flip nothing — 羅馬字 (always half-width) and TPS
+    /// (always full-width); `.space` is `.available`, so it takes the freed width.
     func convert(_ keyDefs: [[KeyDef]]) -> KeyboardLayout {
         let showsTranslateKey = context.candidateDisplayMode.allowsSwapToggle
-        // Read once per layout, not per key: TPS is always full-width, the
-        // other layouts follow the derived punctuation width.
-        let typesFullWidth = SharedSettings.shared.keyboardLayoutType == .tps || context.isFullWidthPunctuation
+            && SharedSettings.shared.keyboardLayoutType != .tps
+        // Read once per layout, not per key.
+        let typesFullWidth = context.isFullWidthPunctuation
         let itemRows = keyDefs.map { row in
             row.compactMap { keyDef -> KeyboardLayoutItem? in
                 if case .translate = keyDef, !showsTranslateKey {
