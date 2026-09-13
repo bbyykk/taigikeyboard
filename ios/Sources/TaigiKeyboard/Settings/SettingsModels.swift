@@ -30,7 +30,7 @@ enum FontType: String, CaseIterable, Codable {
 
     /// The factory default keyboard font. Single source for the `fontType`
     /// setting default, `resetToDefaults()`, and the appearance-settings default.
-    static let keyboardDefault: FontType = .openHuninn
+    static let keyboardDefault: FontType = .system
 
     /// PostScript font name for custom fonts, nil for system
     var customFontName: String? {

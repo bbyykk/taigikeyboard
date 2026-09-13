@@ -123,7 +123,7 @@ final class SettingsKeyTests: XCTestCase {
 
         XCTAssertEqual(settings.inputMode, .tl)
         XCTAssertEqual(settings.keyboardLayoutType, .phahTaigi)
-        XCTAssertEqual(settings.fontType, .openHuninn)
+        XCTAssertEqual(settings.fontType, .system)
         XCTAssertTrue(settings.isDoubleTapOOEnabled)
         XCTAssertTrue(settings.isDoubleTapNNEnabled)
         XCTAssertFalse(settings.isTranslateSwapped)
@@ -246,7 +246,7 @@ final class SettingsKeyTests: XCTestCase {
 
         XCTAssertEqual(settings.inputMode, .tl)
         XCTAssertEqual(settings.keyboardLayoutType, .phahTaigi)
-        XCTAssertEqual(settings.fontType, .openHuninn)
+        XCTAssertEqual(settings.fontType, .system)
         XCTAssertEqual(settings.displayLanguage, DisplayLanguage.defaultTag)
         XCTAssertTrue(settings.isDoubleTapOOEnabled)
         XCTAssertTrue(settings.isDoubleTapNNEnabled)
