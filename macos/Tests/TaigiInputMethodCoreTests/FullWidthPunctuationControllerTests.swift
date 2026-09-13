@@ -53,6 +53,44 @@ final class FullWidthPunctuationControllerTests: XCTestCase {
         XCTAssertEqual(session.client.insertedTexts, [])
     }
 
+    /// 合用 forces the candidate projection hanji-first, but the punctuation
+    /// width still follows the stored swap the chord toggles: half-width
+    /// until it is on, full-width after.
+    func testCombinedDisplay_punctuationWidthFollowsTheStoredSwap() throws {
+        let halfWidth = try makeSession(configure: {
+            $0.candidateDisplayMode = .combined
+            $0.storedIsTranslateSwapped = false
+        })
+        XCTAssertFalse(try halfWidth.controller.handle(
+            TestFixtures.keyDownEvent(characters: ","), client: halfWidth.client,
+        ), "stored swap off under 合用 keeps the host's half-width comma")
+        XCTAssertEqual(halfWidth.client.insertedTexts, [])
+
+        let fullWidth = try makeSession(configure: {
+            $0.candidateDisplayMode = .combined
+            $0.storedIsTranslateSwapped = true
+        })
+        XCTAssertTrue(try fullWidth.controller.handle(
+            TestFixtures.keyDownEvent(characters: ","), client: fullWidth.client,
+        ))
+        XCTAssertEqual(fullWidth.client.insertedTexts, ["，"])
+    }
+
+    /// 羅馬字 writes romanization, which takes half-width marks whatever is stored.
+    func testRomanOnlyDisplay_passesPunctuationThrough() throws {
+        let session = try makeSession(configure: {
+            $0.candidateDisplayMode = .romanOnly
+            $0.storedIsTranslateSwapped = true
+        })
+
+        let handled = try session.controller.handle(
+            TestFixtures.keyDownEvent(characters: ","), client: session.client,
+        )
+
+        XCTAssertFalse(handled)
+        XCTAssertEqual(session.client.insertedTexts, [])
+    }
+
     func testAnUnmappedCharacter_passesThroughEvenWhenActive() throws {
         // Digits are tone markers and must reach the host as themselves.
         let session = try makeSession(configure: { $0.storedIsTranslateSwapped = true })

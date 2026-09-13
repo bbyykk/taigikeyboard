@@ -52,6 +52,7 @@ final class SettingsStoreTests: XCTestCase {
                 inputMode: .poj,
                 isTranslateSwapped: true,
                 isOutputBothScripts: true,
+                isFullWidthPunctuation: true,
                 candidateDisplayMode: .sideBySide,
                 isLiteralRomanCandidateEnabled: false,
                 isFrequencyRecordingEnabled: false,
@@ -625,11 +626,32 @@ final class SettingsStoreTests: XCTestCase {
 
     /// The rules `current` and the swap shortcut read live on the enum — pinned once.
     func testCandidateDisplayMode_rules_perMode() {
-        XCTAssertEqual(CandidateDisplayMode.allCases.filter(\.allowsSwapToggle), [.sideBySide])
+        XCTAssertEqual(CandidateDisplayMode.allCases.filter(\.allowsSwapToggle), [.sideBySide, .combined])
         XCTAssertEqual(CandidateDisplayMode.allCases.filter { !$0.showsHanji }, [.romanOnly])
         XCTAssertTrue(CandidateDisplayMode.combined.effectiveTranslateSwapped(stored: false))
         XCTAssertFalse(CandidateDisplayMode.romanOnly.effectiveTranslateSwapped(stored: true))
         XCTAssertFalse(CandidateDisplayMode.romanOnly.effectiveOutputBothScripts(stored: true))
         XCTAssertTrue(CandidateDisplayMode.combined.effectiveOutputBothScripts(stored: true))
+        // Punctuation width follows the STORED swap under 並排 / 合用, never under 羅馬字.
+        XCTAssertFalse(CandidateDisplayMode.combined.effectiveFullWidthPunctuation(stored: false))
+        XCTAssertTrue(CandidateDisplayMode.combined.effectiveFullWidthPunctuation(stored: true))
+        XCTAssertFalse(CandidateDisplayMode.romanOnly.effectiveFullWidthPunctuation(stored: true))
+    }
+
+    /// Under 合用 the candidate projection stays swapped while the punctuation
+    /// width follows the stored flag the swap shortcut toggles.
+    func testCurrent_underCombined_punctuationWidthFollowsTheStoredSwap() {
+        let store = makeStore()
+        store.candidateDisplayMode = .combined
+
+        store.storedIsTranslateSwapped = false
+        XCTAssertTrue(store.current.isTranslateSwapped, "projection stays hanji-first")
+        XCTAssertFalse(store.current.isFullWidthPunctuation, "half-width until the chord is pressed")
+
+        store.storedIsTranslateSwapped = true
+        XCTAssertTrue(store.current.isFullWidthPunctuation, "full-width after the chord is pressed")
+
+        store.candidateDisplayMode = .romanOnly
+        XCTAssertFalse(store.current.isFullWidthPunctuation, "羅馬字 is always half-width")
     }
 }

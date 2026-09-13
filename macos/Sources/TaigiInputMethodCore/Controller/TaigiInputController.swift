@@ -516,12 +516,9 @@ public final class TaigiInputController: IMKInputController {
         case .toggleRomanization:
             switchInputMode(to: settings.inputMode == .tl ? .poj : .tl)
         case .toggleTranslateSwapped:
-            // Inert unless the display is side by side — silently, no flash
-            // (USER 2026-09-01, Q11): under romanization-only there is no
-            // Hanji on screen for the swap to lead with, under 合用 each script
-            // is its own cell and the Hanji cell always comes first, and
-            // flipping the STORED value blind
-            // would change what the user gets back on returning to side-by-side.
+            // Inert under romanization-only — silently, no flash (USER
+            // 2026-09-01, Q11; see `allowsSwapToggle`). Under 合用 the chord
+            // flips only the punctuation width (`isFullWidthPunctuation`).
             guard settings.current.candidateDisplayMode.allowsSwapToggle else { return }
             // The bar STAYS: the SWAP changes how a candidate displays and
             // commits, never which candidates exist, so the list on screen is
@@ -1183,11 +1180,13 @@ public final class TaigiInputController: IMKInputController {
     /// the mode is read live, like the auto-space gate below, so a swap
     /// applies to the very next key.
     ///
-    /// The EFFECTIVE swap (`current`), not the stored one: a romanization-only
-    /// display writes romanization, and romanization takes half-width marks.
+    /// The EFFECTIVE width (`current`), not the stored swap: a romanization-
+    /// only display writes romanization, and romanization takes half-width
+    /// marks; under 合用 the stored swap still picks the width even though the
+    /// candidate projection is forced hanji-first.
     @MainActor
     private func fullWidthMapped(_ text: String) -> String? {
-        guard settings.current.isTranslateSwapped else { return nil }
+        guard settings.current.isFullWidthPunctuation else { return nil }
         return FullWidthPunctuation.mapped(text)
     }
 

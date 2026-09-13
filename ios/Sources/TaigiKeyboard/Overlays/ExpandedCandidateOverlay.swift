@@ -186,8 +186,8 @@ struct ExpandedCandidateOverlay: View {
                     },
                 )
 
-                // No 文/A where there is no lead script to flip: TPS (always hanzi)
-                // and the single-script display modes (漢羅濫 / 羅馬字).
+                // No 文/A under TPS (always hanzi, always full-width) or 羅馬字
+                // (always half-width); under 漢羅濫 it flips punctuation width.
                 if !isTPSLayout, candidateDisplayMode.allowsSwapToggle {
                     ExpandedCandidateControlButton(
                         iconName: "translate",

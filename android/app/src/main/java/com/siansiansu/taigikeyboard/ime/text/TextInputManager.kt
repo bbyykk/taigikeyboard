@@ -82,18 +82,21 @@ class TextInputManager(
             onInvalidateCharacterKeys = { pushAppearance() },
         )
 
+    /** Layout-facing punctuation width: the smartbar cache once it exists, the pref before that (init order). */
+    private val fullWidthPunctuationProvider: () -> Boolean = {
+        if (this::smartbarManager.isInitialized) {
+            smartbarManager.getCachedIsFullWidthPunctuation()
+        } else {
+            prefs.isFullWidthPunctuation
+        }
+    }
+
     private val appearanceResolver = KeyboardAppearanceResolver(
         prefs = prefs,
         taigikeyboard = taigikeyboard,
         capsStateManager = capsStateManager,
         isComposingProvider = { synchronized(composingLock) { composingManager?.isComposing() == true } },
-        translateSwappedProvider = {
-            if (this::smartbarManager.isInitialized) {
-                smartbarManager.getCachedIsTranslateSwapped()
-            } else {
-                prefs.isTranslateSwapped
-            }
-        },
+        fullWidthPunctuationProvider = fullWidthPunctuationProvider,
     )
 
     /** Owns the keyboard-body UI state + layout-reload cancellation chain.
@@ -103,13 +106,7 @@ class TextInputManager(
         scope = this,
         layoutManagerFactory = { LayoutManager(taigikeyboard, prefs) },
         activeSubtypeProvider = { taigikeyboard.activeSubtype },
-        translateSwappedProvider = {
-            if (this::smartbarManager.isInitialized) {
-                smartbarManager.getCachedIsTranslateSwapped()
-            } else {
-                prefs.isTranslateSwapped
-            }
-        },
+        fullWidthPunctuationProvider = fullWidthPunctuationProvider,
         onLayoutChanged = { pushAppearance() },
         onActiveModeChanged = {
             smartbarManager.activeContainer = smartbarManager.preferredContainer

@@ -7,16 +7,19 @@ struct LayoutConverter {
     let config: KeyboardLayoutConfiguration
 
     /// Entry point: converts [[KeyDef]] to KeyboardLayout. The 文/A key is
-    /// dropped whenever the display mode has no lead script to flip (漢羅濫 /
-    /// 羅馬字); `.space` is `.available`, so it takes the freed width.
+    /// dropped under 羅馬字 (always half-width, nothing to flip); `.space` is
+    /// `.available`, so it takes the freed width.
     func convert(_ keyDefs: [[KeyDef]]) -> KeyboardLayout {
         let showsTranslateKey = context.candidateDisplayMode.allowsSwapToggle
+        // Read once per layout, not per key: TPS is always full-width, the
+        // other layouts follow the derived punctuation width.
+        let typesFullWidth = SharedSettings.shared.keyboardLayoutType == .tps || context.isFullWidthPunctuation
         let itemRows = keyDefs.map { row in
             row.compactMap { keyDef -> KeyboardLayoutItem? in
                 if case .translate = keyDef, !showsTranslateKey {
                     return nil
                 }
-                return createItem(from: keyDef)
+                return createItem(from: keyDef, typesFullWidth: typesFullWidth)
             }
         }
         return KeyboardLayout(itemRows: itemRows, configuration: config)
@@ -24,25 +27,18 @@ struct LayoutConverter {
 
     // MARK: - Private
 
-    private func createItem(from keyDef: KeyDef) -> KeyboardLayoutItem {
-        let action = keyDefToAction(keyDef)
+    private func createItem(from keyDef: KeyDef, typesFullWidth: Bool) -> KeyboardLayoutItem {
+        let action = keyDefToAction(keyDef, typesFullWidth: typesFullWidth)
         let width = widthFor(keyDef)
         return action.standardLayoutItem(for: config, width: width)
     }
 
-    /// Converts KeyDef to KeyboardAction; `.char` width (half/full) depends
-    /// on `isTranslateSwapped` / TPS.
-    private func keyDefToAction(_ keyDef: KeyDef) -> KeyboardAction {
+    /// Converts KeyDef to KeyboardAction; `.char` takes its `fullWidth` form
+    /// when `typesFullWidth`.
+    private func keyDefToAction(_ keyDef: KeyDef, typesFullWidth: Bool) -> KeyboardAction {
         switch keyDef {
         case let .char(char, fullWidth):
-            let isTPSLayout = SharedSettings.shared.keyboardLayoutType == .tps
-            let actualChar: String = if isTPSLayout {
-                // TPS layout: always use full-width (independent of isTranslateSwapped)
-                fullWidth ?? char
-            } else {
-                context.isTranslateSwapped ? (fullWidth ?? char) : char
-            }
-            return .character(actualChar)
+            return .character(typesFullWidth ? (fullWidth ?? char) : char)
 
         case .shift:
             return .shift(context.keyboardCase)

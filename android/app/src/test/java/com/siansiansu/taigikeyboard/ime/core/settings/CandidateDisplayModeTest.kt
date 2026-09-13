@@ -81,7 +81,25 @@ class CandidateDisplayModeTest {
     /** The rules PrefHelper and the UI gates read live on the enum — pinned once. */
     @Test
     fun rules_perMode() {
-        assertEquals(listOf(CandidateDisplayMode.SIDE_BY_SIDE), CandidateDisplayMode.entries.filter { it.allowsSwapToggle })
+        assertEquals(
+            listOf(CandidateDisplayMode.SIDE_BY_SIDE, CandidateDisplayMode.COMBINED),
+            CandidateDisplayMode.entries.filter { it.allowsSwapToggle },
+        )
         assertEquals(listOf(CandidateDisplayMode.ROMAN_ONLY), CandidateDisplayMode.entries.filterNot { it.showsHanji })
+    }
+
+    /**
+     * Punctuation width follows the STORED swap under SIDE_BY_SIDE / COMBINED —
+     * COMBINED forces the candidate projection on but the 文/A key still picks
+     * the width — and is always half-width under ROMAN_ONLY.
+     */
+    @Test
+    fun test_INVARIANT_punctuation_width_follows_stored_swap_except_roman_only() {
+        assertFalse(CandidateDisplayMode.COMBINED.effectiveFullWidthPunctuation(false))
+        assertTrue(CandidateDisplayMode.COMBINED.effectiveFullWidthPunctuation(true))
+        assertTrue(CandidateDisplayMode.COMBINED.effectiveTranslateSwapped(false))
+        assertFalse(CandidateDisplayMode.SIDE_BY_SIDE.effectiveFullWidthPunctuation(false))
+        assertTrue(CandidateDisplayMode.SIDE_BY_SIDE.effectiveFullWidthPunctuation(true))
+        assertFalse(CandidateDisplayMode.ROMAN_ONLY.effectiveFullWidthPunctuation(true))
     }
 }

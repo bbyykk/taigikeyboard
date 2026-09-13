@@ -58,17 +58,20 @@ impl CandidateDisplayMode {
         self != Self::RomanOnly
     }
 
-    /// Only side-by-side has a lead script the swap shortcut can flip; the
-    /// other two fix it, so the shortcut is inert and the stored swap waits
-    /// for the way back.
+    /// Whether the swap shortcut writes the stored swap — exactly where hanji
+    /// is on screen. Under `Combined` the cells are split per script, so the
+    /// shortcut only picks the punctuation width (USER 2026-09-13 「漢羅濫需要有
+    /// isTranslateSwapped 的按鈕」); `RomanOnly` leaves it inert and the stored
+    /// swap waits for the way back.
     pub fn allows_swap_toggle(self) -> bool {
-        self == Self::SideBySide
+        self.shows_hanji()
     }
 
     /// Effective swap for a stored flag. `Combined` leads with — and commits —
     /// the hanji: forcing the pair on is a compatibility projection of that,
-    /// so every reader of the pair (auto-space, full-width, the nextword
-    /// gates) behaves as today's hanji-first mode (invariants §42).
+    /// so every reader of the pair (auto-space, the nextword gates) behaves
+    /// as today's hanji-first mode (invariants §42); full-width punctuation
+    /// reads `effective_full_width_punctuation` instead.
     /// `RomanOnly` has no hanji to lead with.
     /// CROSS-PLATFORM INVARIANT — mirrors macOS `EngineSettings.swift`
     /// `CandidateDisplayMode.effectiveTranslateSwapped`, iOS
@@ -80,6 +83,15 @@ impl CandidateDisplayMode {
     /// Effective 括號標註 for a stored flag — off only where there is no hanji
     /// to bracket; `Combined` keeps it (`漢字 (羅馬字)`).
     pub fn effective_output_both_scripts(self, stored: bool) -> bool {
+        stored && self.shows_hanji()
+    }
+
+    /// Whether a typed punctuation key becomes full-width (`，` for `,`) for a
+    /// stored swap flag — the stored flag masked like 括號標註, NOT the
+    /// candidate projection above, which `Combined` forces on while the swap
+    /// shortcut still picks the width. Mirrored on macOS / iOS / Android
+    /// beside `effective_output_both_scripts`.
+    pub fn effective_full_width_punctuation(self, stored: bool) -> bool {
         stored && self.shows_hanji()
     }
 
@@ -148,6 +160,9 @@ pub struct EngineSettings {
     /// the raw ones stay untouched so leaving either mode restores them.
     pub is_translate_swapped: bool,
     pub is_output_both_scripts: bool,
+    /// `CandidateDisplayMode::effective_full_width_punctuation(stored)` —
+    /// read by the TSF session's `full_width_mapped` only.
+    pub is_full_width_punctuation: bool,
     /// What a candidate cell shows; `AppConfig.candidate_display_mode`.
     /// CROSS-PLATFORM INVARIANT — mirrors
     /// `macos/Sources/TaigiInputMethodCore/Settings/EngineSettings.swift`
@@ -180,6 +195,7 @@ impl Default for EngineSettings {
             input_mode: InputMode::Tl,
             is_translate_swapped: false,
             is_output_both_scripts: false,
+            is_full_width_punctuation: false,
             candidate_display_mode: CandidateDisplayMode::SideBySide,
             is_literal_roman_candidate_enabled: true,
             is_frequency_recording_enabled: true,

@@ -133,25 +133,25 @@ final class TaigiInputControllerShortcutTests: XCTestCase {
     }
 
     /// Under the combined display each script is its own adjacent cell and
-    /// the Hanji cell always comes first, so the swap has nothing to swap
-    /// either: the chord is inert the same silent way — the STORED value is
-    /// untouched while the effective swap
-    /// reads `true`, and leaving the mode gives the user their own swap back.
-    func testTheTranslateSwap_underCombined_isSilentlyInert() {
+    /// the Hanji cell always comes first, so the candidate projection stays
+    /// `true` whatever the chord does — but the chord is NOT inert: it flips
+    /// the STORED swap, which is what picks the punctuation width there
+    /// (USER 2026-09-13 「漢羅濫需要有 isTranslateSwapped 的按鈕」), and the
+    /// flipped value is what the user gets back on returning to side-by-side.
+    func testTheTranslateSwap_underCombined_flipsThePunctuationWidthOnly() {
         controller.settings.storedIsTranslateSwapped = false
         controller.settings.candidateDisplayMode = .combined
-        let callsBefore = presenter.calls.count
 
         controller.performShortcutAction(.toggleTranslateSwapped)
 
-        XCTAssertFalse(controller.settings.storedIsTranslateSwapped, "the chord flipped a stored value it must not touch")
+        XCTAssertTrue(controller.settings.storedIsTranslateSwapped, "the chord flips the stored swap")
+        XCTAssertTrue(controller.settings.current.isFullWidthPunctuation, "…which is the punctuation width under combined")
         XCTAssertTrue(controller.settings.current.isTranslateSwapped, "the effective swap stays on under combined")
-        XCTAssertEqual(presenter.calls.count, callsBefore)
         XCTAssertEqual(flashes, [])
 
-        controller.settings.candidateDisplayMode = .sideBySide
+        controller.performShortcutAction(.toggleTranslateSwapped)
 
-        XCTAssertFalse(controller.settings.current.isTranslateSwapped, "leaving the mode must give the stored swap back")
+        XCTAssertFalse(controller.settings.current.isFullWidthPunctuation, "a second press goes back to half-width")
     }
 
     /// The cycle walks the 外觀 picker's order and comes back round, so three

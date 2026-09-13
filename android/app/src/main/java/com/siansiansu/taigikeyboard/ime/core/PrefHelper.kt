@@ -316,11 +316,11 @@ class PrefHelper(
         set(value) = applyInputMode(value)
 
     // STORED script flags — the only read-write API (settings UI, 文/A toggle,
-    // reset). Engine / commit / layout readers use the EFFECTIVE derived
-    // overrides `isTranslateSwapped` / `isOutputBothScripts` below, which
-    // read `false` under CandidateDisplayMode.ROMAN_ONLY (and `true` for the
-    // swap under COMBINED) without touching storage, so leaving either mode
-    // restores the user's choice.
+    // reset). Engine / commit readers use the EFFECTIVE derived overrides
+    // `isTranslateSwapped` / `isOutputBothScripts` below, which read `false`
+    // under CandidateDisplayMode.ROMAN_ONLY (and `true` for the swap under
+    // COMBINED) without touching storage, so leaving either mode restores the
+    // user's choice; layout readers use `isFullWidthPunctuation`.
     var storedIsTranslateSwapped: Boolean by preference(PreferenceKeys.IS_TRANSLATE_SWAPPED, false)
 
     var storedOutputBothScripts: Boolean by preference(PreferenceKeys.OUTPUT_BOTH_SCRIPTS, false)
@@ -591,6 +591,12 @@ class PrefHelper(
 
     override val isOutputBothScripts: Boolean
         get() = candidateDisplayMode.effectiveOutputBothScripts(storedOutputBothScripts)
+
+    // EFFECTIVE punctuation width — the stored swap under SIDE_BY_SIDE /
+    // COMBINED, never under ROMAN_ONLY. Read by the layout (`LayoutManager`),
+    // the 文/A active state and the `、` slot; never by the engine.
+    val isFullWidthPunctuation: Boolean
+        get() = candidateDisplayMode.effectiveFullWidthPunctuation(storedIsTranslateSwapped)
 
     // §34/S22: engine-facing alias for the Android `literalRomanCandidateEnabled`
     // pref (kept un-renamed because the settings UI reads it directly).

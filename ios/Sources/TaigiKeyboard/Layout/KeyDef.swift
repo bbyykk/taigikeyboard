@@ -4,7 +4,7 @@
 enum KeyDef {
     // MARK: - Character keys
 
-    /// `fullWidth` is the optional full-width form used in isTranslateSwapped mode.
+    /// `fullWidth` is the optional full-width form used when isFullWidthPunctuation.
     case char(String, fullWidth: String? = nil)
 
     // MARK: - Function keys

@@ -151,9 +151,10 @@ final class SharedSettings {
     }
 
     /// Raw stored swap flag — the ONLY read-write API. Settings UI, the 文/A
-    /// toggle (after its `romanOnly` guard) and `resetToDefaults` use this.
-    /// Everything that *consumes* the swap reads the derived
-    /// `isTranslateSwapped` (`EngineSettings` conformance below).
+    /// toggle (after its `allowsSwapToggle` guard) and `resetToDefaults` use
+    /// this. Everything that *consumes* the swap reads a derived value: the
+    /// candidate projection `isTranslateSwapped` (`EngineSettings` conformance
+    /// below) or the punctuation width `isFullWidthPunctuation`.
     var storedIsTranslateSwapped: Bool {
         get { userDefaults.value(for: Self.isTranslateSwappedKey) }
         set { userDefaults.set(newValue, for: Self.isTranslateSwappedKey) }
@@ -697,6 +698,11 @@ extension SharedSettings: EngineSettings {
     /// flag, so writers go through `storedIsTranslateSwapped`.
     var isTranslateSwapped: Bool {
         candidateDisplayMode.effectiveTranslateSwapped(stored: storedIsTranslateSwapped)
+    }
+
+    /// Effective punctuation width — same seam, read by the layout + 文/A icon.
+    var isFullWidthPunctuation: Bool {
+        candidateDisplayMode.effectiveFullWidthPunctuation(stored: storedIsTranslateSwapped)
     }
 
     /// Effective 括號標註 — same seam, same rule owner.

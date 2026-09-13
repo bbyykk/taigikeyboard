@@ -48,6 +48,7 @@ class CandidateOverlayView : FrameLayout {
     // composition (both read off the SmartbarManager cache on show/update).
     private val suggestionsState = mutableStateOf<List<TaigiWord>>(emptyList())
     private val translateSwappedState = mutableStateOf(false)
+    private val fullWidthPunctuationState = mutableStateOf(false)
     private val candidateDisplayModeState = mutableStateOf(CandidateDisplayMode.SIDE_BY_SIDE)
 
     // Resolved theme background gradient stops (ARGB), or null for a flat/default theme.
@@ -100,6 +101,7 @@ class CandidateOverlayView : FrameLayout {
                 val resetKey by resetTrigger
                 val suggestions = suggestionsState.value
                 val isTranslateSwapped = translateSwappedState.value
+                val isFullWidthPunctuation = fullWidthPunctuationState.value
                 val candidateDisplayMode = candidateDisplayModeState.value
                 // Read live each recomposition; recompose is driven by the states above (show/update),
                 // matching the legacy re-measure cadence on submitRows().
@@ -119,6 +121,7 @@ class CandidateOverlayView : FrameLayout {
                         isTPSLayout = isTPSLayout,
                         orMapsToER = prefs.tpsOrMapsToER,
                         isTranslateSwapped = isTranslateSwapped,
+                        isFullWidthPunctuation = isFullWidthPunctuation,
                         candidateDisplayMode = candidateDisplayMode,
                         resetKey = resetKey,
                         backgroundGradient = backgroundGradientState.value,
@@ -160,6 +163,7 @@ class CandidateOverlayView : FrameLayout {
 
         suggestionsState.value = suggestions
         translateSwappedState.value = smartbarManager.getCachedIsTranslateSwapped()
+        fullWidthPunctuationState.value = smartbarManager.getCachedIsFullWidthPunctuation()
         candidateDisplayModeState.value = prefs.candidateDisplayMode
         backgroundGradientState.value = backgroundGradient
         candidateTextColorState.value = candidateTextColor
@@ -203,6 +207,7 @@ class CandidateOverlayView : FrameLayout {
         }
         suggestionsState.value = suggestions
         translateSwappedState.value = smartbarManager.getCachedIsTranslateSwapped()
+        fullWidthPunctuationState.value = smartbarManager.getCachedIsFullWidthPunctuation()
         candidateDisplayModeState.value = prefs.candidateDisplayMode
     }
 

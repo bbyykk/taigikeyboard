@@ -116,7 +116,7 @@ fun KeyboardPreviewPanel(
             caps = false,
             capsLock = false,
             isComposing = false,
-            isTranslateSwapped = false,
+            isFullWidthPunctuation = false,
             imeOptions = EditorInfo.IME_ACTION_NONE,
             confirmKeyLabel = KeyboardAppearance.confirmKeyLabel(previewInputMode, false),
             colorSettings = colorSettings,

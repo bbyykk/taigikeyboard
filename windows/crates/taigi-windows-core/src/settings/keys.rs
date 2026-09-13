@@ -33,6 +33,7 @@ const fn engine_defaults() -> EngineSettings {
         input_mode: InputMode::Tl,
         is_translate_swapped: false,
         is_output_both_scripts: false,
+        is_full_width_punctuation: false,
         candidate_display_mode: CandidateDisplayMode::SideBySide,
         is_literal_roman_candidate_enabled: true,
         is_frequency_recording_enabled: true,

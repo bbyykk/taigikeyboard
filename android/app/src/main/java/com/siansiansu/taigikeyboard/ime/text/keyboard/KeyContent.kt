@@ -69,7 +69,7 @@ internal fun KeyContent(
     caps: Boolean,
     capsLock: Boolean,
     isComposing: Boolean,
-    isTranslateSwapped: Boolean,
+    isFullWidthPunctuation: Boolean,
     imeOptions: Int,
     confirmKeyLabel: String,
     colors: KeyboardColorSettings,
@@ -98,7 +98,7 @@ internal fun KeyContent(
         data = data,
         isFunctionKey = isFunctionKey,
         pressed = pressed,
-        isTranslateSwapped = isTranslateSwapped,
+        isFullWidthPunctuation = isFullWidthPunctuation,
         customFill = customFill,
     )
 
@@ -144,7 +144,7 @@ internal fun KeyContent(
             caps,
             capsLock,
             isComposing,
-            isTranslateSwapped,
+            isFullWidthPunctuation,
             imeOptions,
             confirmKeyLabel,
             isPreview,
@@ -157,7 +157,7 @@ internal fun KeyContent(
                 caps = caps,
                 capsLock = capsLock,
                 isComposing = isComposing,
-                isTranslateSwapped = isTranslateSwapped,
+                isFullWidthPunctuation = isFullWidthPunctuation,
                 imeOptions = imeOptions,
                 confirmKeyLabel = confirmKeyLabel,
                 isPreview = isPreview,
@@ -423,7 +423,7 @@ private fun resolveKeyVisual(
     caps: Boolean,
     capsLock: Boolean,
     isComposing: Boolean,
-    isTranslateSwapped: Boolean,
+    isFullWidthPunctuation: Boolean,
     imeOptions: Int,
     confirmKeyLabel: String,
     isPreview: Boolean,
@@ -458,8 +458,8 @@ private fun resolveKeyVisual(
         -> KeyVisual.Label(resources.getString(R.string.key__view_characters))
         KeyCode.VIEW_NUMERIC -> KeyVisual.Label(resources.getString(R.string.key__view_numeric))
         KeyCode.VIEW_NUMERIC_ADVANCED -> {
-            // In SYMBOLS mode with translate-swapped, this slot becomes "、".
-            val label = if (isTranslateSwapped && mode == KeyboardMode.SYMBOLS) {
+            // In SYMBOLS mode with full-width punctuation, this slot becomes "、".
+            val label = if (isFullWidthPunctuation && mode == KeyboardMode.SYMBOLS) {
                 "、"
             } else {
                 resources.getString(R.string.key__view_numeric)
@@ -611,13 +611,13 @@ private fun resolveBackgroundColor(
     data: KeyData,
     isFunctionKey: Boolean,
     pressed: Boolean,
-    isTranslateSwapped: Boolean,
+    isFullWidthPunctuation: Boolean,
     customFill: Int?,
 ): Int {
-    // Translate key in swapped state always wins (legacy:
+    // Translate key in full-width state always wins (legacy:
     // `setBackgroundTintColor(this, R.attr.key_bgColorActive)` fires after
     // `applyAppearance` finishes, overriding any custom fill).
-    if (data.code == KeyCode.TRANSLATE && isTranslateSwapped) {
+    if (data.code == KeyCode.TRANSLATE && isFullWidthPunctuation) {
         return themeColors.keyBgActive
     }
     // Custom fill replaces both pressed and unpressed (legacy

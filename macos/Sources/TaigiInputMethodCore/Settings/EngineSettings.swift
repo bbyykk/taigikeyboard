@@ -51,11 +51,13 @@ enum CandidateDisplayMode: String, CaseIterable, Sendable {
         }
     }
 
-    /// Only side-by-side has a lead script the swap shortcut can flip; the
-    /// other two fix it, so the shortcut is inert and the stored swap waits
-    /// for the way back.
+    /// Whether the swap shortcut writes the stored swap — exactly where Hanji
+    /// is on screen. Under `.combined` the cells are split per script, so the
+    /// shortcut only picks the punctuation width (USER 2026-09-13 「漢羅濫需要有
+    /// isTranslateSwapped 的按鈕」); `.romanOnly` leaves it inert and the stored
+    /// swap waits for the way back.
     var allowsSwapToggle: Bool {
-        self == .sideBySide
+        showsHanji
     }
 
     /// Effective swap for a stored flag. `.combined` leads with — and commits —
@@ -74,6 +76,15 @@ enum CandidateDisplayMode: String, CaseIterable, Sendable {
     /// Effective 括號標註 for a stored flag — off only where there is no Hanji
     /// to bracket; `.combined` keeps it (`漢字 (羅馬字)`).
     func effectiveOutputBothScripts(stored: Bool) -> Bool {
+        stored && showsHanji
+    }
+
+    /// Whether a typed punctuation key becomes full-width (`，` for `,`) for a
+    /// stored swap flag — the stored flag masked like 括號標註, NOT the candidate
+    /// projection above, which `.combined` forces on while the swap shortcut
+    /// still picks the width. Mirrored on ios / android / windows beside
+    /// `effectiveOutputBothScripts`.
+    func effectiveFullWidthPunctuation(stored: Bool) -> Bool {
         stored && showsHanji
     }
 }
@@ -107,14 +118,19 @@ struct EngineSettings: Equatable, Sendable {
     /// comes first and is the `.primary` commit, the romanization cell beside
     /// it the `.alternate` one (`PresentedCandidate`) — while the bracket
     /// setting is read as stored (`SettingsStore.current` has the why). Every
-    /// reader of "swap" — engine `AppConfig`, cell, document text, auto-space,
-    /// full-width punctuation — reads THIS pair, never the stored one.
+    /// reader of "swap" — engine `AppConfig`, cell, document text, auto-space
+    /// — reads THIS pair, never the stored one; full-width punctuation reads
+    /// `isFullWidthPunctuation` instead.
     /// CROSS-PLATFORM INVARIANT — mirrors ios/Sources/TaigiKeyboard/Settings/EngineSettings.swift
     /// `isTranslateSwapped` / `isOutputBothScripts` (derived the same way) and
     /// the Windows `document.rs engine_settings()`. Drift changes what a
     /// romanization-only install commits.
     let isTranslateSwapped: Bool
     let isOutputBothScripts: Bool
+
+    /// `CandidateDisplayMode.effectiveFullWidthPunctuation(stored:)` — read by
+    /// `TaigiInputController.fullWidthMapped` only.
+    let isFullWidthPunctuation: Bool
 
     /// Whether the candidate window shows both scripts or the romanization
     /// alone. Sent to the engine as `AppConfig.candidate_display_mode`, which
@@ -177,6 +193,7 @@ struct EngineSettings: Equatable, Sendable {
         inputMode: .tl,
         isTranslateSwapped: false,
         isOutputBothScripts: false,
+        isFullWidthPunctuation: false,
         candidateDisplayMode: .sideBySide,
         isLiteralRomanCandidateEnabled: true,
         isFrequencyRecordingEnabled: true,
