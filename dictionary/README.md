@@ -32,8 +32,7 @@ dictionary/
 ├── shared/data/               # Shared reference files consumed by build + frequency stage
 │   ├── char_freq_merged.txt   # Character-frequency table
 │   ├── khiin_frequency.csv    # Khiin frequency supplement
-│   ├── khiin_conversions.csv  # Khiin conversion table
-│   └── 語音差異.csv            # Regional pronunciation reference
+│   └── khiin_conversions.csv  # Khiin conversion table
 │
 ├── output/                    # Generated build artefacts
 └── docs/                      # Pipeline + sources docs

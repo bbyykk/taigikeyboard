@@ -121,8 +121,6 @@ current-at-release values when cutting a dictionary refresh.
 - `khiin_conversions.csv` — tone-conversion pairs from the Khiin project
   used in `build/merge_csv.py` to backfill rows absent from the nine main
   sources. Date TBD.
-- `語音差異.csv` — regional pronunciation variance reference (not currently
-  consumed by the build; retained for future stages).
 
 ## Re-capture notes
 

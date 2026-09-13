@@ -57,8 +57,7 @@ pipelines skip the sheet-based stages.
 ```
 shared/data/
 ├── char_freq_merged.txt ──┐
-├── khiin_*.csv ───────────┼──► build/merge_csv.py ──┐
-└── 語音差異.csv (ref only) │                         │
+└── khiin_*.csv ───────────┼──► build/merge_csv.py ──┐
                            │                         │
 supplementary/             │                         │
 ├── variants/ ─► variants stage (per source)         │
