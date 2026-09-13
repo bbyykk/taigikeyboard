@@ -38,7 +38,7 @@ class KeyboardUiCoordinatorTest {
             scope = scope,
             layoutManagerFactory = { error("layoutManager not used in this test") },
             activeSubtypeProvider = { error("activeSubtype not used in this test") },
-            translateSwappedProvider = { false },
+            fullWidthPunctuationProvider = { false },
             onLayoutChanged = {},
             onActiveModeChanged = {},
         )

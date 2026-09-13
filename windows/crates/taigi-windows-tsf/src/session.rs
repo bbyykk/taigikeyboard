@@ -899,9 +899,10 @@ impl TextService_Impl {
                     log::warn!("shortcut.no_settings_store");
                     return;
                 };
-                // Inert unless side-by-side (`allows_swap_toggle`): no write,
-                // no flash, the stored swap waits for the way back. Read off
-                // the same snapshot every other consumer uses.
+                // Inert under roman-only (`allows_swap_toggle`): no write, no
+                // flash. Under combined the chord flips only the punctuation
+                // width (`is_full_width_punctuation`). Read off the same
+                // snapshot every other consumer uses.
                 let display_mode = runtime
                     .settings
                     .current()
@@ -1675,10 +1676,11 @@ fn append_auto_space(
     }
 }
 
-/// The full-width form of a typed character in hanji-first mode — the
-/// DERIVED swap, so roman-only stays half-width.
+/// The full-width form of a typed character when the layouts type full-width
+/// marks — the DERIVED width, so roman-only stays half-width and combined
+/// follows the stored swap the shortcut toggles.
 fn full_width_mapped(settings: &SettingsDocument, text: &str) -> Option<String> {
-    if !settings.engine_settings().is_translate_swapped {
+    if !settings.engine_settings().is_full_width_punctuation {
         return None;
     }
     policies::full_width_mapped(text)

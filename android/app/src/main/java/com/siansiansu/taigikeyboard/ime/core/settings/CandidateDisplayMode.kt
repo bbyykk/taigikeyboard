@@ -20,7 +20,7 @@ enum class CandidateDisplayMode(
     /**
      * 漢羅濫 (§42 second exception): each hanji-bearing candidate lists
      * adjacent one-script 漢字 + 羅馬字 cells, no subtitle; a tap commits
-     * that cell's script. 文/A hidden.
+     * that cell's script. 文/A stays, as the punctuation-width toggle only.
      */
     COMBINED("combined"),
     ;
@@ -48,8 +48,23 @@ enum class CandidateDisplayMode(
     /** Whether the cell shows any hanji — false only for [ROMAN_ONLY]; also gates the 括號標註 toggle's enabled state. */
     val showsHanji: Boolean get() = this != ROMAN_ONLY
 
-    /** Only side-by-side has a lead script the 文/A key can flip; the other two fix it, so the key is hidden (bottom row + expanded overlay). */
-    val allowsSwapToggle: Boolean get() = this == SIDE_BY_SIDE
+    /**
+     * Whether the 文/A key is shown (bottom row + expanded overlay) and its tap
+     * writes the stored swap — exactly where hanji is on screen. Under COMBINED
+     * the cells are split per script, so the key only picks the punctuation
+     * width (USER 2026-09-13 「漢羅濫需要有 isTranslateSwapped 的按鈕」);
+     * ROMAN_ONLY hides it and the stored swap waits for the way back.
+     */
+    val allowsSwapToggle: Boolean get() = showsHanji
+
+    /**
+     * Whether the character / symbol layouts type full-width punctuation
+     * (`，。` over `,.`) for a stored swap flag — the stored flag masked like
+     * 括號標註, NOT the candidate projection [effectiveTranslateSwapped], which
+     * COMBINED forces on while 文/A still picks the width. TPS has its own JSON.
+     * Mirrored on iOS / macOS / Windows beside [effectiveOutputBothScripts].
+     */
+    fun effectiveFullWidthPunctuation(stored: Boolean): Boolean = stored && showsHanji
 
     companion object {
         /** Coerce a stored raw string into a mode; unknown / absent values fall back to [SIDE_BY_SIDE]. */

@@ -120,7 +120,7 @@ fun KeyboardLayout(
                         caps = appearance.caps,
                         capsLock = appearance.capsLock,
                         isComposing = appearance.isComposing,
-                        isTranslateSwapped = appearance.isTranslateSwapped,
+                        isFullWidthPunctuation = appearance.isFullWidthPunctuation,
                         imeOptions = appearance.imeOptions,
                         confirmKeyLabel = appearance.confirmKeyLabel,
                         colors = appearance.colorSettings,
@@ -418,7 +418,8 @@ data class KeyboardAppearance(
     val caps: Boolean,
     val capsLock: Boolean,
     val isComposing: Boolean,
-    val isTranslateSwapped: Boolean,
+    /** Layout-facing punctuation width (`PrefHelper.isFullWidthPunctuation`); lights 文/A and the `、` slot. */
+    val isFullWidthPunctuation: Boolean,
     val imeOptions: Int,
     val confirmKeyLabel: String,
     val colorSettings: KeyboardColorSettings,

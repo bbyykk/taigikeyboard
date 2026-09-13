@@ -2,7 +2,7 @@
 ///
 /// _withGlobe variants are derived by inserting .globe at bottom-row index 1.
 /// .char(half, fullWidth: full) shows half-width by default,
-/// full-width when isTranslateSwapped = true (or always for TPS layout).
+/// full-width when isFullWidthPunctuation = true (or always for TPS layout).
 enum TaigiLayouts {
     /// Derives a withGlobe variant by inserting .globe at index 1 of the bottom row
     private static func withGlobeKey(_ layout: [[KeyDef]]) -> [[KeyDef]] {

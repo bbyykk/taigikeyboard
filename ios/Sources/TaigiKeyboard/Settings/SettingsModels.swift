@@ -81,11 +81,13 @@ public enum CandidateDisplayMode: String, CaseIterable, Codable {
         self != .romanOnly
     }
 
-    /// Only side-by-side has a lead script the 文/A key can flip; the other two
-    /// fix it, so the key is hidden (bottom row + expanded overlay) and the
-    /// stored swap waits for the way back.
+    /// Whether the 文/A key is shown (bottom row + expanded overlay) and its
+    /// tap writes the stored swap — exactly where Hanji is on screen. Under
+    /// `.combined` the cells are split per script, so the key only picks the
+    /// punctuation width (USER 2026-09-13 「漢羅濫需要有 isTranslateSwapped
+    /// 的按鈕」); `.romanOnly` hides it and the stored swap waits for the way back.
     var allowsSwapToggle: Bool {
-        self == .sideBySide
+        showsHanji
     }
 
     /// Effective swap for a stored flag. `.combined` lists the pair hanji-first
@@ -99,6 +101,15 @@ public enum CandidateDisplayMode: String, CaseIterable, Codable {
     // Drift causes silent divergence (one platform commits roman under 合用, or hanji under 羅馬字).
     func effectiveTranslateSwapped(stored: Bool) -> Bool {
         self == .combined || (stored && showsHanji)
+    }
+
+    /// Whether the character / symbol layouts type full-width punctuation
+    /// (`，。` over `,.`) for a stored swap flag — the stored flag masked like
+    /// 括號標註, NOT the candidate projection above, which `.combined` forces on
+    /// while 文/A still picks the width. TPS ignores it (`LayoutConverter`).
+    /// Mirrored on android / macos / windows beside `effectiveOutputBothScripts`.
+    func effectiveFullWidthPunctuation(stored: Bool) -> Bool {
+        stored && showsHanji
     }
 
     /// Effective 括號標註 for a stored flag — off only where there is no Hanji

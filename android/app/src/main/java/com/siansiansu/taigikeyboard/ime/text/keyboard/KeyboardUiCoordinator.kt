@@ -32,7 +32,7 @@ internal class KeyboardUiCoordinator(
     private val scope: CoroutineScope,
     layoutManagerFactory: () -> LayoutManager,
     private val activeSubtypeProvider: () -> Subtype,
-    private val translateSwappedProvider: () -> Boolean,
+    private val fullWidthPunctuationProvider: () -> Boolean,
     private val onLayoutChanged: () -> Unit,
     private val onActiveModeChanged: () -> Unit,
 ) {
@@ -173,9 +173,9 @@ internal class KeyboardUiCoordinator(
         val currentMode = activeKeyboardMode
         layoutReloadJob?.cancel()
         layoutReloadJob = scope.launch {
-            val isTranslateSwapped = translateSwappedProvider()
+            val isFullWidthPunctuation = fullWidthPunctuationProvider()
             val computed = withContext(Dispatchers.IO) {
-                layoutManager.fetchComputedLayout(currentMode, activeSubtypeProvider(), isTranslateSwapped)
+                layoutManager.fetchComputedLayout(currentMode, activeSubtypeProvider(), isFullWidthPunctuation)
             }
             publishLayout(currentMode, KeyboardLayoutData.from(computed))
             onLayoutChanged()
@@ -189,12 +189,12 @@ internal class KeyboardUiCoordinator(
      */
     fun reloadAllLayoutsInBackground() {
         scope.launch {
-            val isTranslateSwapped = translateSwappedProvider()
+            val isFullWidthPunctuation = fullWidthPunctuationProvider()
             val modes = _keyboardUi.value.layouts.keys.toList()
             for (mode in modes) {
                 if (mode != activeKeyboardMode) {
                     val computed = withContext(Dispatchers.IO) {
-                        layoutManager.fetchComputedLayout(mode, activeSubtypeProvider(), isTranslateSwapped)
+                        layoutManager.fetchComputedLayout(mode, activeSubtypeProvider(), isFullWidthPunctuation)
                     }
                     withContext(Dispatchers.Main) {
                         publishLayout(mode, KeyboardLayoutData.from(computed))

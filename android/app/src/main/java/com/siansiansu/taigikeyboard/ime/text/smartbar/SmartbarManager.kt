@@ -78,6 +78,7 @@ class SmartbarManager(
     // derived pair (stored AND mode != ROMAN_ONLY) plus the mode itself; every strip /
     // overlay / click / layout reader goes through these, never the stored prefs.
     private var cachedIsTranslateSwapped: Boolean = false
+    private var cachedIsFullWidthPunctuation: Boolean = false
     private var cachedOutputBothScripts: Boolean = false
     // Compose-side render state. Subsystems that read `currentSuggestions` /
     // `hasCandidates` continue to do so directly; this flow drives only the
@@ -512,19 +513,25 @@ class SmartbarManager(
 
     fun getCachedIsTranslateSwapped(): Boolean = cachedIsTranslateSwapped
 
+    /** Layout-facing punctuation width, cached beside the candidate projection; feeds the layout / appearance providers. */
+    fun getCachedIsFullWidthPunctuation(): Boolean = cachedIsFullWidthPunctuation
+
     /**
-     * 文/A key + overlay control button. Only SIDE_BY_SIDE toggles; under
-     * ROMAN_ONLY and COMBINED the key is hidden (`LayoutManager` /
-     * `CandidateOverlayContent`) and this guard keeps any other caller safe.
-     * The stored flag is what flips; the cache re-derives from it.
+     * 文/A key + overlay control button. Flips the STORED swap: under
+     * SIDE_BY_SIDE that flips the lead script and the punctuation width, under
+     * COMBINED only the punctuation width (each cell commits its own script).
+     * Inert under ROMAN_ONLY (always half-width) and TPS (always full-width,
+     * hanji-first), where the key is hidden (`LayoutManager` /
+     * `CandidateOverlayContent`); the guard keeps any other caller safe.
+     * Both caches re-derive from the stored flag.
      */
     fun toggleTranslateSwapped() {
-        if (!prefs.candidateDisplayMode.allowsSwapToggle) return
+        if (!prefs.candidateDisplayMode.allowsSwapToggle || prefs.isTpsLayout) return
         prefs.storedIsTranslateSwapped = !prefs.storedIsTranslateSwapped
         refreshScriptFlagCache()
         refreshSurfacesForScriptFlags()
 
-        logger.debug(TAG) { "[TRANSLATE] isTranslateSwapped 切換為: $cachedIsTranslateSwapped" }
+        logger.debug(TAG) { "[TRANSLATE] swapped=$cachedIsTranslateSwapped fullWidth=$cachedIsFullWidthPunctuation" }
     }
 
     /**
@@ -547,6 +554,7 @@ class SmartbarManager(
 
     private fun refreshScriptFlagCache() {
         cachedIsTranslateSwapped = prefs.isTranslateSwapped
+        cachedIsFullWidthPunctuation = prefs.isFullWidthPunctuation
         cachedOutputBothScripts = prefs.isOutputBothScripts
     }
 

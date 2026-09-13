@@ -245,12 +245,12 @@ class LayoutManager(
      *
      * @param keyboardMode The keyboard mode for which the layout should be computed.
      * @param subtype The subtype which localizes the computed layout.
-     * @param overrideIsTranslateSwapped Optional override for isTranslateSwapped; takes precedence over the prefs value.
+     * @param overrideIsFullWidthPunctuation Optional override for isFullWidthPunctuation; takes precedence over the prefs value.
      */
     private fun computeLayoutFor(
         keyboardMode: KeyboardMode,
         subtype: Subtype,
-        overrideIsTranslateSwapped: Boolean? = null,
+        overrideIsFullWidthPunctuation: Boolean? = null,
         overrideInputMode: String? = null,
     ): ComputedLayoutData {
         var main: LTN? = null
@@ -259,10 +259,11 @@ class LayoutManager(
 
         // Prefer the passed-in override over prefs: an async DataStore read can otherwise lag the punctuation
         // (halfwidth / fullwidth) layout choice by a frame.
-        val isTranslateSwapped = overrideIsTranslateSwapped ?: prefs.isTranslateSwapped
+        val isFullWidthPunctuation = overrideIsFullWidthPunctuation ?: prefs.isFullWidthPunctuation
         val inputMode = overrideInputMode ?: prefs.inputMode
-        val modSuffix = if (isTranslateSwapped) "fullwidth" else "halfwidth"
-        val symbolsSuffix = if (isTranslateSwapped) "fullwidth" else "default"
+        val modSuffix = if (isFullWidthPunctuation) "fullwidth" else "halfwidth"
+        val moeSuffix = if (isFullWidthPunctuation) "_fullwidth" else ""
+        val symbolsSuffix = if (isFullWidthPunctuation) "fullwidth" else "default"
 
         when (keyboardMode) {
             KeyboardMode.CHARACTERS -> {
@@ -279,23 +280,20 @@ class LayoutManager(
                         else -> {
                             when (prefs.keyboardLayoutType) {
                                 "phahTaigi" -> {
-                                    val suffix = if (isTranslateSwapped) "fullwidth" else "halfwidth"
-                                    "qwerty_phah_taigi_$suffix"
+                                    "qwerty_phah_taigi_$modSuffix"
                                 }
 
                                 "moe1" -> {
-                                    val suffix = if (isTranslateSwapped) "_fullwidth" else ""
                                     when (inputMode) {
-                                        "poj" -> "qwerty_moe1_poj$suffix"
-                                        else -> "qwerty_moe1$suffix"
+                                        "poj" -> "qwerty_moe1_poj$moeSuffix"
+                                        else -> "qwerty_moe1$moeSuffix"
                                     }
                                 }
 
                                 "moe2" -> {
-                                    val suffix = if (isTranslateSwapped) "_fullwidth" else ""
                                     when (inputMode) {
-                                        "poj" -> "qwerty_moe2_poj$suffix"
-                                        else -> "qwerty_moe2$suffix"
+                                        "poj" -> "qwerty_moe2_poj$moeSuffix"
+                                        else -> "qwerty_moe2$moeSuffix"
                                     }
                                 }
 
@@ -314,8 +312,7 @@ class LayoutManager(
                                 else -> {
                                     // Backward compatibility: fall back to the legacy phahTaigiLayoutEnabled flag.
                                     if (prefs.phahTaigiLayoutEnabled) {
-                                        val suffix = if (isTranslateSwapped) "fullwidth" else "halfwidth"
-                                        "qwerty_phah_taigi_$suffix"
+                                        "qwerty_phah_taigi_$modSuffix"
                                     } else {
                                         when (inputMode) {
                                             "poj" -> "qwerty_poj"
@@ -328,7 +325,7 @@ class LayoutManager(
                         }
                     }
                 logger.debug(TAG) {
-                    "[LAYOUT] Loading layout: $layoutName (inputMode=$inputMode, layoutType=${prefs.keyboardLayoutType}, isTranslateSwapped=$isTranslateSwapped)"
+                    "[LAYOUT] Loading layout: $layoutName (inputMode=$inputMode, layoutType=${prefs.keyboardLayoutType}, isFullWidthPunctuation=$isFullWidthPunctuation)"
                 }
                 main = LTN(LayoutType.CHARACTERS, layoutName)
                 val modifierName =
@@ -383,10 +380,10 @@ class LayoutManager(
 
         val result = mergeLayouts(keyboardMode, subtype, main, modifier, extension)
 
-        // 文/A only exists where there is a lead script to flip: under 漢羅濫 /
-        // 羅馬字 it is dropped from every mode's rows (characters + symbols mods
-        // all carry it) and SPACE (flexGrow 1) takes the freed width.
-        if (!prefs.candidateDisplayMode.allowsSwapToggle) {
+        // 文/A is dropped where it could flip nothing — 羅馬字 (always half-width)
+        // and TPS (always full-width) — from every mode's rows (characters +
+        // symbols mods all carry it) and SPACE (flexGrow 1) takes the freed width.
+        if (!prefs.candidateDisplayMode.allowsSwapToggle || prefs.isTpsLayout) {
             result.arrangement.forEach { row -> row.removeAll { it.code == KeyCode.TRANSLATE } }
         }
 
@@ -425,15 +422,15 @@ class LayoutManager(
      *
      * @param keyboardMode The keyboard mode for which the layout should be computed.
      * @param subtype The subtype which localizes the computed layout.
-     * @param overrideIsTranslateSwapped Optional override for isTranslateSwapped; takes precedence over the prefs value.
+     * @param overrideIsFullWidthPunctuation Optional override for isFullWidthPunctuation; takes precedence over the prefs value.
      * @return The computed layout data.
      */
     fun fetchComputedLayout(
         keyboardMode: KeyboardMode,
         subtype: Subtype,
-        overrideIsTranslateSwapped: Boolean? = null,
+        overrideIsFullWidthPunctuation: Boolean? = null,
         overrideInputMode: String? = null,
-    ): ComputedLayoutData = computeLayoutFor(keyboardMode, subtype, overrideIsTranslateSwapped, overrideInputMode)
+    ): ComputedLayoutData = computeLayoutFor(keyboardMode, subtype, overrideIsFullWidthPunctuation, overrideInputMode)
 
     /**
      * Fetches a layout for preview mode, always using Taigi mode (never English).
@@ -448,7 +445,7 @@ class LayoutManager(
         return computeLayoutFor(
             keyboardMode,
             subtype,
-            overrideIsTranslateSwapped = false,
+            overrideIsFullWidthPunctuation = false,
             overrideInputMode = previewInputMode,
         )
     }

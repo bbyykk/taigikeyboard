@@ -114,6 +114,8 @@ fun CandidateOverlayContent(
     isTPSLayout: Boolean,
     orMapsToER: Boolean,
     isTranslateSwapped: Boolean,
+    /** Lights the 文/A control button — the punctuation width it flips, not the candidate projection above. */
+    isFullWidthPunctuation: Boolean,
     candidateDisplayMode: CandidateDisplayMode,
     resetKey: Int,
     backgroundGradient: List<Int>?,
@@ -234,10 +236,10 @@ fun CandidateOverlayContent(
         ControlPanel(
             modifier = Modifier.align(Alignment.TopEnd),
             colors = colors,
-            // No 文/A where there is no lead script to flip: TPS (always hanzi)
-            // and the single-script display modes (漢羅濫 / 羅馬字).
+            // No 文/A under TPS (always hanzi, always full-width) or 羅馬字
+            // (always half-width); under 漢羅濫 it flips punctuation width.
             showTranslate = !isTPSLayout && candidateDisplayMode.allowsSwapToggle,
-            isTranslateActivated = isTranslateSwapped,
+            isTranslateActivated = isFullWidthPunctuation,
             onCollapse = onCollapse,
             onPageUp = {
                 val newStart = maxOf(0, currentPage * ITEMS_PER_PAGE - ITEMS_PER_PAGE)

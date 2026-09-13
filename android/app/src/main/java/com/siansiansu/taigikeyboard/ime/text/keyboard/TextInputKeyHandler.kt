@@ -142,7 +142,7 @@ internal class TextInputKeyHandler(
             }
 
             KeyCode.VIEW_NUMERIC_ADVANCED -> {
-                if (prefs.isTranslateSwapped && uiCoordinator.activeKeyboardMode == KeyboardMode.SYMBOLS) {
+                if (prefs.isFullWidthPunctuation && uiCoordinator.activeKeyboardMode == KeyboardMode.SYMBOLS) {
                     ic?.beginBatchEdit()
                     ic?.commitText("、", 1)
                     ic?.endBatchEdit()

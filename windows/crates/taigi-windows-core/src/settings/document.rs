@@ -204,12 +204,14 @@ impl SettingsDocument {
     pub fn engine_settings(&self) -> EngineSettings {
         let candidate_display_mode: CandidateDisplayMode =
             self.choice(&keys::CANDIDATE_DISPLAY_MODE);
+        let stored_swap = self.bool(&keys::IS_TRANSLATE_SWAPPED);
         EngineSettings {
             input_mode: self.choice(&keys::INPUT_MODE),
-            is_translate_swapped: candidate_display_mode
-                .effective_translate_swapped(self.bool(&keys::IS_TRANSLATE_SWAPPED)),
+            is_translate_swapped: candidate_display_mode.effective_translate_swapped(stored_swap),
             is_output_both_scripts: candidate_display_mode
                 .effective_output_both_scripts(self.bool(&keys::IS_OUTPUT_BOTH_SCRIPTS)),
+            is_full_width_punctuation: candidate_display_mode
+                .effective_full_width_punctuation(stored_swap),
             candidate_display_mode,
             is_literal_roman_candidate_enabled: self
                 .bool(&keys::IS_LITERAL_ROMAN_CANDIDATE_ENABLED),
@@ -420,7 +422,7 @@ mod tests {
         use CandidateDisplayMode::{Combined, RomanOnly, SideBySide};
         assert!(
             SideBySide.allows_swap_toggle()
-                && !Combined.allows_swap_toggle()
+                && Combined.allows_swap_toggle()
                 && !RomanOnly.allows_swap_toggle()
         );
         assert!(SideBySide.shows_hanji() && Combined.shows_hanji() && !RomanOnly.shows_hanji());
@@ -428,6 +430,37 @@ mod tests {
         assert!(!RomanOnly.effective_translate_swapped(true));
         assert!(!RomanOnly.effective_output_both_scripts(true));
         assert!(Combined.effective_output_both_scripts(true));
+        // Punctuation width follows the STORED swap under side-by-side /
+        // combined, never under roman-only.
+        assert!(!Combined.effective_full_width_punctuation(false));
+        assert!(Combined.effective_full_width_punctuation(true));
+        assert!(!RomanOnly.effective_full_width_punctuation(true));
+    }
+
+    /// Under combined the candidate projection stays swapped while the
+    /// punctuation width follows the stored flag the swap shortcut toggles.
+    #[test]
+    fn combined_punctuation_width_follows_the_stored_swap() {
+        let half = SettingsDocument::from_json(
+            r#"{"revision": 1, "values": {"candidateDisplayMode": "combined", "isTranslateSwapped": false}}"#,
+        )
+        .unwrap()
+        .engine_settings();
+        assert!(half.is_translate_swapped && !half.is_full_width_punctuation);
+
+        let full = SettingsDocument::from_json(
+            r#"{"revision": 1, "values": {"candidateDisplayMode": "combined", "isTranslateSwapped": true}}"#,
+        )
+        .unwrap()
+        .engine_settings();
+        assert!(full.is_translate_swapped && full.is_full_width_punctuation);
+
+        let roman_only = SettingsDocument::from_json(
+            r#"{"revision": 1, "values": {"candidateDisplayMode": "romanOnly", "isTranslateSwapped": true}}"#,
+        )
+        .unwrap()
+        .engine_settings();
+        assert!(!roman_only.is_full_width_punctuation);
     }
 
     #[test]

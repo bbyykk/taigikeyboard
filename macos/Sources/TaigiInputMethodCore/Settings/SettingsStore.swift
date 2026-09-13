@@ -353,10 +353,12 @@ final class SettingsStore: EngineSettingsProvider, @unchecked Sendable {
         // rules live on `CandidateDisplayMode` (§42). The stored values stay
         // put for the way back to side-by-side.
         let displayMode = candidateDisplayMode
+        let storedSwap = storedIsTranslateSwapped
         return EngineSettings(
             inputMode: inputMode,
-            isTranslateSwapped: displayMode.effectiveTranslateSwapped(stored: storedIsTranslateSwapped),
+            isTranslateSwapped: displayMode.effectiveTranslateSwapped(stored: storedSwap),
             isOutputBothScripts: displayMode.effectiveOutputBothScripts(stored: storedIsOutputBothScripts),
+            isFullWidthPunctuation: displayMode.effectiveFullWidthPunctuation(stored: storedSwap),
             candidateDisplayMode: displayMode,
             isLiteralRomanCandidateEnabled: bool(Keys.isLiteralRomanCandidateEnabled),
             isFrequencyRecordingEnabled: bool(Keys.isFrequencyRecordingEnabled),

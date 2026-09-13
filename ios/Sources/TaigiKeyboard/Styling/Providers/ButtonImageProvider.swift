@@ -29,7 +29,9 @@ final class ButtonImageProvider {
         case let .custom(name):
             switch name {
             case "translate":
-                let iconName = keyboardContext.isTranslateSwapped
+                // Lit when the layouts type full-width marks — what the key
+                // flips in every mode it is shown in.
+                let iconName = keyboardContext.isFullWidthPunctuation
                     ? "character.square.fill" // Active: filled
                     : "character.square" // Default: outlined
                 return Image(latinSystemName: iconName)

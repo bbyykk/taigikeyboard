@@ -215,6 +215,7 @@ enum TestFixtures {
             inputMode: inputMode,
             isTranslateSwapped: swapped,
             isOutputBothScripts: bothScripts,
+            isFullWidthPunctuation: swapped,
             candidateDisplayMode: candidateDisplayMode,
             // §34/S22 ships ON; a case that wants it off writes the real
             // setting with `withSetting`, which is the path production reads.

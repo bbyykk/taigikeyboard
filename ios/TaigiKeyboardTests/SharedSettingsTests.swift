@@ -352,12 +352,48 @@ final class SharedSettingsTests: XCTestCase {
     /// The rules the derived pair and the UI gates read live on the enum, so
     /// they are pinned once here rather than through every consumer.
     func test_candidateDisplayMode_rules_perMode() {
-        XCTAssertEqual(CandidateDisplayMode.allCases.filter(\.allowsSwapToggle), [.sideBySide])
+        XCTAssertEqual(CandidateDisplayMode.allCases.filter(\.allowsSwapToggle), [.sideBySide, .combined])
         XCTAssertEqual(CandidateDisplayMode.allCases.filter { !$0.showsHanji }, [.romanOnly])
         XCTAssertTrue(CandidateDisplayMode.combined.effectiveTranslateSwapped(stored: false))
         XCTAssertFalse(CandidateDisplayMode.romanOnly.effectiveTranslateSwapped(stored: true))
         XCTAssertFalse(CandidateDisplayMode.romanOnly.effectiveOutputBothScripts(stored: true))
         XCTAssertTrue(CandidateDisplayMode.combined.effectiveOutputBothScripts(stored: true))
+        // Punctuation width follows the STORED swap under 並排 / 漢羅濫, never under 羅馬字.
+        XCTAssertFalse(CandidateDisplayMode.combined.effectiveFullWidthPunctuation(stored: false))
+        XCTAssertTrue(CandidateDisplayMode.combined.effectiveFullWidthPunctuation(stored: true))
+        XCTAssertFalse(CandidateDisplayMode.romanOnly.effectiveFullWidthPunctuation(stored: true))
+        XCTAssertTrue(CandidateDisplayMode.sideBySide.effectiveFullWidthPunctuation(stored: true))
+    }
+
+    /// Under `.combined` the candidate projection stays swapped while the
+    /// punctuation width follows the stored flag the 文/A key toggles.
+    func test_candidateDisplayMode_combined_punctuationWidthFollowsStoredSwap() {
+        settings.candidateDisplayMode = .combined
+
+        settings.storedIsTranslateSwapped = false
+        XCTAssertTrue(settings.isTranslateSwapped, "projection stays hanji-first")
+        XCTAssertFalse(settings.isFullWidthPunctuation, "half-width until the key is tapped")
+
+        settings.storedIsTranslateSwapped = true
+        XCTAssertTrue(settings.isTranslateSwapped)
+        XCTAssertTrue(settings.isFullWidthPunctuation, "full-width after the key is tapped")
+
+        settings.candidateDisplayMode = .romanOnly
+        XCTAssertFalse(settings.isFullWidthPunctuation, "羅馬字 is always half-width")
+    }
+
+    /// TPS types Chinese: every page is full-width whatever the stored swap or
+    /// display mode says, and the stored swap is untouched for the way back.
+    func test_tpsLayout_isAlwaysFullWidthPunctuation() {
+        settings.storedIsTranslateSwapped = false
+        settings.candidateDisplayMode = .romanOnly
+        settings.keyboardLayoutType = .tps
+
+        XCTAssertTrue(settings.isFullWidthPunctuation, "TPS forces full-width")
+        XCTAssertFalse(settings.storedIsTranslateSwapped, "stored swap untouched")
+
+        settings.keyboardLayoutType = .phahTaigi
+        XCTAssertFalse(settings.isFullWidthPunctuation, "leaving TPS restores the derived width")
     }
 
     func test_candidateDisplayMode_storageContract_keyAndRawValues() {

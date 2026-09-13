@@ -27,7 +27,7 @@ internal class KeyboardAppearanceResolver(
     private val taigikeyboard: TaigiKeyboard,
     private val capsStateManager: CapsStateManager,
     private val isComposingProvider: () -> Boolean,
-    private val translateSwappedProvider: () -> Boolean,
+    private val fullWidthPunctuationProvider: () -> Boolean,
 ) {
     private val themeCache = ThemeAppearanceCache(prefs)
     private var cachedFontType: String = ""
@@ -44,7 +44,7 @@ internal class KeyboardAppearanceResolver(
             caps = capsStateManager.caps,
             capsLock = capsStateManager.capsLock,
             isComposing = isComposingProvider(),
-            isTranslateSwapped = translateSwappedProvider(),
+            isFullWidthPunctuation = fullWidthPunctuationProvider(),
             imeOptions = taigikeyboard.currentInputEditorInfo?.imeOptions ?: 0,
             confirmKeyLabel = KeyboardAppearance.confirmKeyLabel(prefs.inputMode, prefs.isTranslateSwapped),
             colorSettings = theme.colors,

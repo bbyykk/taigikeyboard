@@ -50,8 +50,9 @@ interface EngineSettings {
     /**
      * EFFECTIVE translate-swap: `true` under 漢羅濫, else stored AND mode != roman-only. The
      * stored read-write flag lives on the concrete implementation
-     * (`PrefHelper.storedIsTranslateSwapped`); engine / commit / layout
-     * readers must use this derived view.
+     * (`PrefHelper.storedIsTranslateSwapped`); engine / commit readers must
+     * use this derived view. Punctuation width is NOT this flag — the layout
+     * reads `PrefHelper.isFullWidthPunctuation` (stored swap, off under roman-only).
      */
     val isTranslateSwapped: Boolean
 

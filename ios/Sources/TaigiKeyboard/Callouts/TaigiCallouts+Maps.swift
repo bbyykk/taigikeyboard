@@ -90,10 +90,10 @@ public extension TaigiCallouts {
     /// MOE1 layout punctuation callouts (full-width variants)
     enum MOE1Callouts {
         static let actions: [String: [String]] = [
-            // Full-width keys (when isTranslateSwapped)
+            // Full-width keys (when isFullWidthPunctuation)
             "，": ["，", "、", "；", "："],
             "。": ["。", "！", "？", "…"],
-            // Half-width keys (when not isTranslateSwapped)
+            // Half-width keys (when not isFullWidthPunctuation)
             ",": ["，", "、", "；", "："],
             ".": ["。", "！", "？", "…"],
             // Parentheses (always half-width in MOE1 layout)
@@ -126,7 +126,7 @@ public extension TaigiCallouts {
 
     /// Symbol keyboard callouts (long-press alternatives for numeric & symbolic pages)
     /// Both half-width and full-width entries are needed because the actual character
-    /// depends on isTranslateSwapped state.
+    /// depends on isFullWidthPunctuation state.
     enum SymbolCallouts {
         static let actions: [String: [String]] = [
             // === Page 1 Row 1: High-frequency symbols ===
