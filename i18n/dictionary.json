@@ -14,8 +14,8 @@
       },
       "values": {
         "hanji": "清除",
-        "tailo": "tshing-tî",
-        "poj": "chheng-tî",
+        "tailo": "Tshing-tî",
+        "poj": "Chheng-tî",
         "en": "Clear",
         "ja": "クリア"
       }
@@ -35,8 +35,8 @@
       },
       "values": {
         "hanji": "儉起來",
-        "tailo": "khiām--khí-lâi",
-        "poj": "khiām--khí-lâi",
+        "tailo": "Khiām--khí-lâi",
+        "poj": "Khiām--khí-lâi",
         "en": "Save",
         "ja": "保存"
       }
@@ -56,8 +56,8 @@
       },
       "values": {
         "hanji": "自訂詞庫",
-        "tailo": "tsū-tīng-sû-khòo",
-        "poj": "chū-tēng-sû-khò͘",
+        "tailo": "Tsū-tīng-sû-khòo",
+        "poj": "Chū-tēng-sû-khò͘",
         "en": "Custom Dictionary",
         "ja": "カスタム辞書"
       }
@@ -77,8 +77,8 @@
       },
       "values": {
         "hanji": "啟用自訂詞庫",
-        "tailo": "khé-iōng tsū-tīng-sû-khòo",
-        "poj": "khé-iōng chū-tēng-sû-khò͘",
+        "tailo": "Khé-iōng tsū-tīng-sû-khòo",
+        "poj": "Khé-iōng chū-tēng-sû-khò͘",
         "en": "Enable Custom Dictionary",
         "ja": "カスタム辞書を有効にする"
       }
@@ -96,8 +96,8 @@
       },
       "values": {
         "hanji": "拍開了後，自訂詞會出現佇候選詞內底；關起來了後，就袂閣出現。",
-        "tailo": "phah-khui liáu-āu, tsū-tīng-sû ē tshut-hiān tī hāu-suán sû lāi-té; kuainn--khí-lâi liáu-āu, tsiū buē koh tshut-hiān.",
-        "poj": "phah-khui liáu-āu, chū-tēng-sû ē chhut-hiān tī hāu-soán sû lāi-té; koaiⁿ--khí-lâi liáu-āu, chiū bōe koh chhut-hiān.",
+        "tailo": "Phah-khui liáu-āu, tsū-tīng-sû ē tshut-hiān tī hāu-suán sû lāi-té; kuainn--khí-lâi liáu-āu, tsiū buē koh tshut-hiān.",
+        "poj": "Phah-khui liáu-āu, chū-tēng-sû ē chhut-hiān tī hāu-soán sû lāi-té; koaiⁿ--khí-lâi liáu-āu, chiū bōe koh chhut-hiān.",
         "en": "When on, words you add appear among the candidates. When off, your custom words no longer show up.",
         "ja": "オンにすると、追加した単語が候補に表示されます。オフにすると、カスタム単語は表示されなくなります。"
       }
@@ -115,8 +115,8 @@
       },
       "values": {
         "hanji": "使用資料",
-        "tailo": "sú-iōng tsu-liāu",
-        "poj": "sú-iōng chu-liāu",
+        "tailo": "Sú-iōng tsu-liāu",
+        "poj": "Sú-iōng chu-liāu",
         "en": "Keyboard Data",
         "ja": "キーボードデータ"
       }
@@ -136,8 +136,8 @@
       },
       "values": {
         "hanji": "異用字",
-        "tailo": "ī iōng-jī",
-        "poj": "ī iōng-jī",
+        "tailo": "Ī iōng-jī",
+        "poj": "Ī iōng-jī",
         "en": "Variant Characters",
         "ja": "異体字"
       }
@@ -157,8 +157,8 @@
       },
       "values": {
         "hanji": "在來字",
-        "tailo": "tsāi-lâi jī",
-        "poj": "chāi-lâi jī",
+        "tailo": "Tsāi-lâi jī",
+        "poj": "Chāi-lâi jī",
         "en": "Conventional Characters",
         "ja": "在来字"
       }
@@ -176,8 +176,8 @@
       },
       "values": {
         "hanji": "自訂詞庫使用 CSV 純文字檔案，第 1 欄囥欲拍 ê 羅馬字，第 2 欄囥漢字，毋免囥標題。",
-        "tailo": "tsū-tīng-sû-khòo sú-iōng CSV sûn bûn-jī tòng-àn, tē 1 lân khǹg beh phah ê lô-má-jī, tē 2 lân khǹg hàn-jī, m̄-bián khǹg piau-tê.",
-        "poj": "chū-tēng-sû-khò͘ sú-iōng CSV sûn bûn-jī tòng-àn, tē 1 lân khǹg beh phah ê lô-má-jī, tē 2 lân khǹg hàn-jī, m̄-bián khǹg piau-tê.",
+        "tailo": "Tsū-tīng-sû-khòo sú-iōng CSV sûn bûn-jī tòng-àn, tē 1 lân khǹg beh phah ê lô-má-jī, tē 2 lân khǹg hàn-jī, m̄-bián khǹg piau-tê.",
+        "poj": "Chū-tēng-sû-khò͘ sú-iōng CSV sûn bûn-jī tòng-àn, tē 1 lân khǹg beh phah ê lô-má-jī, tē 2 lân khǹg hàn-jī, m̄-bián khǹg piau-tê.",
         "en": "The custom dictionary uses a plain-text CSV file: column 1 holds the romanization to type, column 2 holds the Hanji. No header row.",
         "ja": "カスタム辞書はプレーンテキストの CSV ファイルを使用します。1 列目に入力するローマ字、2 列目に漢字を記入します。ヘッダー行は不要です。"
       }
@@ -197,8 +197,8 @@
       },
       "values": {
         "hanji": "揤 + 符號加入自訂詞",
-        "tailo": "tshi̍h + hû-hō ka-ji̍p tsū-tīng-sû",
-        "poj": "chhi̍h + hû-hō ka-ji̍p chū-tēng-sû",
+        "tailo": "Tshi̍h + hû-hō ka-ji̍p tsū-tīng-sû",
+        "poj": "Chhi̍h + hû-hō ka-ji̍p chū-tēng-sû",
         "en": "Tap + to add a custom word",
         "ja": "＋ をタップしてカスタム単語を追加"
       }
@@ -218,8 +218,8 @@
       },
       "values": {
         "hanji": "增加詞",
-        "tailo": "tsing-ka sû",
-        "poj": "cheng-ka sû",
+        "tailo": "Tsing-ka sû",
+        "poj": "Cheng-ka sû",
         "en": "Add Word",
         "ja": "単語を追加"
       }
@@ -239,8 +239,8 @@
       },
       "values": {
         "hanji": "編輯詞",
-        "tailo": "pian-tsi̍p sû",
-        "poj": "pian-chi̍p sû",
+        "tailo": "Pian-tsi̍p sû",
+        "poj": "Pian-chi̍p sû",
         "en": "Edit Word",
         "ja": "単語を編集"
       }
@@ -260,8 +260,8 @@
       },
       "values": {
         "hanji": "拍",
-        "tailo": "phah",
-        "poj": "phah",
+        "tailo": "Phah",
+        "poj": "Phah",
         "en": "Romanization",
         "ja": "ローマ字"
       }
@@ -279,8 +279,8 @@
       },
       "values": {
         "hanji": "見本：gâu-tsá",
-        "tailo": "kiàn-pún: gâu-tsá",
-        "poj": "kiàn-pún: gâu-chá",
+        "tailo": "Kiàn-pún: gâu-tsá",
+        "poj": "Kiàn-pún: gâu-chá",
         "en": "Example: 𠢕早",
         "ja": "例：gâu-tsá"
       }
@@ -300,8 +300,8 @@
       },
       "values": {
         "hanji": "揣",
-        "tailo": "tshuē",
-        "poj": "chhōe",
+        "tailo": "Tshuē",
+        "poj": "Chhōe",
         "en": "Hanji",
         "ja": "漢字"
       }
@@ -319,8 +319,8 @@
       },
       "values": {
         "hanji": "見本：𠢕早",
-        "tailo": "kiàn-pún: gâu-tsá",
-        "poj": "kiàn-pún: gâu-chá",
+        "tailo": "Kiàn-pún: gâu-tsá",
+        "poj": "Kiàn-pún: gâu-chá",
         "en": "Example: gâu-tsá",
         "ja": "例：𠢕早"
       }
@@ -340,8 +340,8 @@
       },
       "values": {
         "hanji": "刪除全部自訂詞",
-        "tailo": "san-tû tsuân-pōo tsū-tīng-sû",
-        "poj": "san-tû choân-pō͘ chū-tēng-sû",
+        "tailo": "San-tû tsuân-pōo tsū-tīng-sû",
+        "poj": "San-tû choân-pō͘ chū-tēng-sû",
         "en": "Delete All Custom Words",
         "ja": "すべてのカスタム単語を削除"
       }
@@ -360,8 +360,8 @@
       },
       "values": {
         "hanji": "敢確定欲刪除所有自訂詞？",
-        "tailo": "kám khak-tīng beh san-tû sóo-iú tsū-tīng-sû?",
-        "poj": "kám khak-tēng beh san-tû só͘-iú chū-tēng-sû?",
+        "tailo": "Kám khak-tīng beh san-tû sóo-iú tsū-tīng-sû?",
+        "poj": "Kám khak-tēng beh san-tû só͘-iú chū-tēng-sû?",
         "en": "Delete all custom words?",
         "ja": "すべてのカスタム単語を削除しますか？"
       }
@@ -379,8 +379,8 @@
       },
       "values": {
         "hanji": "自訂詞庫毋通囥身分證字號、密碼、信用卡號碼抑是其他敏感資料。",
-        "tailo": "tsū-tīng-sû-khòo m̄-thang khǹg sin-hūn-tsìng jī-hō, bi̍t-bé, sìn-iōng-khah hō-bé ah-sī kî-thann bín-kám tsu-liāu.",
-        "poj": "chū-tēng-sû-khò͘ m̄-thang khǹg sin-hūn-chèng jī-hō, bi̍t-bé, sìn-iōng-khah hō-bé ah-sī kî-thaⁿ bín-kám chu-liāu.",
+        "tailo": "Tsū-tīng-sû-khòo m̄-thang khǹg sin-hūn-tsìng jī-hō, bi̍t-bé, sìn-iōng-khah hō-bé ah-sī kî-thann bín-kám tsu-liāu.",
+        "poj": "Chū-tēng-sû-khò͘ m̄-thang khǹg sin-hūn-chèng jī-hō, bi̍t-bé, sìn-iōng-khah hō-bé ah-sī kî-thaⁿ bín-kám chu-liāu.",
         "en": "Do not store ID numbers, passwords, credit-card numbers, or other sensitive data in the custom dictionary.",
         "ja": "カスタム辞書には、身分証番号、パスワード、クレジットカード番号などの機密情報を保存しないでください。"
       }
@@ -400,8 +400,8 @@
       },
       "values": {
         "hanji": "匯入自訂詞",
-        "tailo": "huē-ji̍p tsū-tīng-sû",
-        "poj": "hōe-ji̍p chū-tēng-sû",
+        "tailo": "Huē-ji̍p tsū-tīng-sû",
+        "poj": "Hōe-ji̍p chū-tēng-sû",
         "en": "Import Custom Words",
         "ja": "カスタム単語をインポート"
       }
@@ -421,8 +421,8 @@
       },
       "values": {
         "hanji": "匯出自訂詞",
-        "tailo": "huē-tshut tsū-tīng-sû",
-        "poj": "hōe-chhut chū-tēng-sû",
+        "tailo": "Huē-tshut tsū-tīng-sû",
+        "poj": "Hōe-chhut chū-tēng-sû",
         "en": "Export Custom Words",
         "ja": "カスタム単語をエクスポート"
       }
@@ -465,8 +465,8 @@
       },
       "values": {
         "hanji": "成功匯入 {imported} 項，跳過 {skipped} 項",
-        "tailo": "sîng-kong huē-ji̍p {imported} hāng, thiàu-kuè {skipped} hāng",
-        "poj": "sêng-kong hōe-ji̍p {imported} hāng, thiàu-kòe {skipped} hāng",
+        "tailo": "Sîng-kong huē-ji̍p {imported} hāng, thiàu-kuè {skipped} hāng",
+        "poj": "Sêng-kong hōe-ji̍p {imported} hāng, thiàu-kòe {skipped} hāng",
         "en": "Imported {imported}, skipped {skipped}",
         "ja": "{imported} 件をインポート、{skipped} 件をスキップ"
       }
@@ -484,8 +484,8 @@
       },
       "values": {
         "hanji": "檔案格式無正確，請使用 CSV 格式",
-        "tailo": "tòng-àn keh-sik bô tsìng-khak, tshiánn sú-iōng CSV keh-sik",
-        "poj": "tòng-àn keh-sek bô chèng-khak, chhiáⁿ sú-iōng CSV keh-sek",
+        "tailo": "Tòng-àn keh-sik bô tsìng-khak, tshiánn sú-iōng CSV keh-sik",
+        "poj": "Tòng-àn keh-sek bô chèng-khak, chhiáⁿ sú-iōng CSV keh-sek",
         "en": "Invalid file format. Please use CSV.",
         "ja": "ファイル形式が正しくありません。CSV 形式を使用してください。"
       }
@@ -503,8 +503,8 @@
       },
       "values": {
         "hanji": "檔案傷大（上限 5 MB）",
-        "tailo": "tòng-àn siong tuā (siōng hān 5 MB)",
-        "poj": "tòng-àn siong tōa (siōng hān 5 MB)",
+        "tailo": "Tòng-àn siong tuā (siōng hān 5 MB)",
+        "poj": "Tòng-àn siong tōa (siōng hān 5 MB)",
         "en": "File too large (5 MB limit)",
         "ja": "ファイルが大きすぎます（上限 5 MB）"
       }
@@ -522,8 +522,8 @@
       },
       "values": {
         "hanji": "詞傷濟（上限 30,000 項）",
-        "tailo": "sû siunn-tse (siōng hān 30,000 hāng)",
-        "poj": "sû siuⁿ-che (siōng hān 30,000 hāng)",
+        "tailo": "Sû siunn-tse (siōng hān 30,000 hāng)",
+        "poj": "Sû siuⁿ-che (siōng hān 30,000 hāng)",
         "en": "Too many entries (30,000 limit)",
         "ja": "単語が多すぎます（上限 30,000 件）"
       }
@@ -541,8 +541,8 @@
       },
       "values": {
         "hanji": "匯入佮匯出",
-        "tailo": "huē-ji̍p kah huē-tshut",
-        "poj": "hōe-ji̍p kah hōe-chhut",
+        "tailo": "Huē-ji̍p kah huē-tshut",
+        "poj": "Hōe-ji̍p kah hōe-chhut",
         "en": "Import / Export",
         "ja": "インポート / エクスポート"
       }
@@ -560,8 +560,8 @@
       },
       "values": {
         "hanji": "匯出詞頻紀錄",
-        "tailo": "huē-tshut sû pîn kì-lio̍k",
-        "poj": "hōe-chhut sû pîn kì-lio̍k",
+        "tailo": "Huē-tshut sû pîn kì-lio̍k",
+        "poj": "Hōe-chhut sû pîn kì-lio̍k",
         "en": "Export Frequency Records",
         "ja": "単語頻度の記録をエクスポート"
       }
@@ -579,8 +579,8 @@
       },
       "values": {
         "hanji": "匯入詞頻紀錄",
-        "tailo": "huē-ji̍p sû pîn kì-lio̍k",
-        "poj": "hōe-ji̍p sû pîn kì-lio̍k",
+        "tailo": "Huē-ji̍p sû pîn kì-lio̍k",
+        "poj": "Hōe-ji̍p sû pîn kì-lio̍k",
         "en": "Import Frequency Records",
         "ja": "単語頻度の記録をインポート"
       }
@@ -598,8 +598,8 @@
       },
       "values": {
         "hanji": "詞頻紀錄使用 CSV 純文字檔案，共 3 欄：漢字、台羅、次數，毋免囥標題。舊版的「漢字、次數」2 欄格式嘛會當匯入。",
-        "tailo": "sû pîn kì-lio̍k sú-iōng CSV sûn bûn-jī tòng-àn, kā 3 lân: hàn-jī, tâi-lô, tshù-siàu, m̄-bián khǹg piau-tê. kū-pán ê \"hàn-jī, tshù-siàu\" 2 lân keh-sik mā ē-tàng huē-ji̍p.",
-        "poj": "sû pîn kì-lio̍k sú-iōng CSV sûn bûn-jī tòng-àn, kā 3 lân: hàn-jī, tâi-lô, chhù-siàu, m̄-bián khǹg piau-tê. kū-pán ê \"hàn-jī, chhù-siàu\" 2 lân keh-sek mā ē-tàng hōe-ji̍p.",
+        "tailo": "Sû pîn kì-lio̍k sú-iōng CSV sûn bûn-jī tòng-àn, kā 3 lân: hàn-jī, tâi-lô, tshù-siàu, m̄-bián khǹg piau-tê. Kū-pán ê \"hàn-jī, tshù-siàu\" 2 lân keh-sik mā ē-tàng huē-ji̍p.",
+        "poj": "Sû pîn kì-lio̍k sú-iōng CSV sûn bûn-jī tòng-àn, kā 3 lân: hàn-jī, tâi-lô, chhù-siàu, m̄-bián khǹg piau-tê. Kū-pán ê \"hàn-jī, chhù-siàu\" 2 lân keh-sek mā ē-tàng hōe-ji̍p.",
         "en": "Frequency records use a CSV text file with 3 columns: Hanji, Tâi-lô, and count. No header row. The legacy 2-column format, Hanji and count, is also accepted.",
         "ja": "単語頻度の記録は、漢字・台羅・回数の 3 列からなる CSV テキストファイルを使用します。ヘッダー行は不要です。旧形式の「漢字・回数」の 2 列もインポートできます。"
       }
@@ -617,8 +617,8 @@
       },
       "values": {
         "hanji": "匯出詞關聯紀錄",
-        "tailo": "huē-tshut sû kuan-liân kì-lio̍k",
-        "poj": "hōe-chhut sû koan-liân kì-lio̍k",
+        "tailo": "Huē-tshut sû kuan-liân kì-lio̍k",
+        "poj": "Hōe-chhut sû koan-liân kì-lio̍k",
         "en": "Export Association Records",
         "ja": "単語連携の記録をエクスポート"
       }
@@ -636,8 +636,8 @@
       },
       "values": {
         "hanji": "匯入詞關聯紀錄",
-        "tailo": "huē-ji̍p sû kuan-liân kì-lio̍k",
-        "poj": "hōe-ji̍p sû koan-liân kì-lio̍k",
+        "tailo": "Huē-ji̍p sû kuan-liân kì-lio̍k",
+        "poj": "Hōe-ji̍p sû koan-liân kì-lio̍k",
         "en": "Import Association Records",
         "ja": "単語連携の記録をインポート"
       }
@@ -655,8 +655,8 @@
       },
       "values": {
         "hanji": "詞關聯紀錄使用 CSV 純文字檔案，共 5 欄：頭前詞、頭前拍字、後壁詞、後壁拍字、次數，毋免囥標題。",
-        "tailo": "sû kuan-liân kì-lio̍k sú-iōng CSV sûn bûn-jī tòng-àn, kā 5 nuâ: thâu-tsîng sû, thâu-tsîng phah-jī, āu-piah sû, āu-piah phah-jī, tshù siàu, m̄-bián khǹg piau-tuê.",
-        "poj": "sû koan-liân kì-lio̍k sú-iōng CSV sûn bûn-jī tòng-àn, kā 5 nôa: thâu-chêng sû, thâu-chêng phah-jī, āu-piah sû, āu-piah phah-jī, chhù siàu, m̄-bián khǹg piau-tôe.",
+        "tailo": "Sû kuan-liân kì-lio̍k sú-iōng CSV sûn bûn-jī tòng-àn, kā 5 nuâ: thâu-tsîng sû, thâu-tsîng phah-jī, āu-piah sû, āu-piah phah-jī, tshù siàu, m̄-bián khǹg piau-tuê.",
+        "poj": "Sû koan-liân kì-lio̍k sú-iōng CSV sûn bûn-jī tòng-àn, kā 5 nôa: thâu-chêng sû, thâu-chêng phah-jī, āu-piah sû, āu-piah phah-jī, chhù siàu, m̄-bián khǹg piau-tôe.",
         "en": "Association records use a plain-text CSV file with 5 columns: previous word, previous romanization, next word, next romanization, count. No header row.",
         "ja": "単語連携の記録は 5 列のプレーンテキスト CSV ファイルを使用します：前の単語、前のローマ字、次の単語、次のローマ字、回数。ヘッダー行は不要です。"
       }
@@ -676,8 +676,8 @@
       },
       "values": {
         "hanji": "教育部用字",
-        "tailo": "kàu-io̍k-pōo iōng-jī",
-        "poj": "kàu-io̍k-pō͘ iōng-jī",
+        "tailo": "Kàu-io̍k-pōo iōng-jī",
+        "poj": "Kàu-io̍k-pō͘ iōng-jī",
         "en": "MOE Characters",
         "ja": "教育部の用字"
       }
@@ -697,8 +697,8 @@
       },
       "values": {
         "hanji": "其他辭典",
-        "tailo": "kî-thann sû-tián",
-        "poj": "kî-thaⁿ sû-tián",
+        "tailo": "Kî-thann sû-tián",
+        "poj": "Kî-thaⁿ sû-tián",
         "en": "Other Dictionaries",
         "ja": "その他の辞書"
       }
@@ -718,8 +718,8 @@
       },
       "values": {
         "hanji": "補充資料",
-        "tailo": "póo-tshiong tsu-liāu",
-        "poj": "pó͘-chhiong chu-liāu",
+        "tailo": "Póo-tshiong tsu-liāu",
+        "poj": "Pó͘-chhiong chu-liāu",
         "en": "Supplementary Data",
         "ja": "補足データ"
       }
@@ -739,8 +739,8 @@
       },
       "values": {
         "hanji": "漢羅合用建議用字",
-        "tailo": "hàn-lô ha̍h-īng kiàn-gī iōng-jī",
-        "poj": "hàn-lô ha̍h-ēng kiàn-gī iōng-jī",
+        "tailo": "Hàn-lô ha̍h-īng kiàn-gī iōng-jī",
+        "poj": "Hàn-lô ha̍h-ēng kiàn-gī iōng-jī",
         "en": "Han-Lo Recommended Characters",
         "ja": "漢羅併用 推奨用字"
       }
@@ -760,8 +760,8 @@
       },
       "values": {
         "hanji": "詞庫增補檔案",
-        "tailo": "sû khòo tsing-póo tòng-àn",
-        "poj": "sû khò͘ cheng-pó͘ tòng-àn",
+        "tailo": "Sû khòo tsing-póo tòng-àn",
+        "poj": "Sû khò͘ cheng-pó͘ tòng-àn",
         "en": "Supplementary Word List",
         "ja": "補足単語リスト"
       }
@@ -781,8 +781,8 @@
       },
       "values": {
         "hanji": "鹿港偏泉腔",
-        "tailo": "lo̍k-káng phian tsuân-khiunn",
-        "poj": "lo̍k-káng phian choân-khiuⁿ",
+        "tailo": "Lo̍k-káng phian tsuân-khiunn",
+        "poj": "Lo̍k-káng phian choân-khiuⁿ",
         "en": "Lukang (Quanzhou-leaning)",
         "ja": "鹿港（泉州寄り）"
       }
@@ -802,8 +802,8 @@
       },
       "values": {
         "hanji": "三峽偏泉腔",
-        "tailo": "sam-kiap phian tsuân-khiunn",
-        "poj": "sam-kiap phian choân-khiuⁿ",
+        "tailo": "Sam-kiap phian tsuân-khiunn",
+        "poj": "Sam-kiap phian choân-khiuⁿ",
         "en": "Sansia (Quanzhou-leaning)",
         "ja": "三峡（泉州寄り）"
       }
@@ -823,8 +823,8 @@
       },
       "values": {
         "hanji": "臺北偏泉腔",
-        "tailo": "tâi-pak phian tsuân-khiunn",
-        "poj": "tâi-pak phian choân-khiuⁿ",
+        "tailo": "Tâi-pak phian tsuân-khiunn",
+        "poj": "Tâi-pak phian choân-khiuⁿ",
         "en": "Taipei (Quanzhou-leaning)",
         "ja": "台北（泉州寄り）"
       }
@@ -844,8 +844,8 @@
       },
       "values": {
         "hanji": "宜蘭偏漳腔",
-        "tailo": "gî-lân phian tsiang-khiunn",
-        "poj": "gî-lân phian chiang-khiuⁿ",
+        "tailo": "Gî-lân phian tsiang-khiunn",
+        "poj": "Gî-lân phian chiang-khiuⁿ",
         "en": "Yilan (Zhangzhou-leaning)",
         "ja": "宜蘭（漳州寄り）"
       }
@@ -865,8 +865,8 @@
       },
       "values": {
         "hanji": "臺南混合腔",
-        "tailo": "tâi-lâm hūn-ha̍p khiunn",
-        "poj": "tâi-lâm hūn-ha̍p khiuⁿ",
+        "tailo": "Tâi-lâm hūn-ha̍p khiunn",
+        "poj": "Tâi-lâm hūn-ha̍p khiuⁿ",
         "en": "Tainan (Mixed)",
         "ja": "台南（混合）"
       }
@@ -886,8 +886,8 @@
       },
       "values": {
         "hanji": "高雄混合腔",
-        "tailo": "ko-hiông hūn-ha̍p khiunn",
-        "poj": "ko-hiông hūn-ha̍p khiuⁿ",
+        "tailo": "Ko-hiông hūn-ha̍p khiunn",
+        "poj": "Ko-hiông hūn-ha̍p khiuⁿ",
         "en": "Kaohsiung (Mixed)",
         "ja": "高雄（混合）"
       }
@@ -907,8 +907,8 @@
       },
       "values": {
         "hanji": "金門偏泉腔",
-        "tailo": "kim-mn̂g phian tsuân-khiunn",
-        "poj": "kim-mn̂g phian choân-khiuⁿ",
+        "tailo": "Kim-mn̂g phian tsuân-khiunn",
+        "poj": "Kim-mn̂g phian choân-khiuⁿ",
         "en": "Kinmen (Quanzhou-leaning)",
         "ja": "金門（泉州寄り）"
       }
@@ -928,8 +928,8 @@
       },
       "values": {
         "hanji": "馬公偏泉腔",
-        "tailo": "bé-kang phian tsuân-khiunn",
-        "poj": "bé-kang phian choân-khiuⁿ",
+        "tailo": "Bé-kang phian tsuân-khiunn",
+        "poj": "Bé-kang phian choân-khiuⁿ",
         "en": "Makung (Quanzhou-leaning)",
         "ja": "馬公（泉州寄り）"
       }
@@ -949,8 +949,8 @@
       },
       "values": {
         "hanji": "新竹偏泉腔",
-        "tailo": "sin-tik phian tsuân-khiunn",
-        "poj": "sin-tek phian choân-khiuⁿ",
+        "tailo": "Sin-tik phian tsuân-khiunn",
+        "poj": "Sin-tek phian choân-khiuⁿ",
         "en": "Hsinchu (Quanzhou-leaning)",
         "ja": "新竹（泉州寄り）"
       }
@@ -970,8 +970,8 @@
       },
       "values": {
         "hanji": "臺中偏漳腔",
-        "tailo": "tâi-tiong phian tsiang-khiunn",
-        "poj": "tâi-tiong phian chiang-khiuⁿ",
+        "tailo": "Tâi-tiong phian tsiang-khiunn",
+        "poj": "Tâi-tiong phian chiang-khiuⁿ",
         "en": "Taichung (Zhangzhou-leaning)",
         "ja": "台中（漳州寄り）"
       }
@@ -991,8 +991,8 @@
       },
       "values": {
         "hanji": "姓名附錄",
-        "tailo": "sènn-miâ hù-lio̍k",
-        "poj": "sèⁿ-miâ hù-lio̍k",
+        "tailo": "Sènn-miâ hù-lio̍k",
+        "poj": "Sèⁿ-miâ hù-lio̍k",
         "en": "Surname Appendix",
         "ja": "姓名付録"
       }
@@ -1012,8 +1012,8 @@
       },
       "values": {
         "hanji": "揣字",
-        "tailo": "tshuē jī",
-        "poj": "chhōe jī",
+        "tailo": "Tshuē jī",
+        "poj": "Chhōe jī",
         "en": "Type to search",
         "ja": "入力して検索"
       }
@@ -1033,8 +1033,8 @@
       },
       "values": {
         "hanji": "揣無結果",
-        "tailo": "tshuē-bô kiat-kó",
-        "poj": "chhōe-bô kiat-kó",
+        "tailo": "Tshuē-bô kiat-kó",
+        "poj": "Chhōe-bô kiat-kó",
         "en": "No results",
         "ja": "結果がありません"
       }
@@ -1075,8 +1075,8 @@
       },
       "values": {
         "hanji": "教育部辭典",
-        "tailo": "kàu-io̍k-pōo sû-tián",
-        "poj": "kàu-io̍k-pō͘ sû-tián",
+        "tailo": "Kàu-io̍k-pōo sû-tián",
+        "poj": "Kàu-io̍k-pō͘ sû-tián",
         "en": "MOE Dictionary",
         "ja": "教育部辞典"
       }
@@ -1094,8 +1094,8 @@
       },
       "values": {
         "hanji": "詞頻紀錄",
-        "tailo": "sû pîn kì-lio̍k",
-        "poj": "sû pîn kì-lio̍k",
+        "tailo": "Sû pîn kì-lio̍k",
+        "poj": "Sû pîn kì-lio̍k",
         "en": "Frequency Records",
         "ja": "単語頻度の記録"
       }
@@ -1113,8 +1113,8 @@
       },
       "values": {
         "hanji": "開啟詞頻紀錄",
-        "tailo": "khai-khé sû pîn kì-lio̍k",
-        "poj": "khai-khé sû pîn kì-lio̍k",
+        "tailo": "Khai-khé sû pîn kì-lio̍k",
+        "poj": "Khai-khé sû pîn kì-lio̍k",
         "en": "Record Word Frequency",
         "ja": "単語頻度を記録"
       }
@@ -1132,8 +1132,8 @@
       },
       "values": {
         "hanji": "拍開了後，齒盤會記錄各詞揀過幾擺，定定揀 ê 詞會排較頭前。",
-        "tailo": "phah-khui liáu-āu, khí-puânn ē kì-lio̍k kok ê sû kíng kuè kuí-pái, tiānn-tiānn kíng ê sû ē pâi khah thâu-tsîng.",
-        "poj": "phah-khui liáu-āu, khí-pôaⁿ ē kì-lio̍k kok ê sû kéng kòe kúi-pái, tiāⁿ-tiāⁿ kéng ê sû ē pâi khah thâu-chêng.",
+        "tailo": "Phah-khui liáu-āu, khí-puânn ē kì-lio̍k kok ê sû kíng kuè kuí-pái, tiānn-tiānn kíng ê sû ē pâi khah thâu-tsîng.",
+        "poj": "Phah-khui liáu-āu, khí-pôaⁿ ē kì-lio̍k kok ê sû kéng kòe kúi-pái, tiāⁿ-tiāⁿ kéng ê sû ē pâi khah thâu-chêng.",
         "en": "When on, the keyboard records how often you select each word. Frequently selected words move toward the front of the candidate list.",
         "ja": "オンにすると、各単語を選んだ回数を記録します。よく選ぶ単語は候補リストの前方に移動します。"
       }
@@ -1151,8 +1151,8 @@
       },
       "values": {
         "hanji": "詞關聯紀錄",
-        "tailo": "sû kuan-liân kì-lio̍k",
-        "poj": "sû koan-liân kì-lio̍k",
+        "tailo": "Sû kuan-liân kì-lio̍k",
+        "poj": "Sû koan-liân kì-lio̍k",
         "en": "Association Records",
         "ja": "単語連携の記録"
       }
@@ -1170,8 +1170,8 @@
       },
       "values": {
         "hanji": "開啟詞關聯紀錄",
-        "tailo": "khai-khé sû kuan-liân kì-lio̍k",
-        "poj": "khai-khé sû koan-liân kì-lio̍k",
+        "tailo": "Khai-khé sû kuan-liân kì-lio̍k",
+        "poj": "Khai-khé sû koan-liân kì-lio̍k",
         "en": "Record Word Associations",
         "ja": "単語連携を記録"
       }
@@ -1189,8 +1189,8 @@
       },
       "values": {
         "hanji": "拍開了後，齒盤會記錄詞佮詞 ê 前後關係，用來改善下一詞建議。",
-        "tailo": "phah-khui liáu-āu, khí-puânn ē kì-lio̍k sû kah sû ê tsiân-āu kuan-hē, iōng lâi kái-siān ē tsi̍t ê sû kiàn-gī.",
-        "poj": "phah-khui liáu-āu, khí-pôaⁿ ē kì-lio̍k sû kah sû ê chiân-āu koan-hē, iōng lâi kái-siān ē chi̍t ê sû kiàn-gī.",
+        "tailo": "Phah-khui liáu-āu, khí-puânn ē kì-lio̍k sû kah sû ê tsiân-āu kuan-hē, iōng lâi kái-siān ē tsi̍t ê sû kiàn-gī.",
+        "poj": "Phah-khui liáu-āu, khí-pôaⁿ ē kì-lio̍k sû kah sû ê chiân-āu koan-hē, iōng lâi kái-siān ē chi̍t ê sû kiàn-gī.",
         "en": "When on, the keyboard records which words follow each other to improve next-word suggestions.",
         "ja": "オンにすると、単語の前後関係を記録し、次の単語の候補に利用します。"
       }
@@ -1208,8 +1208,8 @@
       },
       "values": {
         "hanji": "詞頻紀錄可能會反映你揀過 ê 詞。匯出抑是分享進前，請先檢查敏感內容。關閉紀錄了後，齒盤袂閣學習你的候選詞排序。",
-        "tailo": "sû pîn kì-lio̍k khó-lîng ē huán-ìng lí kíng kuè ê sû. huē-tshut ah-sī hun-hióng tsìn-tsîng, tshiánn sian kiám-tsa bín-kám luē-iông. kuainn--khí-lâi liáu-āu, khí-puânn buē koh ha̍k-si̍p lí ê hāu-suán sû pâi-sī.",
-        "poj": "sû pîn kì-lio̍k khó-lêng ē hoán-èng lí kéng kòe ê sû. hōe-chhut ah-sī hun-hióng chìn-chêng, chhiáⁿ sian kiám-cha bín-kám lōe-iông. koaiⁿ--khí-lâi liáu-āu, khí-pôaⁿ bōe koh ha̍k-si̍p lí ê hāu-soán sû pâi-sī.",
+        "tailo": "Sû pîn kì-lio̍k khó-lîng ē huán-ìng lí kíng kuè ê sû. Huē-tshut ah-sī hun-hióng tsìn-tsîng, tshiánn sian kiám-tsa bín-kám luē-iông. Kuainn--khí-lâi liáu-āu, khí-puânn buē koh ha̍k-si̍p lí ê hāu-suán sû pâi-sī.",
+        "poj": "Sû pîn kì-lio̍k khó-lêng ē hoán-èng lí kéng kòe ê sû. Hōe-chhut ah-sī hun-hióng chìn-chêng, chhiáⁿ sian kiám-cha bín-kám lōe-iông. Koaiⁿ--khí-lâi liáu-āu, khí-pôaⁿ bōe koh ha̍k-si̍p lí ê hāu-soán sû pâi-sī.",
         "en": "Frequency records may reflect words you have selected. Check for sensitive content before exporting or sharing them. When recording is off, the keyboard stops learning your candidate ranking.",
         "ja": "単語頻度の記録には、選んだ単語が反映される場合があります。エクスポートや共有の前に、機密情報が含まれていないか確認してください。記録をオフにすると、候補の並び順を学習しなくなります。"
       }
@@ -1227,8 +1227,8 @@
       },
       "values": {
         "hanji": "刪除所有詞頻紀錄",
-        "tailo": "san-tû sóo-iú sû pîn kì-lio̍k",
-        "poj": "san-tû só͘-iú sû pîn kì-lio̍k",
+        "tailo": "San-tû sóo-iú sû pîn kì-lio̍k",
+        "poj": "San-tû só͘-iú sû pîn kì-lio̍k",
         "en": "Delete All Frequency Records",
         "ja": "すべての単語頻度の記録を削除"
       }
@@ -1246,8 +1246,8 @@
       },
       "values": {
         "hanji": "詞關聯紀錄可能會反映你拍過 ê 詞組。匯出抑是分享進前，請先檢查敏感內容。關閉紀錄了後，齒盤袂閣學習你的下一詞使用習慣。",
-        "tailo": "sû kuan-liân kì-lio̍k khó-lîng ē huán-ìng lí phah kuè ê sû-tsoo. huē-tshut ah-sī hun-hióng tsìn-tsîng, tshiánn sian kiám-tsa bín-kám luē-iông. kuainn--khí-lâi liáu-āu, khí-puânn buē koh ha̍k-si̍p lí ê ē tsi̍t ê sû sú-iōng si̍p-kuàn.",
-        "poj": "sû koan-liân kì-lio̍k khó-lêng ē hoán-èng lí phah kòe ê sû-cho͘. hōe-chhut ah-sī hun-hióng chìn-chêng, chhiáⁿ sian kiám-cha bín-kám lōe-iông. koaiⁿ--khí-lâi liáu-āu, khí-pôaⁿ bōe koh ha̍k-si̍p lí ê ē chi̍t ê sû sú-iōng si̍p-koàn.",
+        "tailo": "Sû kuan-liân kì-lio̍k khó-lîng ē huán-ìng lí phah kuè ê sû-tsoo. Huē-tshut ah-sī hun-hióng tsìn-tsîng, tshiánn sian kiám-tsa bín-kám luē-iông. Kuainn--khí-lâi liáu-āu, khí-puânn buē koh ha̍k-si̍p lí ê ē tsi̍t ê sû sú-iōng si̍p-kuàn.",
+        "poj": "Sû koan-liân kì-lio̍k khó-lêng ē hoán-èng lí phah kòe ê sû-cho͘. Hōe-chhut ah-sī hun-hióng chìn-chêng, chhiáⁿ sian kiám-cha bín-kám lōe-iông. Koaiⁿ--khí-lâi liáu-āu, khí-pôaⁿ bōe koh ha̍k-si̍p lí ê ē chi̍t ê sû sú-iōng si̍p-koàn.",
         "en": "Association records may reflect phrases you have typed. Check for sensitive content before exporting or sharing them. When recording is off, the keyboard stops learning your next-word habits.",
         "ja": "単語連携の記録には、入力した語句が反映される場合があります。エクスポートや共有の前に、機密情報が含まれていないか確認してください。記録をオフにすると、次の単語の使い方を学習しなくなります。"
       }
@@ -1265,8 +1265,8 @@
       },
       "values": {
         "hanji": "刪除所有詞關聯紀錄",
-        "tailo": "san-tû sóo-iú sû kuan-liân kì-lio̍k",
-        "poj": "san-tû só͘-iú sû koan-liân kì-lio̍k",
+        "tailo": "San-tû sóo-iú sû kuan-liân kì-lio̍k",
+        "poj": "San-tû só͘-iú sû koan-liân kì-lio̍k",
         "en": "Delete All Association Records",
         "ja": "すべての単語連携の記録を削除"
       }
@@ -1284,8 +1284,8 @@
       },
       "values": {
         "hanji": "確定欲刪除所有詞頻紀錄？",
-        "tailo": "khak-tīng beh san-tû sóo-iú sû pîn kì-lio̍k?",
-        "poj": "khak-tēng beh san-tû só͘-iú sû pîn kì-lio̍k?",
+        "tailo": "Khak-tīng beh san-tû sóo-iú sû pîn kì-lio̍k?",
+        "poj": "Khak-tēng beh san-tû só͘-iú sû pîn kì-lio̍k?",
         "en": "Delete all frequency records?",
         "ja": "すべての単語頻度の記録を削除しますか？"
       }
@@ -1303,8 +1303,8 @@
       },
       "values": {
         "hanji": "確定欲刪除所有詞關聯紀錄？",
-        "tailo": "khak-tīng beh san-tû sóo-iú sû kuan-liân kì-lio̍k?",
-        "poj": "khak-tēng beh san-tû só͘-iú sû koan-liân kì-lio̍k?",
+        "tailo": "Khak-tīng beh san-tû sóo-iú sû kuan-liân kì-lio̍k?",
+        "poj": "Khak-tēng beh san-tû só͘-iú sû koan-liân kì-lio̍k?",
         "en": "Delete all association records?",
         "ja": "すべての単語連携の記録を削除しますか？"
       }
@@ -1322,8 +1322,8 @@
       },
       "values": {
         "hanji": "無資料",
-        "tailo": "bô tsu-liāu",
-        "poj": "bô chu-liāu",
+        "tailo": "Bô tsu-liāu",
+        "poj": "Bô chu-liāu",
         "en": "No data",
         "ja": "データがありません"
       }
@@ -1341,8 +1341,8 @@
       },
       "values": {
         "hanji": "清單干焦顯示頭 100 項。欲揣其他紀錄，請用下跤 ê「揣字」。",
-        "tailo": "tshing-tuann kan-ta hián-sī thâu 100 hāng. beh tshuē kî-thann kì-lio̍k, tshiánn iōng ē-kha ê \"tshuē jī\".",
-        "poj": "chheng-toaⁿ kan-ta hián-sī thâu 100 hāng. beh chhōe kî-thaⁿ kì-lio̍k, chhiáⁿ iōng ē-kha ê \"chhōe jī\".",
+        "tailo": "Tshing-tuann kan-ta hián-sī thâu 100 hāng. Beh tshuē kî-thann kì-lio̍k, tshiánn iōng ē-kha ê \"tshuē jī\".",
+        "poj": "Chheng-toaⁿ kan-ta hián-sī thâu 100 hāng. Beh chhōe kî-thaⁿ kì-lio̍k, chhiáⁿ iōng ē-kha ê \"chhōe jī\".",
         "en": "The list shows the first 100 records. Use the \"Type to search\" field below to find other records.",
         "ja": "一覧には先頭の 100 件だけを表示します。ほかの記録は、下の「入力して検索」で検索してください。"
       }
@@ -1360,8 +1360,8 @@
       },
       "values": {
         "hanji": "備份復原",
-        "tailo": "pī-hūn ho̍k-guân",
-        "poj": "pī-hūn ho̍k-goân",
+        "tailo": "Pī-hūn ho̍k-guân",
+        "poj": "Pī-hūn ho̍k-goân",
         "en": "Backup and Restore",
         "ja": "バックアップと復元"
       }
@@ -1379,8 +1379,8 @@
       },
       "values": {
         "hanji": "一擺全出",
-        "tailo": "tsi̍t-pái tsuân tshut",
-        "poj": "chi̍t-pái choân chhut",
+        "tailo": "Tsi̍t-pái tsuân tshut",
+        "poj": "Chi̍t-pái choân chhut",
         "en": "Export All at Once",
         "ja": "すべてを一括エクスポート"
       }
@@ -1398,8 +1398,8 @@
       },
       "values": {
         "hanji": "一擺全入",
-        "tailo": "tsi̍t-pái tsuân ji̍p",
-        "poj": "chi̍t-pái choân ji̍p",
+        "tailo": "Tsi̍t-pái tsuân ji̍p",
+        "poj": "Chi̍t-pái choân ji̍p",
         "en": "Import All at Once",
         "ja": "すべてを一括インポート"
       }
@@ -1417,8 +1417,8 @@
       },
       "values": {
         "hanji": "備份順利匯出",
-        "tailo": "pī-hūn sūn-lī huē-tshut",
-        "poj": "pī-hūn sūn-lī hōe-chhut",
+        "tailo": "Pī-hūn sūn-lī huē-tshut",
+        "poj": "Pī-hūn sūn-lī hōe-chhut",
         "en": "Backup exported successfully",
         "ja": "バックアップをエクスポートしました"
       }
@@ -1441,8 +1441,8 @@
       },
       "values": {
         "hanji": "匯入 {customDict} 項自訂詞、{frequency} 項詞頻、{association} 項詞關聯",
-        "tailo": "huē-ji̍p {customDict} hāng tsū-tīng-sû,{frequency} hāng sû pîn,{association} hāng sû kuan-liân",
-        "poj": "hōe-ji̍p {customDict} hāng chū-tēng-sû,{frequency} hāng sû pîn,{association} hāng sû koan-liân",
+        "tailo": "Huē-ji̍p {customDict} hāng tsū-tīng-sû,{frequency} hāng sû pîn,{association} hāng sû kuan-liân",
+        "poj": "Hōe-ji̍p {customDict} hāng chū-tēng-sû,{frequency} hāng sû pîn,{association} hāng sû koan-liân",
         "en": "Imported {customDict, plural, one {# custom entry} other {# custom entries}}, {frequency, plural, one {# frequency record} other {# frequency records}}, {association, plural, one {# association record} other {# association records}}",
         "ja": "{customDict} 件のカスタム単語、{frequency} 件の単語頻度、{association} 件の単語連携をインポートしました"
       }
@@ -1460,8 +1460,8 @@
       },
       "values": {
         "hanji": "備份檔案包含自訂詞、詞頻佮詞關聯紀錄，會當佇 iOS 佮 Android 匯入。檔案可能包含私人內容，請妥當保管。",
-        "tailo": "pī-hūn tòng-àn pau-hâm tsū-tīng-sû, sû pîn kah sû kuan-liân kì-lio̍k, ē-tàng tī iOS kah Android huē-ji̍p. tòng-àn khó-lîng pau-hâm su-jîn luē-iông, tshiánn thò-tòng pó-kuán.",
-        "poj": "pī-hūn tòng-àn pau-hâm chū-tēng-sû, sû pîn kah sû koan-liân kì-lio̍k, ē-tàng tī iOS kah Android hōe-ji̍p. tòng-àn khó-lêng pau-hâm su-jîn lōe-iông, chhiáⁿ thò-tòng pó-koán.",
+        "tailo": "Pī-hūn tòng-àn pau-hâm tsū-tīng-sû, sû pîn kah sû kuan-liân kì-lio̍k, ē-tàng tī iOS kah Android huē-ji̍p. Tòng-àn khó-lîng pau-hâm su-jîn luē-iông, tshiánn thò-tòng pó-kuán.",
+        "poj": "Pī-hūn tòng-àn pau-hâm chū-tēng-sû, sû pîn kah sû koan-liân kì-lio̍k, ē-tàng tī iOS kah Android hōe-ji̍p. Tòng-àn khó-lêng pau-hâm su-jîn lōe-iông, chhiáⁿ thò-tòng pó-koán.",
         "en": "A backup contains your custom words, frequency records, and association records. You can import it on iOS or Android. Store the file securely because it may contain private content.",
         "ja": "バックアップには、カスタム単語、単語頻度、単語連携の記録が含まれます。iOS と Android のどちらでもインポートできます。個人的な内容が含まれる場合があるため、安全に保管してください。"
       }
@@ -1574,8 +1574,8 @@
       },
       "values": {
         "hanji": "補充政府機關、常見人名、行政區、數字、時間、日期佮其他教典較少收錄 ê 詞。",
-        "tailo": "póo-tshiong tsìng-hú ki-kuan, siông-kiàn jîn-miâ, hîng-tsìng-khu, sòo-jī, sî-kan, ji̍t-kî kah kî-thann kàu-tián khah tsió siu-lio̍k ê sû.",
-        "poj": "pó͘-chhiong chèng-hú ki-koan, siông-kiàn jîn-miâ, hêng-chèng-khu, sò͘-jī, sî-kan, ji̍t-kî kah kî-thaⁿ kàu-tián khah chió siu-lio̍k ê sû.",
+        "tailo": "Póo-tshiong tsìng-hú ki-kuan, siông-kiàn jîn-miâ, hîng-tsìng-khu, sòo-jī, sî-kan, ji̍t-kî kah kî-thann kàu-tián khah tsió siu-lio̍k ê sû.",
+        "poj": "Pó͘-chhiong chèng-hú ki-koan, siông-kiàn jîn-miâ, hêng-chèng-khu, sò͘-jī, sî-kan, ji̍t-kî kah kî-thaⁿ kàu-tián khah chió siu-lio̍k ê sû.",
         "en": "Adds government agencies, common names, administrative divisions, dates, times, numbers, and other words with limited coverage in the MOE Dictionary.",
         "ja": "政府機関、一般的な人名、行政区、日付、時刻、数字など、教育部辞典で収録の少ない語を補います。"
       }
@@ -1707,8 +1707,8 @@
       },
       "values": {
         "hanji": "補充「水台文」佮「台字田」使用 ê 在來字，拍開了後會加入候選詞。",
-        "tailo": "póo-tshiong \"Tsuí-tâi-bûn\" kah \"Tâi-jī-tshân\" sú-iōng ê tsāi-lâi jī, phah-khui liáu-āu ē ka-ji̍p hāu-suán sû.",
-        "poj": "pó͘-chhiong \"Chúi-tâi-bûn\" kah \"Tâi-jī-chhân\" sú-iōng ê chāi-lâi jī, phah-khui liáu-āu ē ka-ji̍p hāu-soán sû.",
+        "tailo": "Póo-tshiong \"Tsuí-tâi-bûn\" kah \"Tâi-jī-tshân\" sú-iōng ê tsāi-lâi jī, phah-khui liáu-āu ē ka-ji̍p hāu-suán sû.",
+        "poj": "Pó͘-chhiong \"Chúi-tâi-bûn\" kah \"Tâi-jī-chhân\" sú-iōng ê chāi-lâi jī, phah-khui liáu-āu ē ka-ji̍p hāu-soán sû.",
         "en": "Adds conventional characters used by Tsuí Tâi-bûn and Tâi-jī-tshân to candidate suggestions.",
         "ja": "「水台文」と「台字田」で使われる在来字を候補に追加します。"
       }
@@ -1728,8 +1728,8 @@
       },
       "values": {
         "hanji": "教典",
-        "tailo": "kàu-tián",
-        "poj": "kàu-tián",
+        "tailo": "Kàu-tián",
+        "poj": "Kàu-tián",
         "en": "MOE Dict",
         "ja": "教育部辞典"
       }
@@ -1749,8 +1749,8 @@
       },
       "values": {
         "hanji": "台語新詞",
-        "tailo": "tâi-gí sin-sû",
-        "poj": "tâi-gí sin-sû",
+        "tailo": "Tâi-gí sin-sû",
+        "poj": "Tâi-gí sin-sû",
         "en": "Taigi New Words",
         "ja": "台湾語新語"
       }
@@ -1791,8 +1791,8 @@
       },
       "values": {
         "hanji": "植物名彙",
-        "tailo": "si̍t-bu̍t bîng-luī",
-        "poj": "si̍t-bu̍t bêng-lūi",
+        "tailo": "Si̍t-bu̍t bîng-luī",
+        "poj": "Si̍t-bu̍t bêng-lūi",
         "en": "Plant Names",
         "ja": "植物名彙"
       }
@@ -1812,8 +1812,8 @@
       },
       "values": {
         "hanji": "台華對照",
-        "tailo": "tâi-huâ tuì-tsiàu",
-        "poj": "tâi-hôa tùi-chiàu",
+        "tailo": "Tâi-huâ tuì-tsiàu",
+        "poj": "Tâi-hôa tùi-chiàu",
         "en": "Taigi-Mandarin",
         "ja": "台華対照"
       }
@@ -1833,8 +1833,8 @@
       },
       "values": {
         "hanji": "臺日",
-        "tailo": "tâi-ji̍t",
-        "poj": "tâi-ji̍t",
+        "tailo": "Tâi-ji̍t",
+        "poj": "Tâi-ji̍t",
         "en": "Taigi-Japanese",
         "ja": "台日"
       }
@@ -1854,8 +1854,8 @@
       },
       "values": {
         "hanji": "工藝辭典",
-        "tailo": "kang-gē sû-tián",
-        "poj": "kang-gē sû-tián",
+        "tailo": "Kang-gē sû-tián",
+        "poj": "Kang-gē sû-tián",
         "en": "Craft Glossary",
         "ja": "工芸用語"
       }
@@ -1875,8 +1875,8 @@
       },
       "values": {
         "hanji": "學科術語",
-        "tailo": "ha̍k-kho su̍t-gí",
-        "poj": "ha̍k-kho su̍t-gí",
+        "tailo": "Ha̍k-kho su̍t-gí",
+        "poj": "Ha̍k-kho su̍t-gí",
         "en": "Academic Terms",
         "ja": "学術用語"
       }
@@ -1896,8 +1896,8 @@
       },
       "values": {
         "hanji": "漢羅合用",
-        "tailo": "hàn-lô ha̍h-īng",
-        "poj": "hàn-lô ha̍h-ēng",
+        "tailo": "Hàn-lô ha̍h-īng",
+        "poj": "Hàn-lô ha̍h-ēng",
         "en": "Han-Roman",
         "ja": "漢羅併用"
       }
