@@ -4087,7 +4087,7 @@ hanzi,tl,frequency,poj,tl_num,poj_num,tps_num,tps_num_var,tl_notone,poj_notone,t
 葵扇,khe-sìnn,5,khe-sìⁿ,khe1sinn3,khe1sinn3,ㄎㆤㄒㆪ˪,,khesinn,khesinn,ㄎㆤㄒㆪ,,ks,ks,ㄎㄒ,,True,False
 培,pē,4,pē,pe7,pe7,ㄅㆤ˫,,pe,pe,ㄅㆤ,,,,,,True,False
 背,pē,4,pē,pe7,pe7,ㄅㆤ˫,,pe,pe,ㄅㆤ,,,,,,True,False
-个,gê,2,gê,ge5,ge5,ㆣㆤˊ,,ge,ge,ㆣㆤ,,,,,,True,True
+个,gê,2,gê,ge5,ge5,ㆣㆤˊ,,ge,ge,ㆣㆤ,,,,,,True,False
 細本字,sè-pún-jī,2,sè-pún-jī,se3pun2ji7,se3pun2ji7,ㄙㆤ˪ㄅㄨㄣˋㆢㄧ˫,,sepunji,sepunji,ㄙㆤㄅㄨㄣㆢㄧ,,spj,spj,ㄙㄅㆢ,,True,False
 不二價,put-jī-kè,1,put-jī-kè,put4ji7ke3,put4ji7ke3,ㄅㄨㆵㆢㄧ˫ㄍㆤ˪,,putjike,putjike,ㄅㄨㆵㆢㄧㄍㆤ,,pjk,pjk,ㄅㆢㄍ,,True,False
 件,kiān,1,kiān,kian7,kian7,ㄍㄧㄢ˫,,kian,kian,ㄍㄧㄢ,,,,,,True,False
