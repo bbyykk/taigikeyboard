@@ -270,7 +270,7 @@ lâm,嵐,101,lâm,lam5,lam5,ㄌㆰˊ,,lam,lam,ㄌㆰ,,,,,,True,False
 khan-tshiú,牽手,101,khan-chhiú,khan1tshiu2,khan1chhiu2,ㄎㄢㄑㄧㄨˋ,,khantshiu,khanchhiu,ㄎㄢㄑㄧㄨ,,kt,kc,ㄎㄑ,,True,False
 bē-īng-tit,袂用得,101,bē-ēng-tit,be7ing7tit4,be7eng7tit4,ㆠㆤ˫ㄧㄥ˫ㄉㄧㆵ,,beingtit,beengtit,ㆠㆤㄧㄥㄉㄧㆵ,,bit,bet,ㆠㄧㄉ,,True,False
 gê,㤉,100,gê,ge5,ge5,ㆣㆤˊ,,ge,ge,ㆣㆤ,,,,,,True,False
-tsi̍t-ê,一个,100,chi̍t-ê,tsit8e5,chit8e5,ㄐㄧㆵ̇ㆤˊ,,tsite,chite,ㄐㄧㆵㆤ,,te,ce,ㄐㆤ,,True,True
+tsi̍t-ê,一个,100,chi̍t-ê,tsit8e5,chit8e5,ㄐㄧㆵ̇ㆤˊ,,tsite,chite,ㄐㄧㆵㆤ,,te,ce,ㄐㆤ,,True,False
 tsi̍t-pah,一百,100,chi̍t-pah,tsit8pah4,chit8pah4,ㄐㄧㆵ̇ㄅㄚㆷ,,tsitpah,chitpah,ㄐㄧㆵㄅㄚㆷ,,tp,cp,ㄐㄅ,,True,False
 tshit-tiám,七點,100,chhit-tiám,tshit4tiam2,chhit4tiam2,ㄑㄧㆵㄉㄧㆰˋ,,tshittiam,chhittiam,ㄑㄧㆵㄉㄧㆰ,,tt,ct,ㄑㄉ,,True,False
 sam-put-gōo-sî,三不五時,100,sam-put-gō͘-sî,sam1put4goo7si5,sam1put4goo7si5,ㄙㆰㄅㄨㆵㆣㆦ˫ㄒㄧˊ,,samputgoosi,samputgoosi,ㄙㆰㄅㄨㆵㆣㆦㄒㄧ,,spgs,spgs,ㄙㄅㆣㄒ,,True,False
@@ -5924,8 +5924,8 @@ thē-ái-tsúi,䖳仔水,16,thē-ái-chúi,the7ai2tsui2,the7ai2chui2,ㄊㆤ˫ㄞ
 lìm-tsi̍t-ē,䫐一下,16,lìm-chi̍t-ē,lim3tsit8e7,lim3chit8e7,ㄌㄧㆬ˪ㄐㄧㆵ̇ㆤ˫,,limtsite,limchite,ㄌㄧㆬㄐㄧㆵㆤ,,lte,lce,ㄌㄐㆤ,,True,False
 tsi̍t-ē-luî,一下雷,16,chi̍t-ē-lûi,tsit8e7lui5,chit8e7lui5,ㄐㄧㆵ̇ㆤ˫ㄌㄨㄧˊ,,tsitelui,chitelui,ㄐㄧㆵㆤㄌㄨㄧ,,tel,cel,ㄐㆤㄌ,,True,False
 it-put-tsok,一不作,16,it-put-chok,it4put4tsok4,it4put4chok4,ㄧㆵㄅㄨㆵㄗㆦㆻ,,itputtsok,itputchok,ㄧㆵㄅㄨㆵㄗㆦㆻ,,ipt,ipc,ㄧㄅㄗ,,True,False
-tsi̍t-ê-lâng,一个人,16,chi̍t-ê-lâng,tsit8e5lang5,chit8e5lang5,ㄐㄧㆵ̇ㆤˊㄌㄤˊ,,tsitelang,chitelang,ㄐㄧㆵㆤㄌㄤ,,tel,cel,ㄐㆤㄌ,,True,True
-tsi̍t-ê-so,一个挲,16,chi̍t-ê-so,tsit8e5so1,chit8e5so1,ㄐㄧㆵ̇ㆤˊㄙㄛ,,tsiteso,chiteso,ㄐㄧㆵㆤㄙㄛ,,tes,ces,ㄐㆤㄙ,,True,True
+tsi̍t-ê-lâng,一个人,16,chi̍t-ê-lâng,tsit8e5lang5,chit8e5lang5,ㄐㄧㆵ̇ㆤˊㄌㄤˊ,,tsitelang,chitelang,ㄐㄧㆵㆤㄌㄤ,,tel,cel,ㄐㆤㄌ,,True,False
+tsi̍t-ê-so,一个挲,16,chi̍t-ê-so,tsit8e5so1,chit8e5so1,ㄐㄧㆵ̇ㆤˊㄙㄛ,,tsiteso,chiteso,ㄐㄧㆵㆤㄙㄛ,,tes,ces,ㄐㆤㄙ,,True,False
 it-kiú-khàu,一九扣,16,it-kiú-khàu,it4kiu2khau3,it4kiu2khau3,ㄧㆵㄍㄧㄨˋㄎㄠ˪,,itkiukhau,itkiukhau,ㄧㆵㄍㄧㄨㄎㄠ,,ikk,ikk,ㄧㄍㄎ,,True,False
 tsi̍t-lâng-tì,一人智,16,chi̍t-lâng-tì,tsit8lang5ti3,chit8lang5ti3,ㄐㄧㆵ̇ㄌㄤˊㄉㄧ˪,,tsitlangti,chitlangti,ㄐㄧㆵㄌㄤㄉㄧ,,tlt,clt,ㄐㄌㄉ,,True,False
 tsi̍t-hun-tsing,一分鐘,16,chi̍t-hun-cheng,tsit8hun1tsing1,chit8hun1cheng1,ㄐㄧㆵ̇ㄏㄨㄣㄐㄧㄥ,,tsithuntsing,chithuncheng,ㄐㄧㆵㄏㄨㄣㄐㄧㄥ,,tht,chc,ㄐㄏㄐ,,True,False
@@ -5974,7 +5974,7 @@ tshit-sik-tôo,七色圖,16,chhit-sek-tô͘,tshit4sik4too5,chhit4sek4too5,ㄑㄧ
 tshit-hio̍h-lân,七葉蘭,16,chhit-hio̍h-lân,tshit4hioh8lan5,chhit4hioh8lan5,ㄑㄧㆵㄏㄧㄛㆷ̇ㄌㄢˊ,,tshithiohlan,chhithiohlan,ㄑㄧㆵㄏㄧㄛㆷㄌㄢ,,thl,chl,ㄑㄏㄌ,,True,False
 tshit-hō-á,七號仔,16,chhit-hō-á,tshit4ho7a2,chhit4ho7a2,ㄑㄧㆵㄏㄛ˫ㄚˋ,,tshithoa,chhithoa,ㄑㄧㆵㄏㄛㄚ,,tha,cha,ㄑㄏㄚ,,True,False
 sann-put-tíng,三不等,16,saⁿ-put-téng,sann1put4ting2,sann1put4teng2,ㄙㆩㄅㄨㆵㄉㄧㄥˋ,,sannputting,sannputteng,ㄙㆩㄅㄨㆵㄉㄧㄥ,,spt,spt,ㄙㄅㄉ,,True,False
-sann-ê-lâng,三个人,16,saⁿ-ê-lâng,sann1e5lang5,sann1e5lang5,ㄙㆩㆤˊㄌㄤˊ,,sannelang,sannelang,ㄙㆩㆤㄌㄤ,,sel,sel,ㄙㆤㄌ,,True,True
+sann-ê-lâng,三个人,16,saⁿ-ê-lâng,sann1e5lang5,sann1e5lang5,ㄙㆩㆤˊㄌㄤˊ,,sannelang,sannelang,ㄙㆩㆤㄌㄤ,,sel,sel,ㄙㆤㄌ,,True,False
 sam-sian-tâi,三仙台,16,sam-sian-tâi,sam1sian1tai5,sam1sian1tai5,ㄙㆰㄒㄧㄢㄉㄞˊ,,samsiantai,samsiantai,ㄙㆰㄒㄧㄢㄉㄞ,,sst,sst,ㄙㄒㄉ,,True,False
 sam-ho̍k-thinn,三伏天,16,sam-ho̍k-thiⁿ,sam1hok8thinn1,sam1hok8thinn1,ㄙㆰㄏㆦㆻ̇ㄊㆪ,,samhokthinn,samhokthinn,ㄙㆰㄏㆦㆻㄊㆪ,,sht,sht,ㄙㄏㄊ,,True,False
 sam-pat-tsi,三八膣,16,sam-pat-chi,sam1pat4tsi1,sam1pat4chi1,ㄙㆰㄅㄚㆵㄐㄧ,,sampattsi,sampatchi,ㄙㆰㄅㄚㆵㄐㄧ,,spt,spc,ㄙㄅㄐ,,True,False
@@ -6038,7 +6038,7 @@ tsiūnn-lī-tiàu,上離吊,16,chiūⁿ-lī-tiàu,tsiunn7li7tiau3,chiunn7li7tiau
 siâng-thâu-á,上頭仔,16,siâng-thâu-á,siang5thau5a2,siang5thau5a2,ㄒㄧㄤˊㄊㄠˊㄚˋ,,siangthaua,siangthaua,ㄒㄧㄤㄊㄠㄚ,,sta,sta,ㄒㄊㄚ,,True,False
 sîng-thâu-á,上頭仔,16,sêng-thâu-á,sing5thau5a2,seng5thau5a2,ㄒㄧㄥˊㄊㄠˊㄚˋ,,singthaua,sengthaua,ㄒㄧㄥㄊㄠㄚ,,sta,sta,ㄒㄊㄚ,,True,False
 siōng-go̍k-kut,上顎骨,16,siōng-go̍k-kut,siong7gok8kut4,siong7gok8kut4,ㄒㄧㆲ˫ㆣㆦㆻ̇ㄍㄨㆵ,,sionggokkut,sionggokkut,ㄒㄧㆲㆣㆦㆻㄍㄨㆵ,,sgk,sgk,ㄒㆣㄍ,,True,False
-ē-tsi̍t-ê,下一个,16,ē-chi̍t-ê,e7tsit8e5,e7chit8e5,ㆤ˫ㄐㄧㆵ̇ㆤˊ,,etsite,echite,ㆤㄐㄧㆵㆤ,,ete,ece,ㆤㄐㆤ,,True,True
+ē-tsi̍t-ê,下一个,16,ē-chi̍t-ê,e7tsit8e5,e7chit8e5,ㆤ˫ㄐㄧㆵ̇ㆤˊ,,etsite,echite,ㆤㄐㄧㆵㆤ,,ete,ece,ㆤㄐㆤ,,True,False
 ē-tsi̍t-iân,下一沿,16,ē-chi̍t-iân,e7tsit8ian5,e7chit8ian5,ㆤ˫ㄐㄧㆵ̇ㄧㄢˊ,,etsitian,echitian,ㆤㄐㄧㆵㄧㄢ,,eti,eci,ㆤㄐㄧ,,True,False
 ē-tsi̍t-tsām,下一站,16,ē-chi̍t-chām,e7tsit8tsam7,e7chit8cham7,ㆤ˫ㄐㄧㆵ̇ㄗㆰ˫,,etsittsam,echitcham,ㆤㄐㄧㆵㄗㆰ,,ett,ecc,ㆤㄐㄗ,,True,False
 hā-ngóo-tê,下午茶,16,hā-ngó͘-tê,ha7ngoo2te5,ha7ngoo2te5,ㄏㄚ˫ㄫㆦˋㄉㆤˊ,,hangoote,hangoote,ㄏㄚㄫㆦㄉㆤ,,hnt,hnt,ㄏㄫㄉ,,True,False
@@ -6093,7 +6093,7 @@ sīng-àm-oo,乘暗烏,16,sēng-àm-o͘,sing7am3oo1,seng7am3oo1,ㄒㄧㄥ˫ㆰ˪
 it-thài-hng,乙太坊,16,it-thài-hng,it4thai3hng1,it4thai3hng1,ㄧㆵㄊㄞ˪ㄏㆭ,,itthaihng,itthaihng,ㄧㆵㄊㄞㄏㆭ,,ith,ith,ㄧㄊㄏ,,True,False
 it-thài-hong,乙太坊,16,it-thài-hong,it4thai3hong1,it4thai3hong1,ㄧㆵㄊㄞ˪ㄏㆲ,,itthaihong,itthaihong,ㄧㆵㄊㄞㄏㆲ,,ith,ith,ㄧㄊㄏ,,True,False
 it-thài-pè,乙太幣,16,it-thài-pè,it4thai3pe3,it4thai3pe3,ㄧㆵㄊㄞ˪ㄅㆤ˪,,itthaipe,itthaipe,ㄧㆵㄊㄞㄅㆤ,,itp,itp,ㄧㄊㄅ,,True,False
-káu-ê-bué,九个尾,16,káu-ê-bóe,kau2e5bue2,kau2e5boe2,ㄍㄠˋㆤˊㆠㄨㆤˋ,,kauebue,kaueboe,ㄍㄠㆤㆠㄨㆤ,,keb,keb,ㄍㆤㆠ,,True,True
+káu-ê-bué,九个尾,16,káu-ê-bóe,kau2e5bue2,kau2e5boe2,ㄍㄠˋㆤˊㆠㄨㆤˋ,,kauebue,kaueboe,ㄍㄠㆤㆠㄨㆤ,,keb,keb,ㄍㆤㆠ,,True,False
 kiú-kiú-suàn,九九算,16,kiú-kiú-soàn,kiu2kiu2suan3,kiu2kiu2soan3,ㄍㄧㄨˋㄍㄧㄨˋㄙㄨㄢ˪,,kiukiusuan,kiukiusoan,ㄍㄧㄨㄍㄧㄨㄙㄨㄢ,,kks,kks,ㄍㄍㄙ,,True,False
 káu-hun-á,九份仔,16,káu-hun-á,kau2hun1a2,kau2hun1a2,ㄍㄠˋㄏㄨㄣㄚˋ,,kauhuna,kauhuna,ㄍㄠㄏㄨㄣㄚ,,kha,kha,ㄍㄏㄚ,,True,False
 káu-bué-kim,九尾金,16,káu-bóe-kim,kau2bue2kim1,kau2boe2kim1,ㄍㄠˋㆠㄨㆤˋㄍㄧㆬ,,kaubuekim,kauboekim,ㄍㄠㆠㄨㆤㄍㄧㆬ,,kbk,kbk,ㄍㆠㄍ,,True,False
@@ -6387,7 +6387,7 @@ kong-ke-la̍p,公家納,16,kong-ke-la̍p,kong1ke1lap8,kong1ke1lap8,ㄍㆲㄍㆤ�
 kong-tsìng-si,公眾私,16,kong-chèng-si,kong1tsing3si1,kong1cheng3si1,ㄍㆲㄐㄧㄥ˪ㄒㄧ,,kongtsingsi,kongchengsi,ㄍㆲㄐㄧㄥㄒㄧ,,kts,kcs,ㄍㄐㄒ,,True,False
 kong-thiann-huē,公聽會,16,kong-thiaⁿ-hōe,kong1thiann1hue7,kong1thiann1hoe7,ㄍㆲㄊㄧㆩㄏㄨㆤ˫,,kongthiannhue,kongthiannhoe,ㄍㆲㄊㄧㆩㄏㄨㆤ,,kth,kth,ㄍㄊㄏ,,True,False
 kong-tshia-liông,公車龍,16,kong-chhia-liông,kong1tshia1liong5,kong1chhia1liong5,ㄍㆲㄑㄧㄚㄌㄧㆲˊ,,kongtshialiong,kongchhialiong,ㄍㆲㄑㄧㄚㄌㄧㆲ,,ktl,kcl,ㄍㄑㄌ,,True,False
-la̍k-ê-ba̍k,六个目,16,la̍k-ê-ba̍k,lak8e5bak8,lak8e5bak8,ㄌㄚㆻ̇ㆤˊㆠㄚㆻ̇,,lakebak,lakebak,ㄌㄚㆻㆤㆠㄚㆻ,,leb,leb,ㄌㆤㆠ,,True,True
+la̍k-ê-ba̍k,六个目,16,la̍k-ê-ba̍k,lak8e5bak8,lak8e5bak8,ㄌㄚㆻ̇ㆤˊㆠㄚㆻ̇,,lakebak,lakebak,ㄌㄚㆻㆤㆠㄚㆻ,,leb,leb,ㄌㆤㆠ,,True,False
 la̍k-bué-âng,六尾紅,16,la̍k-bóe-âng,lak8bue2ang5,lak8boe2ang5,ㄌㄚㆻ̇ㆠㄨㆤˋㄤˊ,,lakbueang,lakboeang,ㄌㄚㆻㆠㄨㆤㄤ,,lba,lba,ㄌㆠㄤ,,True,False
 la̍k-ki-bué,六支尾,16,la̍k-ki-bóe,lak8ki1bue2,lak8ki1boe2,ㄌㄚㆻ̇ㄍㄧㆠㄨㆤˋ,,lakkibue,lakkiboe,ㄌㄚㆻㄍㄧㆠㄨㆤ,,lkb,lkb,ㄌㄍㆠ,,True,False
 la̍k-kènn-tshn̂g,六桱床,16,la̍k-kèⁿ-chhn̂g,lak8kenn3tshng5,lak8kenn3chhng5,ㄌㄚㆻ̇ㄍㆥ˪ㄘㆭˊ,,lakkenntshng,lakkennchhng,ㄌㄚㆻㄍㆥㄘㆭ,,lkt,lkc,ㄌㄍㄘ,,True,False
@@ -7028,7 +7028,7 @@ to-gí-giân,多語言,16,to-gí-giân,to1gi2gian5,to1gi2gian5,ㄉㄛㆣㄧˋㆣ
 iā-pô-kiap,夜婆俠,16,iā-pô-kiap,ia7po5kiap4,ia7po5kiap4,ㄧㄚ˫ㄅㄛˊㄍㄧㄚㆴ,,iapokiap,iapokiap,ㄧㄚㄅㄛㄍㄧㄚㆴ,,ipk,ipk,ㄧㄅㄍ,,True,False
 hué-kì-bóo,夥計某,16,hóe-kì-bó͘,hue2ki3boo2,hoe2ki3boo2,ㄏㄨㆤˋㄍㄧ˪ㆠㆦˋ,,huekiboo,hoekiboo,ㄏㄨㆤㄍㄧㆠㆦ,,hkb,hkb,ㄏㄍㆠ,,True,False
 tuā-it-thóng,大一統,16,tōa-it-thóng,tua7it4thong2,toa7it4thong2,ㄉㄨㄚ˫ㄧㆵㄊㆲˋ,,tuaitthong,toaitthong,ㄉㄨㄚㄧㆵㄊㆲ,,tit,tit,ㄉㄧㄊ,,True,True
-tuā--ê,大个,16,tōa--ê,tua7e5,toa7e5,ㄉㄨㄚ˫ㆤˊ,,tuae,toae,ㄉㄨㄚㆤ,,te,te,ㄉㆤ,,True,True
+tuā--ê,大个,16,tōa--ê,tua7e5,toa7e5,ㄉㄨㄚ˫ㆤˊ,,tuae,toae,ㄉㄨㄚㆤ,,te,te,ㄉㆤ,,True,False
 tuā-lâng-khí,大人齒,16,tōa-lâng-khí,tua7lang5khi2,toa7lang5khi2,ㄉㄨㄚ˫ㄌㄤˊㄎㄧˋ,,tualangkhi,toalangkhi,ㄉㄨㄚㄌㄤㄎㄧ,,tlk,tlk,ㄉㄌㄎ,,True,False
 tuā-sio̍k-buē,大俗賣,16,tōa-sio̍k-bōe,tua7siok8bue7,toa7siok8boe7,ㄉㄨㄚ˫ㄒㄧㆦㆻ̇ㆠㄨㆤ˫,,tuasiokbue,toasiokboe,ㄉㄨㄚㄒㄧㆦㆻㆠㄨㆤ,,tsb,tsb,ㄉㄒㆠ,,True,False
 tuā-sio̍k-bē,大俗賣,16,tōa-sio̍k-bē,tua7siok8be7,toa7siok8be7,ㄉㄨㄚ˫ㄒㄧㆦㆻ̇ㆠㆤ˫,,tuasiokbe,toasiokbe,ㄉㄨㄚㄒㄧㆦㆻㆠㆤ,,tsb,tsb,ㄉㄒㆠ,,True,False
@@ -7083,7 +7083,7 @@ tua-khiong-tíng,大穹頂,16,toa-khiong-téng,tua1khiong1ting2,toa1khiong1teng2
 tuā-kiong-tíng,大穹頂,16,tōa-kiong-téng,tua7kiong1ting2,toa7kiong1teng2,ㄉㄨㄚ˫ㄍㄧㆲㄉㄧㄥˋ,,tuakiongting,toakiongteng,ㄉㄨㄚㄍㄧㆲㄉㄧㄥ,,tkt,tkt,ㄉㄍㄉ,,True,False
 tuā-pūn-tsing,大笨鐘,16,tōa-pūn-cheng,tua7pun7tsing1,toa7pun7cheng1,ㄉㄨㄚ˫ㄅㄨㄣ˫ㄐㄧㄥ,,tuapuntsing,toapuncheng,ㄉㄨㄚㄅㄨㄣㄐㄧㄥ,,tpt,tpc,ㄉㄅㄐ,,True,False
 tuā-khoo-ting,大箍丁,16,tōa-kho͘-teng,tua7khoo1ting1,toa7khoo1teng1,ㄉㄨㄚ˫ㄎㆦㄉㄧㄥ,,tuakhooting,toakhooteng,ㄉㄨㄚㄎㆦㄉㄧㄥ,,tkt,tkt,ㄉㄎㄉ,,True,False
-tuā-khoo-ê,大箍个,16,tōa-kho͘-ê,tua7khoo1e5,toa7khoo1e5,ㄉㄨㄚ˫ㄎㆦㆤˊ,,tuakhooe,toakhooe,ㄉㄨㄚㄎㆦㆤ,,tke,tke,ㄉㄎㆤ,,True,True
+tuā-khoo-ê,大箍个,16,tōa-kho͘-ê,tua7khoo1e5,toa7khoo1e5,ㄉㄨㄚ˫ㄎㆦㆤˊ,,tuakhooe,toakhooe,ㄉㄨㄚㄎㆦㆤ,,tke,tke,ㄉㄎㆤ,,True,False
 tuā-khoo-lâng,大箍人,16,tōa-kho͘-lâng,tua7khoo1lang5,toa7khoo1lang5,ㄉㄨㄚ˫ㄎㆦㄌㄤˊ,,tuakhoolang,toakhoolang,ㄉㄨㄚㄎㆦㄌㄤ,,tkl,tkl,ㄉㄎㄌ,,True,False
 tuā-kóng-sian,大管仙,16,tōa-kóng-sian,tua7kong2sian1,toa7kong2sian1,ㄉㄨㄚ˫ㄍㆲˋㄒㄧㄢ,,tuakongsian,toakongsian,ㄉㄨㄚㄍㆲㄒㄧㄢ,,tks,tks,ㄉㄍㄒ,,True,False
 tuā-kóng-hun,大管薰,16,tōa-kóng-hun,tua7kong2hun1,toa7kong2hun1,ㄉㄨㄚ˫ㄍㆲˋㄏㄨㄣ,,tuakonghun,toakonghun,ㄉㄨㄚㄍㆲㄏㄨㄣ,,tkh,tkh,ㄉㄍㄏ,,True,False
@@ -7167,7 +7167,7 @@ thài-bú-suann,太姥山,16,thài-bú-soaⁿ,thai3bu2suann1,thai3bu2soann1,ㄊ�
 thài-pîng-tóo,太平島,16,thài-pêng-tó͘,thai3ping5too2,thai3peng5too2,ㄊㄞ˪ㄅㄧㄥˊㄉㆦˋ,,thaipingtoo,thaipengtoo,ㄊㄞㄅㄧㄥㄉㆦ,,tpt,tpt,ㄊㄅㄉ,,True,False
 thài-suè-tshenn,太歲星,16,thài-sòe-chheⁿ,thai3sue3tshenn1,thai3soe3chhenn1,ㄊㄞ˪ㄙㄨㆤ˪ㄘㆥ,,thaisuetshenn,thaisoechhenn,ㄊㄞㄙㄨㆤㄘㆥ,,tst,tsc,ㄊㄙㄘ,,True,False
 thài-suè-tshinn,太歲星,16,thài-sòe-chhiⁿ,thai3sue3tshinn1,thai3soe3chhinn1,ㄊㄞ˪ㄙㄨㆤ˪ㄑㆪ,,thaisuetshinn,thaisoechhinn,ㄊㄞㄙㄨㆤㄑㆪ,,tst,tsc,ㄊㄙㄑ,,True,False
-thài-tsóo-ê,太祖个,16,thài-chó͘-ê,thai3tsoo2e5,thai3choo2e5,ㄊㄞ˪ㄗㆦˋㆤˊ,,thaitsooe,thaichooe,ㄊㄞㄗㆦㆤ,,tte,tce,ㄊㄗㆤ,,True,True
+thài-tsóo-ê,太祖个,16,thài-chó͘-ê,thai3tsoo2e5,thai3choo2e5,ㄊㄞ˪ㄗㆦˋㆤˊ,,thaitsooe,thaichooe,ㄊㄞㄗㆦㆤ,,tte,tce,ㄊㄗㆤ,,True,False
 thài-khong-so,太空梭,16,thài-khong-so,thai3khong1so1,thai3khong1so1,ㄊㄞ˪ㄎㆲㄙㄛ,,thaikhongso,thaikhongso,ㄊㄞㄎㆲㄙㄛ,,tks,tks,ㄊㄎㄙ,,True,False
 thài-khong-tsûn,太空船,16,thài-khong-chûn,thai3khong1tsun5,thai3khong1chun5,ㄊㄞ˪ㄎㆲㄗㄨㄣˊ,,thaikhongtsun,thaikhongchun,ㄊㄞㄎㆲㄗㄨㄣ,,tkt,tkc,ㄊㄎㄗ,,True,False
 thài-khong-sann,太空衫,16,thài-khong-saⁿ,thai3khong1sann1,thai3khong1sann1,ㄊㄞ˪ㄎㆲㄙㆩ,,thaikhongsann,thaikhongsann,ㄊㄞㄎㆲㄙㆩ,,tks,tks,ㄊㄎㄙ,,True,False
@@ -7573,8 +7573,8 @@ iánn-gîn-hâng,影銀行,16,iáⁿ-gîn-hâng,iann2gin5hang5,iann2gin5hang5,�
 hit-sî-tsūn,彼時陣,16,hit-sî-chūn,hit4si5tsun7,hit4si5chun7,ㄏㄧㆵㄒㄧˊㄗㄨㄣ˫,,hitsitsun,hitsichun,ㄏㄧㆵㄒㄧㄗㄨㄣ,,hst,hsc,ㄏㄒㄗ,,True,False
 hit-tang-sî,彼當時,16,hit-tang-sî,hit4tang1si5,hit4tang1si5,ㄏㄧㆵㄉㄤㄒㄧˊ,,hittangsi,hittangsi,ㄏㄧㆵㄉㄤㄒㄧ,,hts,hts,ㄏㄉㄒ,,True,False
 hit-tang-tsūn,彼當陣,16,hit-tang-chūn,hit4tang1tsun7,hit4tang1chun7,ㄏㄧㆵㄉㄤㄗㄨㄣ˫,,hittangtsun,hittangchun,ㄏㄧㆵㄉㄤㄗㄨㄣ,,htt,htc,ㄏㄉㄗ,,True,False
-āu-tsit-ê,後一个,16,āu-chit-ê,au7tsit4e5,au7chit4e5,ㄠ˫ㄐㄧㆵㆤˊ,,autsite,auchite,ㄠㄐㄧㆵㆤ,,ate,ace,ㄠㄐㆤ,,True,True
-āu-tsi̍t-ê,後一个,16,āu-chi̍t-ê,au7tsit8e5,au7chit8e5,ㄠ˫ㄐㄧㆵ̇ㆤˊ,,autsite,auchite,ㄠㄐㄧㆵㆤ,,ate,ace,ㄠㄐㆤ,,True,True
+āu-tsit-ê,後一个,16,āu-chit-ê,au7tsit4e5,au7chit4e5,ㄠ˫ㄐㄧㆵㆤˊ,,autsite,auchite,ㄠㄐㄧㆵㆤ,,ate,ace,ㄠㄐㆤ,,True,False
+āu-tsi̍t-ê,後一个,16,āu-chi̍t-ê,au7tsit8e5,au7chit8e5,ㄠ˫ㄐㄧㆵ̇ㆤˊ,,autsite,auchite,ㄠㄐㄧㆵㆤ,,ate,ace,ㄠㄐㆤ,,True,False
 āu-tsi̍t-tsām,後一站,16,āu-chi̍t-chām,au7tsit8tsam7,au7chit8cham7,ㄠ˫ㄐㄧㆵ̇ㄗㆰ˫,,autsittsam,auchitcham,ㄠㄐㄧㆵㄗㆰ,,att,acc,ㄠㄐㄗ,,True,False
 āu-kè-gue̍h,後個月,16,āu-kè-goe̍h,au7ke3gueh8,au7ke3goeh8,ㄠ˫ㄍㆤ˪ㆣㄨㆤㆷ̇,,aukegueh,aukegoeh,ㄠㄍㆤㆣㄨㆤㆷ,,akg,akg,ㄠㄍㆣ,,True,False
 āu-thôo-tî,後塗除,16,āu-thô͘-tî,au7thoo5ti5,au7thoo5ti5,ㄠ˫ㄊㆦˊㄉㄧˊ,,authooti,authooti,ㄠㄊㆦㄉㄧ,,att,att,ㄠㄊㄉ,,True,False
@@ -9747,7 +9747,7 @@ suè-pau-piah,細胞壁,16,sòe-pau-piah,sue3pau1piah4,soe3pau1piah4,ㄙㄨㆤ˪
 sè-pau-piah,細胞壁,16,sè-pau-piah,se3pau1piah4,se3pau1piah4,ㄙㆤ˪ㄅㄠㄅㄧㄚㆷ,,sepaupiah,sepaupiah,ㄙㆤㄅㄠㄅㄧㄚㆷ,,spp,spp,ㄙㄅㄅ,,True,False
 suè-pau-hu̍t,細胞核,16,sòe-pau-hu̍t,sue3pau1hut8,soe3pau1hut8,ㄙㄨㆤ˪ㄅㄠㄏㄨㆵ̇,,suepauhut,soepauhut,ㄙㄨㆤㄅㄠㄏㄨㆵ,,sph,sph,ㄙㄅㄏ,,True,False
 sè-pau-hu̍t,細胞核,16,sè-pau-hu̍t,se3pau1hut8,se3pau1hut8,ㄙㆤ˪ㄅㄠㄏㄨㆵ̇,,sepauhut,sepauhut,ㄙㆤㄅㄠㄏㄨㆵ,,sph,sph,ㄙㄅㄏ,,True,False
-sè-kha-ê,細跤个,16,sè-kha-ê,se3kha1e5,se3kha1e5,ㄙㆤ˪ㄎㄚㆤˊ,,sekhae,sekhae,ㄙㆤㄎㄚㆤ,,ske,ske,ㄙㄎㆤ,,True,True
+sè-kha-ê,細跤个,16,sè-kha-ê,se3kha1e5,se3kha1e5,ㄙㆤ˪ㄎㄚㆤˊ,,sekhae,sekhae,ㄙㆤㄎㄚㆤ,,ske,ske,ㄙㄎㆤ,,True,False
 sè-tshut-á,細齣仔,16,sè-chhut-á,se3tshut4a2,se3chhut4a2,ㄙㆤ˪ㄘㄨㆵㄚˋ,,setshuta,sechhuta,ㄙㆤㄘㄨㆵㄚ,,sta,sca,ㄙㄘㄚ,,True,False
 tsiong-kî-bué,終其尾,16,chiong-kî-bóe,tsiong1ki5bue2,chiong1ki5boe2,ㄐㄧㆲㄍㄧˊㆠㄨㆤˋ,,tsiongkibue,chiongkiboe,ㄐㄧㆲㄍㄧㆠㄨㆤ,,tkb,ckb,ㄐㄍㆠ,,True,False
 kiat-á-ku,結仔龜,16,kiat-á-ku,kiat4a2ku1,kiat4a2ku1,ㄍㄧㄚㆵㄚˋㄍㄨ,,kiataku,kiataku,ㄍㄧㄚㆵㄚㄍㄨ,,kak,kak,ㄍㄚㄍ,,True,False
@@ -11698,9 +11698,9 @@ bái-tshiú-á-kuái,䆀手仔枴,12,bái-chhiú-á-koái,bai2tshiu2a2kuai2,bai2
 bái-kah-ū-tshun,䆀甲有賰,12,bái-kah-ū-chhun,bai2kah4u7tshun1,bai2kah4u7chhun1,ㆠㄞˋㄍㄚㆷㄨ˫ㄘㄨㄣ,,baikahutshun,baikahuchhun,ㆠㄞㄍㄚㆷㄨㄘㄨㄣ,,bkut,bkuc,ㆠㄍㄨㄘ,,True,True
 the-tó-khí-io,䖙倒起腰,12,the-tó-khí-io,the1to2khi2io1,the1to2khi2io1,ㄊㆤㄉㄛˋㄎㄧˋㄧㄛ,,thetokhiio,thetokhiio,ㄊㆤㄉㄛㄎㄧㄧㄛ,,ttki,ttki,ㄊㄉㄎㄧ,,True,False
 tsi̍t-ē-á-kiánn,一下子囝,12,chi̍t-ē-á-kiáⁿ,tsit8e7a2kiann2,chit8e7a2kiann2,ㄐㄧㆵ̇ㆤ˫ㄚˋㄍㄧㆩˋ,,tsiteakiann,chiteakiann,ㄐㄧㆵㆤㄚㄍㄧㆩ,,teak,ceak,ㄐㆤㄚㄍ,,True,False
-tsi̍t-ê-suann-thâu,一个山頭,12,chi̍t-ê-soaⁿ-thâu,tsit8e5suann1thau5,chit8e5soann1thau5,ㄐㄧㆵ̇ㆤˊㄙㄨㆩㄊㄠˊ,,tsitesuannthau,chitesoannthau,ㄐㄧㆵㆤㄙㄨㆩㄊㄠ,,test,cest,ㄐㆤㄙㄊ,,True,True
-tsi̍t-ê-toh-thâu,一个桌頭,12,chi̍t-ê-toh-thâu,tsit8e5toh4thau5,chit8e5toh4thau5,ㄐㄧㆵ̇ㆤˊㄉㄛㆷㄊㄠˊ,,tsitetohthau,chitetohthau,ㄐㄧㆵㆤㄉㄛㆷㄊㄠ,,tett,cett,ㄐㆤㄉㄊ,,True,True
-tsi̍t-ê-tâng-ki,一个童乩,12,chi̍t-ê-tâng-ki,tsit8e5tang5ki1,chit8e5tang5ki1,ㄐㄧㆵ̇ㆤˊㄉㄤˊㄍㄧ,,tsitetangki,chitetangki,ㄐㄧㆵㆤㄉㄤㄍㄧ,,tetk,cetk,ㄐㆤㄉㄍ,,True,True
+tsi̍t-ê-suann-thâu,一个山頭,12,chi̍t-ê-soaⁿ-thâu,tsit8e5suann1thau5,chit8e5soann1thau5,ㄐㄧㆵ̇ㆤˊㄙㄨㆩㄊㄠˊ,,tsitesuannthau,chitesoannthau,ㄐㄧㆵㆤㄙㄨㆩㄊㄠ,,test,cest,ㄐㆤㄙㄊ,,True,False
+tsi̍t-ê-toh-thâu,一个桌頭,12,chi̍t-ê-toh-thâu,tsit8e5toh4thau5,chit8e5toh4thau5,ㄐㄧㆵ̇ㆤˊㄉㄛㆷㄊㄠˊ,,tsitetohthau,chitetohthau,ㄐㄧㆵㆤㄉㄛㆷㄊㄠ,,tett,cett,ㄐㆤㄉㄊ,,True,False
+tsi̍t-ê-tâng-ki,一个童乩,12,chi̍t-ê-tâng-ki,tsit8e5tang5ki1,chit8e5tang5ki1,ㄐㄧㆵ̇ㆤˊㄉㄤˊㄍㄧ,,tsitetangki,chitetangki,ㄐㄧㆵㆤㄉㄤㄍㄧ,,tetk,cetk,ㄐㆤㄉㄍ,,True,False
 it-gōo-it-tsa̍p,一五一十,12,it-gō͘-it-cha̍p,it4goo7it4tsap8,it4goo7it4chap8,ㄧㆵㆣㆦ˫ㄧㆵㄗㄚㆴ̇,,itgooittsap,itgooitchap,ㄧㆵㆣㆦㄧㆵㄗㄚㆴ,,igit,igic,ㄧㆣㄧㄗ,,True,False
 tsi̍t-lâng-tsú-tiunn,一人主張,12,chi̍t-lâng-chú-tiuⁿ,tsit8lang5tsu2tiunn1,chit8lang5chu2tiunn1,ㄐㄧㆵ̇ㄌㄤˊㄗㄨˋㄉㄧㆫ,,tsitlangtsutiunn,chitlangchutiunn,ㄐㄧㆵㄌㄤㄗㄨㄉㄧㆫ,,tltt,clct,ㄐㄌㄗㄉ,,True,False
 tsi̍t-lâng-tsò-tsha̍t,一人做賊,12,chi̍t-lâng-chò-chha̍t,tsit8lang5tso3tshat8,chit8lang5cho3chhat8,ㄐㄧㆵ̇ㄌㄤˊㄗㄛ˪ㄘㄚㆵ̇,,tsitlangtsotshat,chitlangchochhat,ㄐㄧㆵㄌㄤㄗㄛㄘㄚㆵ,,tltt,clcc,ㄐㄌㄗㄘ,,True,False
@@ -11811,7 +11811,7 @@ tshit-tàu-peh-tàu,七鬥八鬥,12,chhit-tàu-peh-tàu,tshit4tau3peh4tau3,chhit
 sam-sam-ngóo-ngóo,三三五五,12,sam-sam-ngó͘-ngó͘,sam1sam1ngoo2ngoo2,sam1sam1ngoo2ngoo2,ㄙㆰㄙㆰㄫㆦˋㄫㆦˋ,,samsamngoongoo,samsamngoongoo,ㄙㆰㄙㆰㄫㆦㄫㆦ,,ssnn,ssnn,ㄙㄙㄫㄫ,,True,False
 sam-sam-pat-pat,三三八八,12,sam-sam-pat-pat,sam1sam1pat4pat4,sam1sam1pat4pat4,ㄙㆰㄙㆰㄅㄚㆵㄅㄚㆵ,,samsampatpat,samsampatpat,ㄙㆰㄙㆰㄅㄚㆵㄅㄚㆵ,,sspp,sspp,ㄙㄙㄅㄅ,,True,False
 sann-put-tsìng-sî,三不正時,12,saⁿ-put-chèng-sî,sann1put4tsing3si5,sann1put4cheng3si5,ㄙㆩㄅㄨㆵㄐㄧㄥ˪ㄒㄧˊ,,sannputtsingsi,sannputchengsi,ㄙㆩㄅㄨㆵㄐㄧㄥㄒㄧ,,spts,spcs,ㄙㄅㄐㄒ,,True,False
-sann-ê-puànn-lâng,三个半人,12,saⁿ-ê-pòaⁿ-lâng,sann1e5puann3lang5,sann1e5poann3lang5,ㄙㆩㆤˊㄅㄨㆩ˪ㄌㄤˊ,,sannepuannlang,sannepoannlang,ㄙㆩㆤㄅㄨㆩㄌㄤ,,sepl,sepl,ㄙㆤㄅㄌ,,True,True
+sann-ê-puànn-lâng,三个半人,12,saⁿ-ê-pòaⁿ-lâng,sann1e5puann3lang5,sann1e5poann3lang5,ㄙㆩㆤˊㄅㄨㆩ˪ㄌㄤˊ,,sannepuannlang,sannepoannlang,ㄙㆩㆤㄅㄨㆩㄌㄤ,,sepl,sepl,ㄙㆤㄅㄌ,,True,False
 sann-lâng-nn̄g-bīn,三人兩面,12,saⁿ-lâng-nn̄g-bīn,sann1lang5nng7bin7,sann1lang5nng7bin7,ㄙㆩㄌㄤˊㄋㆭ˫ㆠㄧㄣ˫,,sannlangnngbin,sannlangnngbin,ㄙㆩㄌㄤㄋㆭㆠㄧㄣ,,slnb,slnb,ㄙㄌㄋㆠ,,True,False
 sann-tsoh-sì-hioh,三作四歇,12,saⁿ-choh-sì-hioh,sann1tsoh4si3hioh4,sann1choh4si3hioh4,ㄙㆩㄗㄛㆷㄒㄧ˪ㄏㄧㄛㆷ,,sanntsohsihioh,sannchohsihioh,ㄙㆩㄗㄛㆷㄒㄧㄏㄧㄛㆷ,,stsh,scsh,ㄙㄗㄒㄏ,,True,False
 sann-tsò-sì-hioh,三做四歇,12,saⁿ-chò-sì-hioh,sann1tso3si3hioh4,sann1cho3si3hioh4,ㄙㆩㄗㄛ˪ㄒㄧ˪ㄏㄧㄛㆷ,,sanntsosihioh,sannchosihioh,ㄙㆩㄗㄛㄒㄧㄏㄧㄛㆷ,,stsh,scsh,ㄙㄗㄒㄏ,,True,False
@@ -11994,7 +11994,7 @@ jîn-tsō-gú-giân,人造語言,12,jîn-chō-gú-giân,jin5tso7gu2gian5,jin5cho
 jîn-kan-tsing-huat,人間蒸發,12,jîn-kan-cheng-hoat,jin5kan1tsing1huat4,jin5kan1cheng1hoat4,ㆢㄧㄣˊㄍㄢㄐㄧㄥㄏㄨㄚㆵ,,jinkantsinghuat,jinkanchenghoat,ㆢㄧㄣㄍㄢㄐㄧㄥㄏㄨㄚㆵ,,jkth,jkch,ㆢㄍㄐㄏ,,True,False
 jîn-tsè-bāng-lōo,人際網路,12,jîn-chè-bāng-lō͘,jin5tse3bang7loo7,jin5che3bang7loo7,ㆢㄧㄣˊㄗㆤ˪ㆠㄤ˫ㄌㆦ˫,,jintsebangloo,jinchebangloo,ㆢㄧㄣㄗㆤㆠㄤㄌㆦ,,jtbl,jcbl,ㆢㄗㆠㄌ,,True,False
 hù-tsu-tong-lîu,付諸東流,12,hù-chu-tong-liû,hu3tsu1tong1liu5,hu3chu1tong1liu5,ㄏㄨ˪ㄗㄨㄉㆲㄌㄧㄨˊ,,hutsutongliu,huchutongliu,ㄏㄨㄗㄨㄉㆲㄌㄧㄨ,,httl,hctl,ㄏㄗㄉㄌ,,True,False
-kāng-tiâu-tsuí-ê,仝條水个,12,kāng-tiâu-chúi-ê,kang7tiau5tsui2e5,kang7tiau5chui2e5,ㄍㄤ˫ㄉㄧㄠˊㄗㄨㄧˋㆤˊ,,kangtiautsuie,kangtiauchuie,ㄍㄤㄉㄧㄠㄗㄨㄧㆤ,,ktte,ktce,ㄍㄉㄗㆤ,,True,True
+kāng-tiâu-tsuí-ê,仝條水个,12,kāng-tiâu-chúi-ê,kang7tiau5tsui2e5,kang7tiau5chui2e5,ㄍㄤ˫ㄉㄧㄠˊㄗㄨㄧˋㆤˊ,,kangtiautsuie,kangtiauchuie,ㄍㄤㄉㄧㄠㄗㄨㄧㆤ,,ktte,ktce,ㄍㄉㄗㆤ,,True,False
 kâng-khuán-khuànn-thāi,仝款看待,12,kâng-khoán-khòaⁿ-thāi,kang5khuan2khuann3thai7,kang5khoan2khoann3thai7,ㄍㄤˊㄎㄨㄢˋㄎㄨㆩ˪ㄊㄞ˫,,kangkhuankhuannthai,kangkhoankhoannthai,ㄍㄤㄎㄨㄢㄎㄨㆩㄊㄞ,,kkkt,kkkt,ㄍㄎㄎㄊ,,True,False
 kâng-iânn--ê,仝營的,12,kâng-iâⁿ--ê,kang5iann5e5,kang5iann5e5,ㄍㄤˊㄧㆩˊㆤˊ,,kangianne,kangianne,ㄍㄤㄧㆩㆤ,,kie,kie,ㄍㄧㆤ,,True,False
 kāng-iânn--ê,仝營的,12,kāng-iâⁿ--ê,kang7iann5e5,kang7iann5e5,ㄍㄤ˫ㄧㆩˊㆤˊ,,kangianne,kangianne,ㄍㄤㄧㆩㆤ,,kie,kie,ㄍㄧㆤ,,True,False
@@ -12145,7 +12145,7 @@ tsuân-bîn-kiān-pó,全民健保,12,choân-bîn-kiān-pó,tsuan5bin5kian7po2,c
 tsuân-puânn-kiám-thó,全盤檢討,12,choân-pôaⁿ-kiám-thó,tsuan5puann5kiam2tho2,choan5poann5kiam2tho2,ㄗㄨㄢˊㄅㄨㆩˊㄍㄧㆰˋㄊㄛˋ,,tsuanpuannkiamtho,choanpoannkiamtho,ㄗㄨㄢㄅㄨㆩㄍㄧㆰㄊㄛ,,tpkt,cpkt,ㄗㄅㄍㄊ,,True,False
 nn̄g-sann-lián-tshiú,兩三輾手,12,nn̄g-saⁿ-lián-chhiú,nng7sann1lian2tshiu2,nng7sann1lian2chhiu2,ㄋㆭ˫ㄙㆩㄌㄧㄢˋㄑㄧㄨˋ,,nngsannliantshiu,nngsannlianchhiu,ㄋㆭㄙㆩㄌㄧㄢㄑㄧㄨ,,nslt,nslc,ㄋㄙㄌㄑ,,True,True
 nn̄g-sann-lián-tńg,兩三輾轉,12,nn̄g-saⁿ-lián-tńg,nng7sann1lian2tng2,nng7sann1lian2tng2,ㄋㆭ˫ㄙㆩㄌㄧㄢˋㄉㆭˋ,,nngsannliantng,nngsannliantng,ㄋㆭㄙㆩㄌㄧㄢㄉㆭ,,nslt,nslt,ㄋㄙㄌㄉ,,True,True
-nn̄g-ê-puànn-tshiú,兩个半手,12,nn̄g-ê-pòaⁿ-chhiú,nng7e5puann3tshiu2,nng7e5poann3chhiu2,ㄋㆭ˫ㆤˊㄅㄨㆩ˪ㄑㄧㄨˋ,,nngepuanntshiu,nngepoannchhiu,ㄋㆭㆤㄅㄨㆩㄑㄧㄨ,,nept,nepc,ㄋㆤㄅㄑ,,True,True
+nn̄g-ê-puànn-tshiú,兩个半手,12,nn̄g-ê-pòaⁿ-chhiú,nng7e5puann3tshiu2,nng7e5poann3chhiu2,ㄋㆭ˫ㆤˊㄅㄨㆩ˪ㄑㄧㄨˋ,,nngepuanntshiu,nngepoannchhiu,ㄋㆭㆤㄅㄨㆩㄑㄧㄨ,,nept,nepc,ㄋㆤㄅㄑ,,True,False
 nn̄g-kù-puànn-uē,兩句半話,12,nn̄g-kù-pòaⁿ-ōe,nng7ku3puann3ue7,nng7ku3poann3oe7,ㄋㆭ˫ㄍㄨ˪ㄅㄨㆩ˪ㄨㆤ˫,,nngkupuannue,nngkupoannoe,ㄋㆭㄍㄨㄅㄨㆩㄨㆤ,,nkpu,nkpo,ㄋㄍㄅㄨ,,True,False
 nn̄g-tshuì-puànn-tsi̍h,兩喙半舌,12,nn̄g-chhùi-pòaⁿ-chi̍h,nng7tshui3puann3tsih8,nng7chhui3poann3chih8,ㄋㆭ˫ㄘㄨㄧ˪ㄅㄨㆩ˪ㄐㄧㆷ̇,,nngtshuipuanntsih,nngchhuipoannchih,ㄋㆭㄘㄨㄧㄅㄨㆩㄐㄧㆷ,,ntpt,ncpc,ㄋㄘㄅㄐ,,True,False
 nn̄g-pōo-tshit-á,兩步七仔,12,nn̄g-pō͘-chhit-á,nng7poo7tshit4a2,nng7poo7chhit4a2,ㄋㆭ˫ㄅㆦ˫ㄑㄧㆵㄚˋ,,nngpootshita,nngpoochhita,ㄋㆭㄅㆦㄑㄧㆵㄚ,,npta,npca,ㄋㄅㄑㄚ,,True,True
@@ -12434,7 +12434,7 @@ sì-hio̍h-tsí-soo,四葉紫蘇,12,sì-hio̍h-chí-so͘,si3hioh8tsi2soo1,si3hio
 sì-kha-tsuí-sian,四跤水仙,12,sì-kha-chúi-sian,si3kha1tsui2sian1,si3kha1chui2sian1,ㄒㄧ˪ㄎㄚㄗㄨㄧˋㄒㄧㄢ,,sikhatsuisian,sikhachuisian,ㄒㄧㄎㄚㄗㄨㄧㄒㄧㄢ,,skts,skcs,ㄒㄎㄗㄒ,,True,False
 sì-kha-hái-ang,四跤海翁,12,sì-kha-hái-ang,si3kha1hai2ang1,si3kha1hai2ang1,ㄒㄧ˪ㄎㄚㄏㄞˋㄤ,,sikhahaiang,sikhahaiang,ㄒㄧㄎㄚㄏㄞㄤ,,skha,skha,ㄒㄎㄏㄤ,,True,False
 sì-kha-tōo-ting,四跤肚丁,12,sì-kha-tō͘-teng,si3kha1too7ting1,si3kha1too7teng1,ㄒㄧ˪ㄎㄚㄉㆦ˫ㄉㄧㄥ,,sikhatooting,sikhatooteng,ㄒㄧㄎㄚㄉㆦㄉㄧㄥ,,sktt,sktt,ㄒㄎㄉㄉ,,True,False
-sì-sàng--ê,四送个,12,sì-sàng--ê,si3sang3e5,si3sang3e5,ㄒㄧ˪ㄙㄤ˪ㆤˊ,,sisange,sisange,ㄒㄧㄙㄤㆤ,,sse,sse,ㄒㄙㆤ,,True,True
+sì-sàng--ê,四送个,12,sì-sàng--ê,si3sang3e5,si3sang3e5,ㄒㄧ˪ㄙㄤ˪ㆤˊ,,sisange,sisange,ㄒㄧㄙㄤㆤ,,sse,sse,ㄒㄙㆤ,,True,False
 kiánn-kiánn-sun-sun,囝囝孫孫,12,kiáⁿ-kiáⁿ-sun-sun,kiann2kiann2sun1sun1,kiann2kiann2sun1sun1,ㄍㄧㆩˋㄍㄧㆩˋㄙㄨㄣㄙㄨㄣ,,kiannkiannsunsun,kiannkiannsunsun,ㄍㄧㆩㄍㄧㆩㄙㄨㄣㄙㄨㄣ,,kkss,kkss,ㄍㄍㄙㄙ,,True,False
 kiánn-kam-á-kiánn,囝甘仔囝,12,kiáⁿ-kam-á-kiáⁿ,kiann2kam1a2kiann2,kiann2kam1a2kiann2,ㄍㄧㆩˋㄍㆰㄚˋㄍㄧㆩˋ,,kiannkamakiann,kiannkamakiann,ㄍㄧㆩㄍㆰㄚㄍㄧㆩ,,kkak,kkak,ㄍㄍㄚㄍ,,True,False
 huê-thiô-sī-gān,回頭是岸,12,hôe-thiô-sī-gān,hue5thio5si7gan7,hoe5thio5si7gan7,ㄏㄨㆤˊㄊㄧㄛˊㄒㄧ˫ㆣㄢ˫,,huethiosigan,hoethiosigan,ㄏㄨㆤㄊㄧㄛㄒㄧㆣㄢ,,htsg,htsg,ㄏㄊㄒㆣ,,True,False
@@ -12667,7 +12667,7 @@ tsú-kiong-tshuì-gâm,子宮喙癌,12,chú-kiong-chhùi-gâm,tsu2kiong1tshui3ga
 jī-tsat-thiàu-tōng,字節跳動,12,jī-chat-thiàu-tōng,ji7tsat4thiau3tong7,ji7chat4thiau3tong7,ㆢㄧ˫ㄗㄚㆵㄊㄧㄠ˪ㄉㆲ˫,,jitsatthiautong,jichatthiautong,ㆢㄧㄗㄚㆵㄊㄧㄠㄉㆲ,,jttt,jctt,ㆢㄗㄊㄉ,,True,False
 jī-tsiat-thiàu-tōng,字節跳動,12,jī-chiat-thiàu-tōng,ji7tsiat4thiau3tong7,ji7chiat4thiau3tong7,ㆢㄧ˫ㄐㄧㄚㆵㄊㄧㄠ˪ㄉㆲ˫,,jitsiatthiautong,jichiatthiautong,ㆢㄧㄐㄧㄚㆵㄊㄧㄠㄉㆲ,,jttt,jctt,ㆢㄐㄊㄉ,,True,False
 hàu-pá-siunn-îng,孝飽傷閒,12,hàu-pá-siuⁿ-êng,hau3pa2siunn1ing5,hau3pa2siunn1eng5,ㄏㄠ˪ㄅㄚˋㄒㄧㆫㄧㄥˊ,,haupasiunning,haupasiunneng,ㄏㄠㄅㄚㄒㄧㆫㄧㄥ,,hpsi,hpse,ㄏㄅㄒㄧ,,True,False
-koo-tuann-tsi̍t-ê,孤單一个,12,ko͘-toaⁿ-chi̍t-ê,koo1tuann1tsit8e5,koo1toann1chit8e5,ㄍㆦㄉㄨㆩㄐㄧㆵ̇ㆤˊ,,kootuanntsite,kootoannchite,ㄍㆦㄉㄨㆩㄐㄧㆵㆤ,,ktte,ktce,ㄍㄉㄐㆤ,,True,True
+koo-tuann-tsi̍t-ê,孤單一个,12,ko͘-toaⁿ-chi̍t-ê,koo1tuann1tsit8e5,koo1toann1chit8e5,ㄍㆦㄉㄨㆩㄐㄧㆵ̇ㆤˊ,,kootuanntsite,kootoannchite,ㄍㆦㄉㄨㆩㄐㄧㆵㆤ,,ktte,ktce,ㄍㄉㄐㆤ,,True,False
 koo-tuann-tsi̍t-sin,孤單一身,12,ko͘-toaⁿ-chi̍t-sin,koo1tuann1tsit8sin1,koo1toann1chit8sin1,ㄍㆦㄉㄨㆩㄐㄧㆵ̇ㄒㄧㄣ,,kootuanntsitsin,kootoannchitsin,ㄍㆦㄉㄨㆩㄐㄧㆵㄒㄧㄣ,,ktts,ktcs,ㄍㄉㄐㄒ,,True,False
 koo-tshenn-tsiú-hî,孤星酒魚,12,ko͘-chheⁿ-chiú-hî,koo1tshenn1tsiu2hi5,koo1chhenn1chiu2hi5,ㄍㆦㄘㆥㄐㄧㄨˋㄏㄧˊ,,kootshenntsiuhi,koochhennchiuhi,ㄍㆦㄘㆥㄐㄧㄨㄏㄧ,,ktth,kcch,ㄍㄘㄐㄏ,,True,False
 koo-hâng-to̍k-tshī,孤行獨市,12,ko͘-hâng-to̍k-chhī,koo1hang5tok8tshi7,koo1hang5tok8chhi7,ㄍㆦㄏㄤˊㄉㆦㆻ̇ㄑㄧ˫,,koohangtoktshi,koohangtokchhi,ㄍㆦㄏㄤㄉㆦㆻㄑㄧ,,khtt,khtc,ㄍㄏㄉㄑ,,True,False
@@ -12720,7 +12720,7 @@ sió-kuí-á-khì,小鬼仔氣,12,sió-kúi-á-khì,sio2kui2a2khi3,sio2kui2a2khi
 sió-kuí-á-siòng,小鬼仔相,12,sió-kúi-á-siòng,sio2kui2a2siong3,sio2kui2a2siong3,ㄒㄧㄛˋㄍㄨㄧˋㄚˋㄒㄧㆲ˪,,siokuiasiong,siokuiasiong,ㄒㄧㄛㄍㄨㄧㄚㄒㄧㆲ,,skas,skas,ㄒㄍㄚㄒ,,True,False
 siàu-lí-sî-tāi,少女時代,12,siàu-lí-sî-tāi,siau3li2si5tai7,siau3li2si5tai7,ㄒㄧㄠ˪ㄌㄧˋㄒㄧˊㄉㄞ˫,,siaulisitai,siaulisitai,ㄒㄧㄠㄌㄧㄒㄧㄉㄞ,,slst,slst,ㄒㄌㄒㄉ,,True,False
 siàu-lú-sî-tāi,少女時代,12,siàu-lú-sî-tāi,siau3lu2si5tai7,siau3lu2si5tai7,ㄒㄧㄠ˪ㄌㄨˋㄒㄧˊㄉㄞ˫,,siaulusitai,siaulusitai,ㄒㄧㄠㄌㄨㄒㄧㄉㄞ,,slst,slst,ㄒㄌㄒㄉ,,True,False
-siàu-liân--ê,少年个,12,siàu-liân--ê,siau3lian5e5,siau3lian5e5,ㄒㄧㄠ˪ㄌㄧㄢˊㆤˊ,,siauliane,siauliane,ㄒㄧㄠㄌㄧㄢㆤ,,sle,sle,ㄒㄌㆤ,,True,True
+siàu-liân--ê,少年个,12,siàu-liân--ê,siau3lian5e5,siau3lian5e5,ㄒㄧㄠ˪ㄌㄧㄢˊㆤˊ,,siauliane,siauliane,ㄒㄧㄠㄌㄧㄢㆤ,,sle,sle,ㄒㄌㆤ,,True,False
 siàu-liân-si̍k-kut,少年熟骨,12,siàu-liân-se̍k-kut,siau3lian5sik8kut4,siau3lian5sek8kut4,ㄒㄧㄠ˪ㄌㄧㄢˊㄒㄧㆻ̇ㄍㄨㆵ,,siauliansikkut,siauliansekkut,ㄒㄧㄠㄌㄧㄢㄒㄧㆻㄍㄨㆵ,,slsk,slsk,ㄒㄌㄒㄍ,,True,False
 siàu-liân-ang-bóo,少年翁某,12,siàu-liân-ang-bó͘,siau3lian5ang1boo2,siau3lian5ang1boo2,ㄒㄧㄠ˪ㄌㄧㄢˊㄤㆠㆦˋ,,siaulianangboo,siaulianangboo,ㄒㄧㄠㄌㄧㄢㄤㆠㆦ,,slab,slab,ㄒㄌㄤㆠ,,True,False
 siàu-liân-ló-sîng,少年老成,12,siàu-liân-ló-sêng,siau3lian5lo2sing5,siau3lian5lo2seng5,ㄒㄧㄠ˪ㄌㄧㄢˊㄌㄛˋㄒㄧㄥˊ,,siaulianlosing,siaulianloseng,ㄒㄧㄠㄌㄧㄢㄌㄛㄒㄧㄥ,,slls,slls,ㄒㄌㄌㄒ,,True,False
@@ -12758,7 +12758,7 @@ ik-ing-kuè-tiānn,已經過定,12,ek-eng-kòe-tiāⁿ,ik4ing1kue3tiann7,ek4eng1
 pa-li̍k-su-thán,巴勒斯坦,12,pa-le̍k-su-thán,pa1lik8su1than2,pa1lek8su1than2,ㄅㄚㄌㄧㆻ̇ㄙㄨㄊㄢˋ,,paliksuthan,paleksuthan,ㄅㄚㄌㄧㆻㄙㄨㄊㄢ,,plst,plst,ㄅㄌㄙㄊ,,True,False
 pa-lûn-pōo-tsháu,巴圇哺草,12,pa-lûn-pō͘-chháu,pa1lun5poo7tshau2,pa1lun5poo7chhau2,ㄅㄚㄌㄨㄣˊㄅㆦ˫ㄘㄠˋ,,palunpootshau,palunpoochhau,ㄅㄚㄌㄨㄣㄅㆦㄘㄠ,,plpt,plpc,ㄅㄌㄅㄘ,,True,False
 pa-tuā-ia̍h-á,巴大蛾仔,12,pa-tōa-ia̍h-á,pa1tua7iah8a2,pa1toa7iah8a2,ㄅㄚㄉㄨㄚ˫ㄧㄚㆷ̇ㄚˋ,,patuaiaha,patoaiaha,ㄅㄚㄉㄨㄚㄧㄚㆷㄚ,,ptia,ptia,ㄅㄉㄧㄚ,,True,False
-hāng-á-lāi-ê,巷仔內个,12,hāng-á-lāi-ê,hang7a2lai7e5,hang7a2lai7e5,ㄏㄤ˫ㄚˋㄌㄞ˫ㆤˊ,,hangalaie,hangalaie,ㄏㄤㄚㄌㄞㆤ,,hale,hale,ㄏㄚㄌㆤ,,True,True
+hāng-á-lāi-ê,巷仔內个,12,hāng-á-lāi-ê,hang7a2lai7e5,hang7a2lai7e5,ㄏㄤ˫ㄚˋㄌㄞ˫ㆤˊ,,hangalaie,hangalaie,ㄏㄤㄚㄌㄞㆤ,,hale,hale,ㄏㄚㄌㆤ,,True,False
 pòo-ta̍t-la-king,布達拉宮,12,pò͘-ta̍t-la-keng,poo3tat8la1king1,poo3tat8la1keng1,ㄅㆦ˪ㄉㄚㆵ̇ㄌㄚㄍㄧㄥ,,pootatlaking,pootatlakeng,ㄅㆦㄉㄚㆵㄌㄚㄍㄧㄥ,,ptlk,ptlk,ㄅㄉㄌㄍ,,True,True
 pòo-lí-su-thok,布里斯托,12,pò͘-lí-su-thok,poo3li2su1thok4,poo3li2su1thok4,ㄅㆦ˪ㄌㄧˋㄙㄨㄊㆦㆻ,,poolisuthok,poolisuthok,ㄅㆦㄌㄧㄙㄨㄊㆦㆻ,,plst,plst,ㄅㄌㄙㄊ,,True,True
 pòo-lí-su-thuh,布里斯托,12,pò͘-lí-su-thuh,poo3li2su1thuh4,poo3li2su1thuh4,ㄅㆦ˪ㄌㄧˋㄙㄨㄊㄨㆷ,,poolisuthuh,poolisuthuh,ㄅㆦㄌㄧㄙㄨㄊㄨㆷ,,plst,plst,ㄅㄌㄙㄊ,,True,True
@@ -13562,7 +13562,7 @@ bô-lâng-gîn-hâng,無人銀行,12,bô-lâng-gîn-hâng,bo5lang5gin5hang5,bo5l
 bô-kāng-tiâu-tsuí,無仝條水,12,bô-kāng-tiâu-chúi,bo5kang7tiau5tsui2,bo5kang7tiau5chui2,ㆠㄛˊㄍㄤ˫ㄉㄧㄠˊㄗㄨㄧˋ,,bokangtiautsui,bokangtiauchui,ㆠㄛㄍㄤㄉㄧㄠㄗㄨㄧ,,bktt,bktc,ㆠㄍㄉㄗ,,True,False
 bô-tāi-bô-tsì,無代無誌,12,bô-tāi-bô-chì,bo5tai7bo5tsi3,bo5tai7bo5chi3,ㆠㄛˊㄉㄞ˫ㆠㄛˊㄐㄧ˪,,botaibotsi,botaibochi,ㆠㄛㄉㄞㆠㄛㄐㄧ,,btbt,btbc,ㆠㄉㆠㄐ,,True,False
 bô-tī--leh,無佇咧,12,bô-tī--leh,bo5ti7leh4,bo5ti7leh4,ㆠㄛˊㄉㄧ˫ㄌㆤㆷ,,botileh,botileh,ㆠㄛㄉㄧㄌㆤㆷ,,btl,btl,ㆠㄉㄌ,,True,False
-bô-lí-ê-tāi,無你个代,12,bô-lí-ê-tāi,bo5li2e5tai7,bo5li2e5tai7,ㆠㄛˊㄌㄧˋㆤˊㄉㄞ˫,,bolietai,bolietai,ㆠㄛㄌㄧㆤㄉㄞ,,blet,blet,ㆠㄌㆤㄉ,,True,True
+bô-lí-ê-tāi,無你个代,12,bô-lí-ê-tāi,bo5li2e5tai7,bo5li2e5tai7,ㆠㄛˊㄌㄧˋㆤˊㄉㄞ˫,,bolietai,bolietai,ㆠㄛㄌㄧㆤㄉㄞ,,blet,blet,ㆠㄌㆤㄉ,,True,False
 bô-thau-bô-lāu,無偷無漏,12,bô-thau-bô-lāu,bo5thau1bo5lau7,bo5thau1bo5lau7,ㆠㄛˊㄊㄠㆠㄛˊㄌㄠ˫,,bothaubolau,bothaubolau,ㆠㄛㄊㄠㆠㄛㄌㄠ,,btbl,btbl,ㆠㄊㆠㄌ,,True,False
 bô-tau-bô-sau,無兜無梢,12,bô-tau-bô-sau,bo5tau1bo5sau1,bo5tau1bo5sau1,ㆠㄛˊㄉㄠㆠㄛˊㄙㄠ,,botaubosau,botaubosau,ㆠㄛㄉㄠㆠㄛㄙㄠ,,btbs,btbs,ㆠㄉㆠㄙ,,True,False
 bô-niú-bô-siūnn,無兩無想,12,bô-niú-bô-siūⁿ,bo5niu2bo5siunn7,bo5niu2bo5siunn7,ㆠㄛˊㄋㄧㄨˋㆠㄛˊㄒㄧㆫ˫,,boniubosiunn,boniubosiunn,ㆠㄛㄋㄧㄨㆠㄛㄒㄧㆫ,,bnbs,bnbs,ㆠㄋㆠㄒ,,True,False
@@ -13628,7 +13628,7 @@ bô-tshin-tshiūnn-khuán,無親像款,12,bô-chhin-chhiūⁿ-khoán,bo5tshin1ts
 bô-kì-tî-tsìng,無記持症,12,bô-kì-tî-chèng,bo5ki3ti5tsing3,bo5ki3ti5cheng3,ㆠㄛˊㄍㄧ˪ㄉㄧˊㄐㄧㄥ˪,,bokititsing,bokiticheng,ㆠㄛㄍㄧㄉㄧㄐㄧㄥ,,bktt,bktc,ㆠㄍㄉㄐ,,True,False
 bô-uē-bô-kù,無話無句,12,bô-ōe-bô-kù,bo5ue7bo5ku3,bo5oe7bo5ku3,ㆠㄛˊㄨㆤ˫ㆠㄛˊㄍㄨ˪,,boueboku,booeboku,ㆠㄛㄨㆤㆠㄛㄍㄨ,,bubk,bobk,ㆠㄨㆠㄍ,,True,False
 bô-su-bô-iânn,無輸無贏,12,bô-su-bô-iâⁿ,bo5su1bo5iann5,bo5su1bo5iann5,ㆠㄛˊㄙㄨㆠㄛˊㄧㆩˊ,,bosuboiann,bosuboiann,ㆠㄛㄙㄨㆠㄛㄧㆩ,,bsbi,bsbi,ㆠㄙㆠㄧ,,True,False
-bô-tsit-ê-lâng,無這个人,12,bô-chit-ê-lâng,bo5tsit4e5lang5,bo5chit4e5lang5,ㆠㄛˊㄐㄧㆵㆤˊㄌㄤˊ,,botsitelang,bochitelang,ㆠㄛㄐㄧㆵㆤㄌㄤ,,btel,bcel,ㆠㄐㆤㄌ,,True,True
+bô-tsit-ê-lâng,無這个人,12,bô-chit-ê-lâng,bo5tsit4e5lang5,bo5chit4e5lang5,ㆠㄛˊㄐㄧㆵㆤˊㄌㄤˊ,,botsitelang,bochitelang,ㆠㄛㄐㄧㆵㆤㄌㄤ,,btel,bcel,ㆠㄐㆤㄌ,,True,False
 bô-tō-tik-tsînn,無道德錢,12,bô-tō-tek-chîⁿ,bo5to7tik4tsinn5,bo5to7tek4chinn5,ㆠㄛˊㄉㄛ˫ㄉㄧㆻㄐㆪˊ,,bototiktsinn,bototekchinn,ㆠㄛㄉㄛㄉㄧㆻㄐㆪ,,bttt,bttc,ㆠㄉㄉㄐ,,True,False
 bô-iân-khì-iû,無鉛汽油,12,bô-iân-khì-iû,bo5ian5khi3iu5,bo5ian5khi3iu5,ㆠㄛˊㄧㄢˊㄎㄧ˪ㄧㄨˊ,,boiankhiiu,boiankhiiu,ㆠㄛㄧㄢㄎㄧㄧㄨ,,biki,biki,ㆠㄧㄎㄧ,,True,False
 bô-îng-tshì-tshì,無閒刺刺,12,bô-êng-chhì-chhì,bo5ing5tshi3tshi3,bo5eng5chhi3chhi3,ㆠㄛˊㄧㄥˊㄑㄧ˪ㄑㄧ˪,,boingtshitshi,boengchhichhi,ㆠㄛㄧㄥㄑㄧㄑㄧ,,bitt,becc,ㆠㄧㄑㄑ,,True,False
@@ -13966,7 +13966,7 @@ tsuá-phiò-piàn-kāu,紙票變厚,12,chóa-phiò-piàn-kāu,tsua2phio3pian3kau
 tsuá-phiò-piàn-po̍h,紙票變薄,12,chóa-phiò-piàn-po̍h,tsua2phio3pian3poh8,choa2phio3pian3poh8,ㄗㄨㄚˋㄆㄧㄛ˪ㄅㄧㄢ˪ㄅㄛㆷ̇,,tsuaphiopianpoh,choaphiopianpoh,ㄗㄨㄚㄆㄧㄛㄅㄧㄢㄅㄛㆷ,,tppp,cppp,ㄗㄆㄅㄅ,,True,False
 sòo-tsán--ê,素讚的,12,sò͘-chán--ê,soo3tsan2e5,soo3chan2e5,ㄙㆦ˪ㄗㄢˋㆤˊ,,sootsane,soochane,ㄙㆦㄗㄢㆤ,,ste,sce,ㄙㄗㆤ,,True,False
 sè-pún-sing-lí,細本生理,12,sè-pún-seng-lí,se3pun2sing1li2,se3pun2seng1li2,ㄙㆤ˪ㄅㄨㄣˋㄒㄧㄥㄌㄧˋ,,sepunsingli,sepunsengli,ㄙㆤㄅㄨㄣㄒㄧㄥㄌㄧ,,spsl,spsl,ㄙㄅㄒㄌ,,True,False
-sè-hàn-ê-sî,細漢个時,12,sè-hàn-ê-sî,se3han3e5si5,se3han3e5si5,ㄙㆤ˪ㄏㄢ˪ㆤˊㄒㄧˊ,,sehanesi,sehanesi,ㄙㆤㄏㄢㆤㄒㄧ,,shes,shes,ㄙㄏㆤㄒ,,True,True
+sè-hàn-ê-sî,細漢个時,12,sè-hàn-ê-sî,se3han3e5si5,se3han3e5si5,ㄙㆤ˪ㄏㄢ˪ㆤˊㄒㄧˊ,,sehanesi,sehanesi,ㄙㆤㄏㄢㆤㄒㄧ,,shes,shes,ㄙㄏㆤㄒ,,True,False
 sè-hàn-gín-á,細漢囡仔,12,sè-hàn-gín-á,se3han3gin2a2,se3han3gin2a2,ㄙㆤ˪ㄏㄢ˪ㆣㄧㄣˋㄚˋ,,sehangina,sehangina,ㄙㆤㄏㄢㆣㄧㄣㄚ,,shga,shga,ㄙㄏㆣㄚ,,True,False
 suè-hàn--ê,細漢的,12,sòe-hàn--ê,sue3han3e5,soe3han3e5,ㄙㄨㆤ˪ㄏㄢ˪ㆤˊ,,suehane,soehane,ㄙㄨㆤㄏㄢㆤ,,she,she,ㄙㄏㆤ,,True,False
 suè-lia̍p-pau-á,細粒包仔,12,sòe-lia̍p-pau-á,sue3liap8pau1a2,soe3liap8pau1a2,ㄙㄨㆤ˪ㄌㄧㄚㆴ̇ㄅㄠㄚˋ,,sueliappaua,soeliappaua,ㄙㄨㆤㄌㄧㄚㆴㄅㄠㄚ,,slpa,slpa,ㄙㄌㄅㄚ,,True,False
@@ -14467,7 +14467,7 @@ thàu-tsá-thàu-iàu,透早透要,12,thàu-chá-thàu-iàu,thau3tsa2thau3iau3,t
 thàu-lām--ê,透濫的,12,thàu-lām--ê,thau3lam7e5,thau3lam7e5,ㄊㄠ˪ㄌㆰ˫ㆤˊ,,thaulame,thaulame,ㄊㄠㄌㆰㆤ,,tle,tle,ㄊㄌㆤ,,True,False
 thàu-sin-tuā-kuānn,透身大汗,12,thàu-sin-tōa-kōaⁿ,thau3sin1tua7kuann7,thau3sin1toa7koann7,ㄊㄠ˪ㄒㄧㄣㄉㄨㄚ˫ㄍㄨㆩ˫,,thausintuakuann,thausintoakoann,ㄊㄠㄒㄧㄣㄉㄨㄚㄍㄨㆩ,,tstk,tstk,ㄊㄒㄉㄍ,,True,False
 ta̍k-hāng-ta̍k-khuán,逐項逐款,12,ta̍k-hāng-ta̍k-khoán,tak8hang7tak8khuan2,tak8hang7tak8khoan2,ㄉㄚㆻ̇ㄏㄤ˫ㄉㄚㆻ̇ㄎㄨㄢˋ,,takhangtakkhuan,takhangtakkhoan,ㄉㄚㆻㄏㄤㄉㄚㆻㄎㄨㄢ,,thtk,thtk,ㄉㄏㄉㄎ,,True,False
-tsit-ê-mi̍h-kiānn,這个物件,12,chit-ê-mi̍h-kiāⁿ,tsit4e5mih8kiann7,chit4e5mih8kiann7,ㄐㄧㆵㆤˊㄇㄧㆷ̇ㄍㄧㆩ˫,,tsitemihkiann,chitemihkiann,ㄐㄧㆵㆤㄇㄧㆷㄍㄧㆩ,,temk,cemk,ㄐㆤㄇㄍ,,True,True
+tsit-ê-mi̍h-kiānn,這个物件,12,chit-ê-mi̍h-kiāⁿ,tsit4e5mih8kiann7,chit4e5mih8kiann7,ㄐㄧㆵㆤˊㄇㄧㆷ̇ㄍㄧㆩ˫,,tsitemihkiann,chitemihkiann,ㄐㄧㆵㆤㄇㄧㆷㄍㄧㆩ,,temk,cemk,ㄐㆤㄇㄍ,,True,False
 tsit-táu-pué-tio̍h,這斗掰著,12,chit-táu-póe-tio̍h,tsit4tau2pue2tioh8,chit4tau2poe2tioh8,ㄐㄧㆵㄉㄠˋㄅㄨㆤˋㄉㄧㄛㆷ̇,,tsittaupuetioh,chittaupoetioh,ㄐㄧㆵㄉㄠㄅㄨㆤㄉㄧㄛㆷ,,ttpt,ctpt,ㄐㄉㄅㄉ,,True,False
 tse-sī-siánn-mi̍h,這是啥物,12,che-sī-siáⁿ-mi̍h,tse1si7siann2mih8,che1si7siann2mih8,ㄗㆤㄒㄧ˫ㄒㄧㆩˋㄇㄧㆷ̇,,tsesisiannmih,chesisiannmih,ㄗㆤㄒㄧㄒㄧㆩㄇㄧㆷ,,tssm,cssm,ㄗㄒㄒㄇ,,True,False
 tse-sī-gún-tau,這是阮兜,12,che-sī-gún-tau,tse1si7gun2tau1,che1si7gun2tau1,ㄗㆤㄒㄧ˫ㆣㄨㄣˋㄉㄠ,,tsesiguntau,chesiguntau,ㄗㆤㄒㄧㆣㄨㄣㄉㄠ,,tsgt,csgt,ㄗㄒㆣㄉ,,True,False
@@ -14950,7 +14950,7 @@ huān,飯,11,hoān,huan7,hoan7,ㄏㄨㄢ˫,,huan,hoan,ㄏㄨㄢ,,,,,,True,False
 kiâm-tsuí,鹹水,11,kiâm-chúi,kiam5tsui2,kiam5chui2,ㄍㄧㆰˊㄗㄨㄧˋ,,kiamtsui,kiamchui,ㄍㄧㆰㄗㄨㄧ,,kt,kc,ㄍㄗ,,True,False
 kiâm-tsuí,鹽水,11,kiâm-chúi,kiam5tsui2,kiam5chui2,ㄍㄧㆰˊㄗㄨㄧˋ,,kiamtsui,kiamchui,ㄍㄧㆰㄗㄨㄧ,,kt,kc,ㄍㄗ,,True,False
 luí,䉪,10,lúi,lui2,lui2,ㄌㄨㄧˋ,,lui,lui,ㄌㄨㄧ,,,,,,True,False
-tsi̍t-ê--tsi̍t-ê,一个一个,10,chi̍t-ê--chi̍t-ê,tsit8e5tsit8e5,chit8e5chit8e5,ㄐㄧㆵ̇ㆤˊㄐㄧㆵ̇ㆤˊ,,tsitetsite,chitechite,ㄐㄧㆵㆤㄐㄧㆵㆤ,,tete,cece,ㄐㆤㄐㆤ,,True,True
+tsi̍t-ê--tsi̍t-ê,一个一个,10,chi̍t-ê--chi̍t-ê,tsit8e5tsit8e5,chit8e5chit8e5,ㄐㄧㆵ̇ㆤˊㄐㄧㆵ̇ㆤˊ,,tsitetsite,chitechite,ㄐㄧㆵㆤㄐㄧㆵㆤ,,tete,cece,ㄐㆤㄐㆤ,,True,False
 tsi̍t-to--kìnn-bah,一刀見肉,10,chi̍t-to--kìⁿ-bah,tsit8to1kinn3bah4,chit8to1kinn3bah4,ㄐㄧㆵ̇ㄉㄛㄍㆪ˪ㆠㄚㆷ,,tsittokinnbah,chittokinnbah,ㄐㄧㆵㄉㄛㄍㆪㆠㄚㆷ,,ttkb,ctkb,ㄐㄉㄍㆠ,,True,False
 tiūnn-ḿ,丈姆,10,tiūⁿ-ḿ,tiunn7m2,tiunn7m2,ㄉㄧㆫ˫ㆬˋ,,tiunnm,tiunnm,ㄉㄧㆫㆬ,,tm,tm,ㄉㆬ,,True,False
 sam-koo--lio̍k-pô,三姑六婆,10,sam-ko͘--lio̍k-pô,sam1koo1liok8po5,sam1koo1liok8po5,ㄙㆰㄍㆦㄌㄧㆦㆻ̇ㄅㄛˊ,,samkooliokpo,samkooliokpo,ㄙㆰㄍㆦㄌㄧㆦㆻㄅㄛ,,sklp,sklp,ㄙㄍㄌㄅ,,True,False
@@ -15077,7 +15077,7 @@ ke-hué-á,家伙仔,10,ke-hóe-á,ke1hue2a2,ke1hoe2a2,ㄍㆤㄏㄨㆤˋㄚˋ,,k
 siok-tê,宿題,10,siok-tê,siok4te5,siok4te5,ㄒㄧㆦㆻㄉㆤˊ,,siokte,siokte,ㄒㄧㆦㆻㄉㆤ,,st,st,ㄒㄉ,,True,False
 siok-bo̍k,寂寞,10,siok-bo̍k,siok4bok8,siok4bok8,ㄒㄧㆦㆻㆠㆦㆻ̇,,siokbok,siokbok,ㄒㄧㆦㆻㆠㆦㆻ,,sb,sb,ㄒㆠ,,True,False
 bi̍t-pô,密婆,10,bi̍t-pô,bit8po5,bit8po5,ㆠㄧㆵ̇ㄅㄛˊ,,bitpo,bitpo,ㆠㄧㆵㄅㄛ,,bp,bp,ㆠㄅ,,True,True
-kuânn--lâng-ê-sî,寒人个時,10,kôaⁿ--lâng-ê-sî,kuann5lang5e5si5,koann5lang5e5si5,ㄍㄨㆩˊㄌㄤˊㆤˊㄒㄧˊ,,kuannlangesi,koannlangesi,ㄍㄨㆩㄌㄤㆤㄒㄧ,,kles,kles,ㄍㄌㆤㄒ,,True,True
+kuânn--lâng-ê-sî,寒人个時,10,kôaⁿ--lâng-ê-sî,kuann5lang5e5si5,koann5lang5e5si5,ㄍㄨㆩˊㄌㄤˊㆤˊㄒㄧˊ,,kuannlangesi,koannlangesi,ㄍㄨㆩㄌㄤㆤㄒㄧ,,kles,kles,ㄍㄌㆤㄒ,,True,False
 tsiong-lâi,將來,10,chiong-lâi,tsiong1lai5,chiong1lai5,ㄐㄧㆲㄌㄞˊ,,tsionglai,chionglai,ㄐㄧㆲㄌㄞ,,tl,cl,ㄐㄌ,,True,False
 tuì-tâng,對同,10,tùi-tâng,tui3tang5,tui3tang5,ㄉㄨㄧ˪ㄉㄤˊ,,tuitang,tuitang,ㄉㄨㄧㄉㄤ,,tt,tt,ㄉㄉ,,True,False
 sió-khuá-á,小可仔,10,sió-khóa-á,sio2khua2a2,sio2khoa2a2,ㄒㄧㄛˋㄎㄨㄚˋㄚˋ,,siokhuaa,siokhoaa,ㄒㄧㄛㄎㄨㄚㄚ,,ska,ska,ㄒㄎㄚ,,True,False
@@ -15174,7 +15174,7 @@ pha̍k-ji̍t,曝日,10,pha̍k-ji̍t,phak8jit8,phak8jit8,ㄆㄚㆻ̇ㆢㄧㆵ̇,,
 tsuè-kīn-hó--bô,最近好無,10,chòe-kīn-hó--bô,tsue3kin7ho2bo5,choe3kin7ho2bo5,ㄗㄨㆤ˪ㄍㄧㄣ˫ㄏㄛˋㆠㄛˊ,,tsuekinhobo,choekinhobo,ㄗㄨㆤㄍㄧㄣㄏㄛㆠㄛ,,tkhb,ckhb,ㄗㄍㄏㆠ,,True,False
 ē-hô,會和,10,ē-hô,e7ho5,e7ho5,ㆤ˫ㄏㄛˊ,,eho,eho,ㆤㄏㄛ,,eh,eh,ㆤㄏ,,True,False
 gue̍h-sū,月事,10,goe̍h-sū,gueh8su7,goeh8su7,ㆣㄨㆤㆷ̇ㄙㄨ˫,,guehsu,goehsu,ㆣㄨㆤㆷㄙㄨ,,gs,gs,ㆣㄙ,,True,False
-ū-ê-bô-ê,有个無个,10,ū-ê-bô-ê,u7e5bo5e5,u7e5bo5e5,ㄨ˫ㆤˊㆠㄛˊㆤˊ,,ueboe,ueboe,ㄨㆤㆠㄛㆤ,,uebe,uebe,ㄨㆤㆠㆤ,,True,True
+ū-ê-bô-ê,有个無个,10,ū-ê-bô-ê,u7e5bo5e5,u7e5bo5e5,ㄨ˫ㆤˊㆠㄛˊㆤˊ,,ueboe,ueboe,ㄨㆤㆠㄛㆤ,,uebe,uebe,ㄨㆤㆠㆤ,,True,False
 ū-hîng-thé--ê,有形體的,10,ū-hêng-thé--ê,u7hing5the2e5,u7heng5the2e5,ㄨ˫ㄏㄧㄥˊㄊㆤˋㆤˊ,,uhingthee,uhengthee,ㄨㄏㄧㄥㄊㆤㆤ,,uhte,uhte,ㄨㄏㄊㆤ,,True,False
 ū-khang--bô-sún,有空無榫,10,ū-khang--bô-sún,u7khang1bo5sun2,u7khang1bo5sun2,ㄨ˫ㄎㄤㆠㄛˊㄙㄨㄣˋ,,ukhangbosun,ukhangbosun,ㄨㄎㄤㆠㄛㄙㄨㄣ,,ukbs,ukbs,ㄨㄎㆠㄙ,,True,False
 ū-thiann--tio̍h-bô,有聽著無,10,ū-thiaⁿ--tio̍h-bô,u7thiann1tioh8bo5,u7thiann1tioh8bo5,ㄨ˫ㄊㄧㆩㄉㄧㄛㆷ̇ㆠㄛˊ,,uthianntiohbo,uthianntiohbo,ㄨㄊㄧㆩㄉㄧㄛㆷㆠㄛ,,uttb,uttb,ㄨㄊㄉㆠ,,True,False
@@ -15638,7 +15638,7 @@ kan-tāu,干豆,1,kan-tāu,kan1tau7,kan1tau7,ㄍㄢㄉㄠ˫,,kantau,kantau,ㄍ�
 pîng-siâng,平常,1,pêng-siâng,ping5siang5,peng5siang5,ㄅㄧㄥˊㄒㄧㄤˊ,,pingsiang,pengsiang,ㄅㄧㄥㄒㄧㄤ,,ps,ps,ㄅㄒ,,True,False
 pîng-siông,平常,1,pêng-siông,ping5siong5,peng5siong5,ㄅㄧㄥˊㄒㄧㆲˊ,,pingsiong,pengsiong,ㄅㄧㄥㄒㄧㆲ,,ps,ps,ㄅㄒ,,True,False
 nî-tau,年兜,1,nî-tau,ni5tau1,ni5tau1,ㄋㄧˊㄉㄠ,,nitau,nitau,ㄋㄧㄉㄠ,,nt,nt,ㄋㄉ,,True,False
-kuí-ê,幾个,1,kúi-ê,kui2e5,kui2e5,ㄍㄨㄧˋㆤˊ,,kuie,kuie,ㄍㄨㄧㆤ,,ke,ke,ㄍㆤ,,True,True
+kuí-ê,幾个,1,kúi-ê,kui2e5,kui2e5,ㄍㄨㄧˋㆤˊ,,kuie,kuie,ㄍㄨㄧㆤ,,ke,ke,ㄍㆤ,,True,False
 khong-hi,康熙,1,khong-hi,khong1hi1,khong1hi1,ㄎㆲㄏㄧ,,khonghi,khonghi,ㄎㆲㄏㄧ,,kh,kh,ㄎㄏ,,True,False
 ín-kù-tiám,引句點,1,ín-kù-tiám,in2ku3tiam2,in2ku3tiam2,ㄧㄣˋㄍㄨ˪ㄉㄧㆰˋ,,inkutiam,inkutiam,ㄧㄣㄍㄨㄉㄧㆰ,,ikt,ikt,ㄧㄍㄉ,,True,False
 ín-tshuā,引𤆬,1,ín-chhōa,in2tshua7,in2chhoa7,ㄧㄣˋㄘㄨㄚ˫,,intshua,inchhoa,ㄧㄣㄘㄨㄚ,,it,ic,ㄧㄘ,,True,False
