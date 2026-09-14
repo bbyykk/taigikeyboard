@@ -466,14 +466,21 @@ pub fn fetch_hanji_with_custom(
     input_mode: &str,
     custom: Vec<CustomDictEntry>,
 ) -> Vec<String> {
-    let resp = fetch_at_pos_response(
-        &config(input_mode),
+    fetch_hanji(
         raw,
+        input_mode,
         FetchAtPos {
             custom_entries: custom,
             ..Default::default()
         },
-    );
+    )
+}
+
+/// [`fetch_at_pos_response`] under `config(input_mode)` with an arbitrary
+/// `FetchAtPos` payload, reduced to the candidate hanji in display order
+/// (roman-only candidates — including the §34 literal at index 0 — dropped).
+pub fn fetch_hanji(raw: &str, input_mode: &str, fetch: FetchAtPos) -> Vec<String> {
+    let resp = fetch_at_pos_response(&config(input_mode), raw, fetch);
     resp.continuous
         .map(|c| {
             c.candidates

@@ -88,7 +88,7 @@ use lexicon::{
     ConsumedSpan, ContinuousFetchCtx, CustomEntry, EngineHandle as LexiconHandle, RawCandidate,
     SyllableInventory, COVERAGE_KIND_FULL, FORM_NOTONE, PARTIAL_PREFIX_OUTPUT_CAP,
 };
-use ranking::{decayed_user_weight_delta, recency_rank, FrequencyMap};
+use ranking::FrequencyMap;
 
 // ============================================================================
 // D3 honest type — walker result struct names `cost`
@@ -115,7 +115,7 @@ pub(crate) struct WalkerSlot0 {
     /// knows the fold rule) so the seam reads it instead of re-folding.
     pub canonical_tl: String,
     pub mode: CandidateMode,
-    pub recency_rank: u8,
+    pub user_weight: f64,
     pub coverage_kind: u8,
     pub is_custom: bool,
 }
@@ -445,18 +445,15 @@ fn fetch_via_lexicon_partial_inner_impl(
 /// `enabled_sources_bitmask` + the dictionary readers).
 /// A walker edge's time-decayed user-frequency weight for the
 /// `(display_text, canonical_tl)` pair the platform commits to
-/// `user_frequency.db` (Core Principle #7). `FrequencyData.count` is i32
-/// (legacy cap domain); re-widened to u32 the same way
-/// `lexicon::record_to_candidate` does (negative → 0).
+/// `user_frequency.db` (Core Principle #7) — for the custom-edge and
+/// synth paths, which have no `RawCandidate` carrying `user_weight`.
 fn edge_user_weight_delta(
     freq_map: &FrequencyMap,
     now_ms: i64,
     display_text: &str,
     canonical_tl: &str,
 ) -> f64 {
-    let fd = freq_map.get(display_text, canonical_tl);
-    let count = u32::try_from(fd.count).unwrap_or(0);
-    decayed_user_weight_delta(count, now_ms, fd.last_used_ms)
+    freq_map.get(display_text, canonical_tl).user_weight(now_ms)
 }
 
 fn fetch_walker_slot0_inner(
@@ -670,29 +667,14 @@ fn fetch_walker_slot0_inner(
             raw_span,
             ctx,
         ) {
-            Some(c) => {
-                // v3.5.8 S3 (Codex pre-impl Q4d seam, 2026-05-16):
-                // fold this edge's time-decayed user-frequency
-                // weight into the walker path objective (closes
-                // Continuous-input Gap B → G2). `c.display_text`
-                // is the exact key the platform writes to
-                // `user_frequency.db` on commit (set by
-                // `lexicon::record_to_candidate`), so the same
-                // snapshot the span-local path consults applies
-                // here. Looked up BEFORE the field moves below.
-                // `best_candidate_for_key_with_barriers` / `record_to_candidate`
-                // are deliberately UNTOUCHED — their internal
-                // `user_freq_boost` answers "which record wins
-                // inside this edge" (homophone disambiguation);
-                // this answers "which segmentation path wins".
-                // Same user signal, two orthogonal decision
-                // levels, no double counting.
-                // R5 pair-key (#7): (c.display_text, c.canonical_tl) —
-                // c.canonical_tl is the record's TL, the same reading the
-                // platform commits to user_frequency.db. Tolerant fallback
-                // to the legacy tl == "" bucket on an exact miss.
-                let user_weight_delta =
-                    edge_user_weight_delta(freq_map, now_ms, &c.display_text, &c.canonical_tl);
+            Some(lexicon::EdgeBest {
+                candidate: c,
+                span_frequency,
+            }) => {
+                // Word = the user's pick (`SortKey` order). Cost =
+                // `span_frequency` (key max) so a rarer preferred
+                // homophone does not lose the segmentation; the S3
+                // path discount reads the pick's own `user_weight`.
                 Some(crate::lattice::EdgeChoice {
                     roman: c.roman,
                     hanji: c.hanji,
@@ -704,12 +686,12 @@ fn fetch_walker_slot0_inner(
                     dict_hit: true,
                     // S6: a `dict.bin` record is not custom.
                     is_custom: false,
-                    frequency: c.frequency,
+                    frequency: span_frequency,
                     syllable_count: c.syllable_count,
                     // khiin `word_len` for the S5 length
                     // normalization (Codex pre-impl Q1 BLOCK).
                     toneless_len: toneless.chars().count(),
-                    user_weight_delta,
+                    user_weight_delta: c.user_weight,
                 })
             }
             // No dict hit: the edge's own toneless roman, SAME code
@@ -866,10 +848,9 @@ fn fetch_walker_slot0_inner(
     // (`assemble_candidates`) reads it instead of re-folding `slot0.roman`.
     let canonical_tl = phonetics::api::canonical_tl_form(&roman, mode);
     let display_text = hanji.clone().unwrap_or_else(|| canonical_tl.clone());
-    // R5 pair-key (#7): walker OOV synth keyed by (display_text,
-    // canonical_tl); `get` returns neutral default (last_used_ms = 0)
-    // on miss, same as the prior `unwrap_or(0)`.
-    let last_used_ms = freq_map.get(&display_text, &canonical_tl).last_used_ms;
+    // R5 pair-key (#7): walker synth keyed by (display_text,
+    // canonical_tl); `get` returns the neutral default on a miss.
+    let user_weight = edge_user_weight_delta(freq_map, now_ms, &display_text, &canonical_tl);
     // Classify via the lexicon single-source-of-truth so the
     // synth's `CandidateMessage.mode` matches span-local / custom
     // candidates exactly — including MIXED when the concatenated
@@ -894,7 +875,7 @@ fn fetch_walker_slot0_inner(
         hanji,
         canonical_tl,
         mode: candidate_mode,
-        recency_rank: recency_rank(now_ms, last_used_ms),
+        user_weight,
         coverage_kind: COVERAGE_KIND_FULL,
         // v3.5.8 S6 (Codex pre-impl S6 Q4): provenance truth — a
         // synthesized full-buffer path containing ≥1 custom edge is
@@ -1137,7 +1118,7 @@ pub(crate) fn assemble_candidates(
                             frequency: 0,
                             bitmask: 0,
                             mode: slot0.mode,
-                            recency_rank: slot0.recency_rank,
+                            user_weight: slot0.user_weight,
                             coverage_kind: slot0.coverage_kind,
                             is_custom: slot0.is_custom,
                         };
@@ -1540,7 +1521,7 @@ mod tests {
             frequency: 0,
             bitmask: 0,
             mode: lexicon::CandidateMode::Hant,
-            recency_rank: 1,
+            user_weight: 0.0,
             coverage_kind: COVERAGE_KIND_FULL,
             is_custom: false,
         };
@@ -1567,7 +1548,7 @@ mod tests {
                 frequency: 0,
                 bitmask: 0,
                 mode: lexicon::CandidateMode::Tailo,
-                recency_rank: 1,
+                user_weight: 0.0,
                 coverage_kind: COVERAGE_KIND_FULL,
                 is_custom,
             }
@@ -1614,7 +1595,7 @@ mod tests {
                 frequency: 0,
                 bitmask: 0,
                 mode: lexicon::CandidateMode::Tailo,
-                recency_rank: 1,
+                user_weight: 0.0,
                 coverage_kind: COVERAGE_KIND_FULL,
                 is_custom: false,
             }
@@ -1643,7 +1624,7 @@ mod tests {
                 frequency: 0,
                 bitmask: 0,
                 mode: lexicon::CandidateMode::Tailo,
-                recency_rank: 1,
+                user_weight: 0.0,
                 coverage_kind: COVERAGE_KIND_FULL,
                 is_custom: false,
             }
@@ -1676,7 +1657,7 @@ mod tests {
                 frequency: 0,
                 bitmask: 0,
                 mode: lexicon::CandidateMode::Tailo,
-                recency_rank: 1,
+                user_weight: 0.0,
                 coverage_kind: COVERAGE_KIND_FULL,
                 is_custom: false,
             }

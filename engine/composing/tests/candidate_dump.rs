@@ -24,7 +24,9 @@
 //! ```sh
 //! # default sample inputs (tl mode)
 //! cargo test -p composing --test candidate_dump -- --ignored --nocapture
-//! # custom inputs (comma-separated) + mode (tl|poj|tps)
+//! # custom inputs (comma-separated) + mode (tl|poj|tps) + simulated
+//! # user_frequency rows `display:tl:count[:age_ms]`
+//! DUMP_FREQ="更新:king-sin:1:7200000" \
 //! DUMP_INPUTS="tai5,tai5gi2,tsua" DUMP_MODE=tl \
 //!   cargo test -p composing --test candidate_dump -- --ignored --nocapture
 //! ```
@@ -84,12 +86,35 @@ fn dump_continuous_candidates() {
         .unwrap_or(0);
     let cfg = config(&mode);
 
+    // DUMP_FREQ="更新:king-sin:10;羽:ú:10:7200000" — simulated
+    // user_frequency rows `display:tl:count[:age_ms]`, default age 1 s.
+    let now_ms: i64 = 1_800_000_000_000;
+    let freq: Vec<protos::engine::FrequencyEntry> = std::env::var("DUMP_FREQ")
+        .unwrap_or_default()
+        .split(';')
+        .filter(|s| !s.is_empty())
+        .map(|e| {
+            let p: Vec<&str> = e.split(':').collect();
+            protos::engine::FrequencyEntry {
+                display_text_key: p[0].to_string(),
+                canonical_tl: p[1].to_string(),
+                count: p[2].parse().unwrap(),
+                last_used_ms: p
+                    .get(3)
+                    .map(|a| now_ms - a.parse::<i64>().unwrap())
+                    .unwrap_or(now_ms - 1000),
+            }
+        })
+        .collect();
+
     for raw in inputs.split(',').map(str::trim).filter(|s| !s.is_empty()) {
         let resp = fetch_at_pos_response(
             &cfg,
             raw,
             FetchAtPos {
                 enabled_sources_bitmask: bitmask,
+                frequency_entries: freq.clone(),
+                now_ms,
                 ..Default::default()
             },
         );
@@ -101,10 +126,11 @@ fn dump_continuous_candidates() {
         );
         for (i, cand) in candidates.iter().enumerate() {
             println!(
-                "  [{i:>3}] span=({},{}) syll={} roman={:<16} hanji={}",
+                "  [{i:>3}] span=({},{}) syll={} score={:<12} roman={:<16} hanji={}",
                 cand.consumed_span_start,
                 cand.consumed_span_end,
                 cand.syllable_count,
+                cand.score,
                 cand.roman,
                 cand.hanji.as_deref().unwrap_or(""),
             );

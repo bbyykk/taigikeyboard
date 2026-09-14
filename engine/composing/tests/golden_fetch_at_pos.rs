@@ -366,6 +366,9 @@ fn matrix() -> Vec<Case> {
         },
         case("mixed", "iausi", "tl"),
         case("tailo_no_hanji", "li", "tl"),
+        // 台 selected 10× with the last pick 10 s before `now_ms` — a
+        // genuinely recent entry (`last_used_ms: 1` used to sit ~31 years
+        // back and only exercised the score boost, never the user dim).
         Case {
             name: "user_freq_boosted",
             raw: "tai",
@@ -373,7 +376,7 @@ fn matrix() -> Vec<Case> {
             freq: vec![FrequencyEntry {
                 display_text_key: "台".into(),
                 count: 10,
-                last_used_ms: 1,
+                last_used_ms: 999_999_990_000,
                 canonical_tl: String::new(),
             }],
             now_ms: 1_000_000_000_000,

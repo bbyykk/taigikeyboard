@@ -153,8 +153,8 @@ pub fn write_temp(name: &str, bytes: &[u8]) -> PathBuf {
 /// Always forces `custom = &[]` (the lexicon integration tests never carry
 /// custom-dict matches; the Item 12 tests in `span_local_fetch.rs` call the
 /// production entry directly for that). Pass `&FrequencyMap::new()` +
-/// `now_ms = 0` for cold-start neutral ranking (boost = 1.0,
-/// recency_rank = 1 everywhere).
+/// `now_ms = 0` for cold-start neutral ranking (user_weight = 0.0
+/// everywhere).
 pub fn fetch_candidates_for_endings(
     input: &str,
     pos: usize,

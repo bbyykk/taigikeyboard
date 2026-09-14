@@ -404,7 +404,7 @@ fn literal_roman_candidate(
         frequency: 0,
         bitmask: 0,
         mode: derive_mode(None),
-        recency_rank: 0,
+        user_weight: 0.0,
         coverage_kind: COVERAGE_KIND_FULL,
         is_custom: false,
     })
@@ -591,7 +591,7 @@ mod tests {
             frequency: 12,
             bitmask: 0,
             mode: lexicon::CandidateMode::Hant,
-            recency_rank: 1,
+            user_weight: 0.0,
             coverage_kind: lexicon::COVERAGE_KIND_FULL,
             is_custom: false,
         };
@@ -617,7 +617,7 @@ mod tests {
             frequency: 3,
             bitmask: 0,
             mode: lexicon::CandidateMode::Tailo,
-            recency_rank: 1,
+            user_weight: 0.0,
             coverage_kind: lexicon::COVERAGE_KIND_FULL,
             is_custom: false,
         };
@@ -647,7 +647,7 @@ mod tests {
                 frequency: 1,
                 bitmask: 0,
                 mode: lexicon::CandidateMode::Hant,
-                recency_rank: 1,
+                user_weight: 0.0,
                 coverage_kind: lexicon::COVERAGE_KIND_FULL,
                 is_custom: false,
             }

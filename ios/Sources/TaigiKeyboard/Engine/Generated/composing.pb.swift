@@ -499,8 +499,9 @@ public nonisolated struct Taigi_Engine_EnterContinuous: Sendable {
 /// keyed by `display_text_key` = `hanji ?? roman`). The engine builds
 /// a `FrequencyMap` once per fetch, computes `user_freq_boost(count)`
 /// per candidate (saturated at `MAX_BOOST = 5.0`), and derives the
-/// `SortKey.recency_rank` axis from `now_ms − last_used_ms`. Empty
-/// list = neutral 1.0 boost + rank 1 everywhere; backward-compatible
+/// leading `SortKey` user dimension (`RawCandidate.user_weight` =
+/// `decayed_user_weight_delta`) from `count` + `now_ms − last_used_ms`.
+/// Empty list = neutral 1.0 boost + weight 0.0 everywhere; backward-compatible
 /// with PR-9.2 platform builds that have not yet wired the snapshot
 /// (PR-9.3b plumbs iOS, PR-9.3c plumbs Android).
 ///
@@ -508,8 +509,8 @@ public nonisolated struct Taigi_Engine_EnterContinuous: Sendable {
 /// (iOS `Date().timeIntervalSince1970 * 1000`, Android
 /// `System.currentTimeMillis()`). The engine guards against
 /// `now_ms <= 0`, `last_used_ms <= 0`, and `now_ms < last_used_ms`
-/// (clock skew) by falling through to `recency_rank = 1` for every
-/// candidate — see `engine/ranking/src/score.rs::recency_rank`.
+/// (clock skew) by falling through to `user_weight = 0.0` for every
+/// candidate — see `engine/ranking/src/score.rs::decayed_user_weight_delta`.
 ///
 /// v3.5.8 Phase 9 Item 12 — `custom_entries` carries the platform's
 /// `custom_dictionary.db` matches for the current raw buffer. The DB
