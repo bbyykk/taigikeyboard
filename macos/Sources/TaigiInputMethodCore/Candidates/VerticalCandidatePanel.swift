@@ -6,18 +6,19 @@ import AppKit
 /// (`references/MacishType/macos/MacishType/MacishCandidateWindow/
 /// MacishVerticalPanel.swift`; MIT, © 2026 Luke Chang) with two departures:
 ///
-/// - Widths are measured eagerly over the whole displayed list rather than
-///   estimated from the top three rows and corrected later. With the
-///   200-candidate display cap that is bounded work, and it removes the
-///   mid-scroll window-widening animation upstream needs when its heuristic
-///   misses.
+/// - Width follows what the viewport has revealed, not the whole list.
+///   Upstream estimates from the first page plus the three longest texts and
+///   corrects to the full-list width on the first scroll; here the window is
+///   as wide as the widest row the user has actually scrolled to, and grows
+///   as wider rows come into view. The engine sorts low-frequency prefix
+///   extensions to the tail, so a long one at row 30 must not widen the nine
+///   rows the user sees. Within one list the window never shrinks back, so
+///   scrolling up does not make it jitter (`widenForRevealedRows`).
 /// - Rows are built for the viewport plus a small buffer as it moves, and
 ///   kept until the next list replaces them (`materialiseRows`). Building
 ///   every row up front — up to two hundred layer-backed views with three
 ///   labels each, before the window is presented — was a visible pause on
-///   every keystroke on a slower Mac. The width pass stays whole-list because
-///   the column has to be as wide as the widest candidate; the view pass does
-///   not.
+///   every keystroke on a slower Mac.
 ///
 /// Upstream's column alignment IS kept — every row's annotation starts at the
 /// same x — because this window shows two scripts per row.
@@ -42,6 +43,11 @@ final class VerticalCandidatePanel: CandidateBasePanel {
     private static let separatorHeight: CGFloat = 1
 
     private var cells: [CandidateCellContent] = []
+    /// `metrics.measurePrimaryWidth` per cell, measured once per list.
+    private var primaryWidths: [CGFloat] = []
+    /// How many rows from the top the viewport has shown so far — the rows
+    /// the width is measured over. Only ever grows within a list.
+    private var revealedRows = 0
     /// The first row of the nine the slot keys currently address, derived
     /// from the scroll position — the slots renumber as the user scrolls.
     private var anchorRow = 0
@@ -163,6 +169,8 @@ final class VerticalCandidatePanel: CandidateBasePanel {
 
     override func clear() {
         cells = []
+        primaryWidths = []
+        revealedRows = 0
         selectedIndex = 0
         anchorRow = 0
         removeRowViews()
@@ -239,34 +247,6 @@ final class VerticalCandidatePanel: CandidateBasePanel {
         let itemHeight = metrics.itemHeight
         let hasOverflow = cells.count > Self.visibleRows
 
-        // Width: the widest displayed cell, floored at one slot and capped at
-        // what the screen leaves once the scroller has its share — a long
-        // phrase widens the window rather than truncating inside a fixed one.
-        let primaryWidths = cells.map { metrics.measurePrimaryWidth($0.text) }
-        let widest = zip(cells, primaryWidths)
-            .map { metrics.cellWidth(for: $0, primaryWidth: $1) }
-            .max() ?? 0
-        let scroller = scrollerLayout(hasOverflow: hasOverflow)
-        let contentWidth = min(
-            max(widest, metrics.baseWidth),
-            max(metrics.baseWidth, maximumWindowWidth - scroller.allowance),
-        )
-        let geometry = scroller.geometry(contentWidth: contentWidth, naturalPadding: metrics.horizontalPadding)
-
-        // Every row's annotation starts at the same x, which is what makes a
-        // column of two-script rows readable rather than a ragged edge
-        // (`MacishVerticalPanel.swift:119-131`). The widest candidate sets the
-        // column — clamped to what the capped window can actually hold, since
-        // a column wider than the cell would push text past its edge.
-        let widestPrimary = primaryWidths.max() ?? 0
-        let primaryColumnWidth = min(
-            widestPrimary,
-            metrics.maximumPrimaryColumnWidth(
-                inCellWidth: geometry.itemWidth,
-                trailingInset: geometry.itemTrailing,
-            ),
-        )
-
         // Height: nine rows, plus half a row peeking when there is more — the
         // cut-off row is what says "scroll me".
         let visibleCount = min(cells.count, Self.visibleRows)
@@ -277,9 +257,15 @@ final class VerticalCandidatePanel: CandidateBasePanel {
         naturalContentHeight = CGFloat(cells.count) * itemHeight
             + CGFloat(max(cells.count - 1, 0)) * Self.separatorHeight
             + bottomPeek
+
+        // Width: the rows the opening viewport shows set it; the rest join
+        // as the viewport reaches them.
+        primaryWidths = cells.map { metrics.measurePrimaryWidth($0.text) }
+        revealedRows = rowsIntersectingViewport(minY: 0, height: windowHeight)
+        let geometry = resolveWidth()
         rowsContainer.frame.size = NSSize(width: geometry.itemWidth, height: naturalContentHeight)
         rowTrailingInset = geometry.itemTrailing
-        rowPrimaryColumnWidth = primaryColumnWidth
+        rowPrimaryColumnWidth = geometry.primaryColumnWidth
 
         scrollView.contentView.scroll(to: .zero)
         scrollView.reflectScrolledClipView(scrollView.contentView)
@@ -294,6 +280,72 @@ final class VerticalCandidatePanel: CandidateBasePanel {
             scrollView.flashScrollers()
         }
         return CGSize(width: geometry.windowWidth, height: windowHeight)
+    }
+
+    /// How many rows from the top a viewport of `height` at `minY`
+    /// intersects — the peeking half row included, since its text is painted.
+    private func rowsIntersectingViewport(minY: CGFloat, height: CGFloat) -> Int {
+        min(Int(ceil((minY + height) / rowHeight)), cells.count)
+    }
+
+    /// The widths every row of the current list renders at, from the revealed
+    /// rows: the widest revealed cell, floored at one slot and capped at what
+    /// the screen leaves once the scroller has its share — a long phrase
+    /// widens the window rather than truncating inside a fixed one.
+    private func resolveWidth() -> (windowWidth: CGFloat, itemWidth: CGFloat, itemTrailing: CGFloat, primaryColumnWidth: CGFloat) {
+        let revealed = cells.indices.prefix(revealedRows)
+        let widest = revealed
+            .map { metrics.cellWidth(for: cells[$0], primaryWidth: primaryWidths[$0]) }
+            .max() ?? 0
+        let scroller = scrollerLayout(hasOverflow: cells.count > Self.visibleRows)
+        let contentWidth = min(
+            max(widest, metrics.baseWidth),
+            max(metrics.baseWidth, maximumWindowWidth - scroller.allowance),
+        )
+        let geometry = scroller.geometry(contentWidth: contentWidth, naturalPadding: metrics.horizontalPadding)
+
+        // Every row's annotation starts at the same x, which is what makes a
+        // column of two-script rows readable rather than a ragged edge
+        // (`MacishVerticalPanel.swift:119-131`). The widest revealed candidate
+        // sets the column — clamped to what the capped window can actually
+        // hold, since a column wider than the cell would push text past its
+        // edge.
+        let widestPrimary = revealed.map { primaryWidths[$0] }.max() ?? 0
+        let primaryColumnWidth = min(
+            widestPrimary,
+            metrics.maximumPrimaryColumnWidth(
+                inCellWidth: geometry.itemWidth,
+                trailingInset: geometry.itemTrailing,
+            ),
+        )
+        return (geometry.windowWidth, geometry.itemWidth, geometry.itemTrailing, primaryColumnWidth)
+    }
+
+    /// The rows the viewport now shows join the revealed set; when that
+    /// brought a wider row in, the built rows are re-laid at the new widths
+    /// and the window grows in place. Runs before the materialisation so the
+    /// rows built for the new viewport are built at the final widths.
+    private func widenForRevealedRows() {
+        let viewport = effectiveViewport
+        let revealed = rowsIntersectingViewport(minY: viewport.minY, height: viewport.height)
+        guard revealed > revealedRows else { return }
+        revealedRows = revealed
+        let geometry = resolveWidth()
+        guard geometry.itemWidth != rowsContainer.frame.width
+            || geometry.primaryColumnWidth != rowPrimaryColumnWidth
+        else { return }
+        rowsContainer.frame.size.width = geometry.itemWidth
+        rowTrailingInset = geometry.itemTrailing
+        rowPrimaryColumnWidth = geometry.primaryColumnWidth
+        for item in itemViewsByRow.values {
+            item.trailingInset = geometry.itemTrailing
+            item.setPrimaryColumnWidth(geometry.primaryColumnWidth)
+            item.frame.size.width = geometry.itemWidth
+        }
+        for separator in separatorViewsByRow.values {
+            separator.frame.size.width = geometry.itemWidth
+        }
+        replace(panelSize: CGSize(width: geometry.windowWidth, height: frame.height))
     }
 
     /// What the scroller costs the window, and how the rows share it — from
@@ -341,11 +393,16 @@ final class VerticalCandidatePanel: CandidateBasePanel {
 
     /// Builds whichever rows the viewport now reaches that do not exist yet.
     private func materialiseRowsAroundViewport() {
-        let viewport = scrollView.contentView.bounds
-        // Before the window is presented the clip view has no size; the nine
-        // rows the window opens on are the viewport then.
-        let height = max(viewport.height, CGFloat(Self.visibleRows) * rowHeight)
-        materialiseRows(coveringMinY: viewport.minY, maxY: viewport.minY + height)
+        let viewport = effectiveViewport
+        materialiseRows(coveringMinY: viewport.minY, maxY: viewport.maxY)
+    }
+
+    /// The clip view's bounds — or, before the window is presented and the
+    /// clip view has no size, the nine rows the window opens on.
+    private var effectiveViewport: NSRect {
+        var viewport = scrollView.contentView.bounds
+        viewport.size.height = max(viewport.height, CGFloat(Self.visibleRows) * rowHeight)
+        return viewport
     }
 
     /// Builds the rows under `minY ... maxY` of the rows container — plus
@@ -409,6 +466,7 @@ final class VerticalCandidatePanel: CandidateBasePanel {
         if targetHeight < rowsContainer.frame.height {
             rowsContainer.frame.size.height = targetHeight
         }
+        widenForRevealedRows()
         materialiseRowsAroundViewport()
         updateRowNumbering()
     }
