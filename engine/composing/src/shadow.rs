@@ -56,7 +56,7 @@ pub(crate) fn strip_tones_for_mode(s: &str, mode: InputMode) -> String {
 }
 
 /// True iff `span` is a fully-toned TL/POJ reading: a non-empty sequence
-/// of `(letter+ digit)` groups — every syllable carries an ASCII tone
+/// of `(syllable digit)` groups — every syllable carries an ASCII tone
 /// digit (e.g. `tai5`, `tai5gi2`, `kak4`) — with no orphan/leading digit
 /// and a trailing tone digit. Such a span maps verbatim onto the
 /// digit-separated, hyphenless `tl_num` / `poj_num` FST key family
@@ -64,39 +64,43 @@ pub(crate) fn strip_tones_for_mode(s: &str, mode: InputMode) -> String {
 /// every record), so an exact lookup on the verbatim span filters
 /// candidates to exactly the typed tone(s).
 ///
-/// Text-only by design. The span-local + walker callers pass an
-/// already-syllabified lattice edge (syllable validity guaranteed
-/// upstream); the partial-prefix caller ([`build_partial_prefix_key`])
-/// passes the raw whole-buffer shadow, which may be an INCOMPLETE
-/// syllable. Either way this answers only "did the user fully tone it?",
-/// a pure property of the text — it never claims the span is a real word,
-/// so it needs no inventory and no re-segmentation (avoiding the greedy
-/// dead-end trap [`greedy_longest_syllabification`] documents). Safety for
-/// the unvalidated partial case: a fully-toned-LOOKING but nonexistent
-/// body (`abc1`) yields a verbatim key that simply MISSES the FST and
-/// returns zero candidates — never a wrong-tone hit. A mixed/partial-tone
-/// span (`tai5bak`, `taigi2`, `tai5g`) ends in a letter → returns false,
-/// so the caller keeps it on the toneless key, preserving the
-/// toneless-input "show all tones" behavior with no regression.
+/// Syllable-aware: each letter group a digit closes must be ONE
+/// phonotactically valid syllable ([`phonetics::is_valid_syllable`], the
+/// `TL_INITIALS × TL_FINALS` gate with POJ spelling folded to TL). A fused
+/// group carrying an untoned syllable (`kokbin5tong2`, `tengsek4`) is a
+/// PARTIAL-tone span with no FST key of its own → false → toneless key +
+/// [`TonePin::TypedTones`], the path a tail-untoned `kokbin5tong` already
+/// takes (§17 case 3). Phonotactics rather than the syllable inventory:
+/// this is a property of the typed SHAPE and must not drift with the
+/// dictionary build. A group that is a valid syllable yet could also
+/// split (`ai5` as `a`+`i5`) still keys verbatim — unchanged.
+///
+/// The span-local + walker callers pass a lattice edge (which proves the
+/// SPAN splits into syllables, not that every digit-closed group is one);
+/// the partial-prefix caller ([`build_partial_prefix_key`]) passes the raw
+/// whole-buffer shadow, possibly an INCOMPLETE syllable (`ts5`, `abc1`) —
+/// that keys toneless + pin, and the pin is fail-closed on a spelling
+/// mismatch, so it can widen the prefix scan but never admit a wrong tone.
 fn span_is_fully_toned_ascii(span: &str) -> bool {
     if span.is_empty() {
         return false;
     }
-    let mut group_has_letter = false;
-    for b in span.bytes() {
+    let mut group_start = 0;
+    for (i, b) in span.bytes().enumerate() {
         if b.is_ascii_digit() {
-            if !group_has_letter {
-                return false; // orphan digit — no letter opened this group (`5tai`, `tai55`)
+            // A tone digit closes the current syllable group; an empty
+            // group is an orphan digit (`5tai`, `tai55`).
+            let group = &span[group_start..i];
+            if group.is_empty() || !phonetics::is_valid_syllable(group) {
+                return false;
             }
-            group_has_letter = false; // tone digit closes the current syllable group
-        } else if b.is_ascii_alphabetic() {
-            group_has_letter = true;
-        } else {
+            group_start = i + 1;
+        } else if !b.is_ascii_alphabetic() {
             return false; // leaked hyphen / non-ASCII — not a clean toned reading
         }
     }
     // A trailing letter leaves a group open (un-toned) → not fully toned.
-    !group_has_letter
+    group_start == span.len()
 }
 
 /// TPS analogue of [`span_is_fully_toned_ascii`]: true iff `span` matches the
@@ -120,8 +124,8 @@ fn span_is_fully_toned_ascii(span: &str) -> bool {
 /// ([`span_end_pins_unmarked_tone`]). Surfacing all tones stays correct only
 /// for a tone-1/4 span the user has NOT closed with a space.
 ///
-/// **Same text-only limitation as [`span_is_fully_toned_ascii`]**: with no
-/// inventory it cannot split a fused multi-syllable body, so a tone-1/4
+/// **Text-only, unlike [`span_is_fully_toned_ascii`]**: with no syllable
+/// splitter it cannot split a fused multi-syllable body, so a tone-1/4
 /// syllable that is *leading or interior* (followed later by a marked
 /// syllable) is NOT detected — `ㄍㄠㄉㄞˊ` (kau1+tai5, e.g. the §18 `ㄍㄠ ␣ ㄉㄞˊ`
 /// space-phrase after the separator strip) reads as fully toned and keys the
@@ -2363,11 +2367,34 @@ mod tests {
         //   - mixed (trailing letter) → toneless prefix (no regression).
         let (_, k) = build_partial_prefix_key("tai5g", InputMode::Tl).unwrap();
         assert_eq!(k, "tl:taig");
-        //   - fully-toned-LOOKING but non-existent → still verbatim; it
-        //     just misses the FST and returns zero candidates (NEVER a
-        //     wrong-tone hit), which is the safe outcome for junk input.
+        //   - fully-toned-LOOKING but not a syllable → toneless prefix;
+        //     the typed digit travels as the whole-buffer `TypedTones`
+        //     pin, fail-closed on a spelling mismatch, so junk input
+        //     still yields zero candidates (NEVER a wrong-tone hit).
         let (_, k) = build_partial_prefix_key("abc1", InputMode::Tl).unwrap();
-        assert_eq!(k, "tl:abc1");
+        assert_eq!(k, "tl:abc");
+    }
+
+    #[test]
+    fn span_is_fully_toned_ascii_requires_one_syllable_per_group() {
+        // Every digit-closed group is one valid syllable → verbatim key.
+        assert!(span_is_fully_toned_ascii("tai5"));
+        assert!(span_is_fully_toned_ascii("kok4bin5tong2"));
+        assert!(
+            span_is_fully_toned_ascii("chit4"),
+            "POJ spelling folds to TL"
+        );
+        // A fused group carrying an untoned syllable is PARTIAL tone.
+        assert!(!span_is_fully_toned_ascii("kokbin5tong2"));
+        assert!(!span_is_fully_toned_ascii("kok4bintong2"));
+        assert!(!span_is_fully_toned_ascii("tengsek4"));
+        // Open tail, orphan digit, non-syllable group, separator leak.
+        assert!(!span_is_fully_toned_ascii("kokbin5tong"));
+        assert!(!span_is_fully_toned_ascii("5tai"));
+        assert!(!span_is_fully_toned_ascii("tai55"));
+        assert!(!span_is_fully_toned_ascii("abc1"));
+        assert!(!span_is_fully_toned_ascii("tai5-gi2"));
+        assert!(!span_is_fully_toned_ascii(""));
     }
 
     #[test]
@@ -2501,9 +2528,8 @@ mod tests {
 
     #[test]
     fn span_is_fully_toned_tps_leading_untoned_syllable_reads_as_toned() {
-        // Documented text-only limitation (mirrors `span_is_fully_toned_ascii`
-        // on `taigi5`): a LEADING tone-1 syllable followed by a marked syllable
-        // cannot be split without an inventory, so `ㄍㄠㄉㄞˊ` (kau1+tai5, the
+        // Documented text-only limitation: a LEADING tone-1 syllable
+        // followed by a marked syllable is not split, so `ㄍㄠㄉㄞˊ` (kau1+tai5, the
         // §18 `ㄍㄠ ␣ ㄉㄞˊ` space-phrase after the separator strip) reads as
         // fully toned and keys the verbatim `tps:ㄍㄠㄉㄞˊ`. This is EXACT, not a
         // wrong-tone hit — kau's tone-1 contributes no mark to `tps_num` either,
