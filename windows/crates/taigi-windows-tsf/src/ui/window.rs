@@ -1,7 +1,8 @@
 //! A non-activating popup window (`WS_POPUP`, `WS_EX_TOPMOST | TOOLWINDOW |
 //! NOACTIVATE`; khiin `candidate_window.rs:62-64`), created inside a
 //! per-monitor-v2 thread DPI scope (an in-proc DLL must not change the host
-//! process's DPI context, roadmap W4), rounded by DWM, shown with
+//! process's DPI context, roadmap W4), rounded by DWM with its show / hide
+//! fade forced off (`DWMWA_TRANSITIONS_FORCEDISABLED`), shown with
 //! `SW_SHOWNA` so the host's caret keeps blinking. Messages are forwarded to
 //! a [`WindowHandler`] whose box the [`PopupWindow`] OWNS — the HWND only
 //! borrows a pointer to it, so creation failure, `WM_NCDESTROY` and
@@ -14,12 +15,13 @@ use std::cell::RefCell;
 use std::ffi::c_void;
 use std::rc::Rc;
 use taigi_windows_core::composing::ContextToken;
-use windows::core::{Result, PCWSTR};
+use windows::core::{Result, BOOL, PCWSTR};
 use windows::Win32::Foundation::{
     GetLastError, ERROR_CLASS_ALREADY_EXISTS, HWND, LPARAM, LRESULT, POINT, RECT, WPARAM,
 };
 use windows::Win32::Graphics::Dwm::{
-    DwmSetWindowAttribute, DWMWA_WINDOW_CORNER_PREFERENCE, DWMWCP_ROUND,
+    DwmSetWindowAttribute, DWMWA_TRANSITIONS_FORCEDISABLED, DWMWA_WINDOW_CORNER_PREFERENCE,
+    DWMWCP_ROUND,
 };
 use windows::Win32::Graphics::Gdi::{
     BeginPaint, EndPaint, GetMonitorInfoW, InvalidateRect, MonitorFromPoint, HBRUSH, MONITORINFO,
@@ -366,6 +368,17 @@ fn handle_message(hwnd: HWND, message: u32, wparam: WPARAM, lparam: LPARAM) -> O
                     DWMWA_WINDOW_CORNER_PREFERENCE,
                     &preference as *const _ as *const c_void,
                     std::mem::size_of_val(&preference) as u32,
+                )
+                .ok();
+                // DWM fades every top-level window in and out (~200 ms) on
+                // show / hide; a candidate popup must appear and vanish on
+                // the keystroke, so the transition is forced off.
+                let no_transitions = BOOL(1);
+                DwmSetWindowAttribute(
+                    hwnd,
+                    DWMWA_TRANSITIONS_FORCEDISABLED,
+                    &no_transitions as *const _ as *const c_void,
+                    std::mem::size_of_val(&no_transitions) as u32,
                 )
                 .ok();
             }
