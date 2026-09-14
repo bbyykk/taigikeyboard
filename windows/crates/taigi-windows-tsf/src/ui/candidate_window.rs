@@ -449,18 +449,21 @@ impl CandidateWindow {
     /// keystroke's list is measured once, not once for the columns and again
     /// for the cells.
     fn build_layout(&self, layout: CandidateLayout, metrics: &CandidateMetrics) -> LayoutModel {
-        let widths: Vec<f32> = self
-            .primary_widths
-            .iter()
-            .zip(&self.annotation_widths)
-            .map(|(&primary, &annotation)| metrics.cell_width(primary, annotation))
-            .collect();
+        // The vertical list sizes from the two columns apart, so it takes
+        // the measurements themselves rather than these sums.
+        let cell_widths = || -> Vec<f32> {
+            self.primary_widths
+                .iter()
+                .zip(&self.annotation_widths)
+                .map(|(&primary, &annotation)| metrics.cell_width(primary, annotation))
+                .collect()
+        };
         let maximum = self.maximum_window_width(metrics);
         match layout {
             CandidateLayout::Horizontal => {
                 let arrow = Self::arrow_width(metrics);
                 let pages = HorizontalPageLayout::pack_with_chrome(
-                    &widths,
+                    &cell_widths(),
                     metrics.base_width(),
                     maximum,
                     arrow,
@@ -474,8 +477,8 @@ impl CandidateWindow {
             CandidateLayout::Vertical => {
                 LayoutModel::Vertical(VerticalListModel::new(VerticalLayoutInput {
                     metrics,
-                    cell_widths: &widths,
                     primary_widths: &self.primary_widths,
+                    annotation_widths: &self.annotation_widths,
                     maximum_window_width: maximum,
                     scroller: ScrollerStyle::Overlay {
                         width: SCROLLER_WIDTH,
@@ -483,7 +486,7 @@ impl CandidateWindow {
                 }))
             }
             CandidateLayout::Expandable => LayoutModel::Expandable(ExpandableListModel::new(
-                &widths,
+                &cell_widths(),
                 ExpandableGeometryInput {
                     base_width: metrics.base_width(),
                     maximum_window_width: maximum,

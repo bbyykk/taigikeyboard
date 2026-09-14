@@ -66,10 +66,13 @@ impl ScrollerLayout {
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct VerticalLayoutInput<'a> {
     pub metrics: &'a CandidateMetrics,
-    /// `CandidateMetrics::measure_width` per candidate, display order.
-    pub cell_widths: &'a [f32],
-    /// `CandidateMetrics::measure_primary_width` per candidate, same order.
+    /// `CandidateMetrics::measure_primary_width` per candidate, display order.
     pub primary_widths: &'a [f32],
+    /// `CandidateMetrics::measure_annotation` per candidate, same order and
+    /// length. The two columns are taken apart rather than as a summed cell
+    /// width: the window is sized to the widest column plus the widest
+    /// annotation, which need not be one row (`resolve_width`).
+    pub annotation_widths: &'a [Option<f32>],
     pub maximum_window_width: f32,
     pub scroller: ScrollerStyle,
 }
@@ -97,9 +100,9 @@ pub struct VerticalListModel {
     item_height: f32,
     metrics: CandidateMetrics,
     /// The measured widths the geometry is re-derived from as rows are
-    /// revealed (`VerticalLayoutInput::cell_widths` / `primary_widths`).
-    cell_widths: Vec<f32>,
+    /// revealed (`VerticalLayoutInput::primary_widths` / `annotation_widths`).
     primary_widths: Vec<f32>,
+    annotation_widths: Vec<Option<f32>>,
     maximum_window_width: f32,
     scroller: ScrollerStyle,
     /// How many rows from the top the viewport has shown so far — the
@@ -126,7 +129,12 @@ impl VerticalListModel {
     /// viewport at the top, sized to the rows that opening viewport shows.
     pub fn new(input: VerticalLayoutInput<'_>) -> Self {
         let metrics = input.metrics;
-        let count = input.cell_widths.len().min(MAX_DISPLAY_CANDIDATES);
+        assert_eq!(
+            input.primary_widths.len(),
+            input.annotation_widths.len(),
+            "one annotation measurement per candidate"
+        );
+        let count = input.primary_widths.len().min(MAX_DISPLAY_CANDIDATES);
         let item_height = metrics.item_height();
         let has_overflow = count > Self::VISIBLE_ROWS;
         let visible = count.min(Self::VISIBLE_ROWS);
@@ -137,8 +145,8 @@ impl VerticalListModel {
             count,
             item_height,
             metrics: metrics.clone(),
-            cell_widths: input.cell_widths[..count].to_vec(),
-            primary_widths: input.primary_widths[..count.min(input.primary_widths.len())].to_vec(),
+            primary_widths: input.primary_widths[..count].to_vec(),
+            annotation_widths: input.annotation_widths[..count].to_vec(),
             maximum_window_width: input.maximum_window_width,
             scroller: input.scroller,
             revealed_rows: 0,
@@ -177,9 +185,12 @@ impl VerticalListModel {
         }
     }
 
-    /// Width: the widest revealed cell, floored at one slot and capped at
-    /// what the screen leaves once the scroller has its share
-    /// (`rebuildRows` / `widenForRevealedRows`).
+    /// Width: the widest revealed candidate column plus the widest revealed
+    /// annotation — which can come from different rows, since every row's
+    /// annotation starts at the column's edge — floored at one slot and
+    /// capped at what the screen leaves once the scroller has its share
+    /// (`resolveWidth`). Sizing to the widest single row left kuānn beside 汗
+    /// truncated once 舅仔 / kǔ-á had widened the column.
     fn resolve_width(&mut self) {
         let metrics = &self.metrics;
         let scroller = ScrollerLayout::resolve(
@@ -187,10 +198,16 @@ impl VerticalListModel {
             self.scroller,
             metrics.horizontal_padding(),
         );
-        let widest = self.cell_widths[..self.revealed_rows]
+        let widest_primary = self.primary_widths[..self.revealed_rows]
             .iter()
             .copied()
             .fold(0.0, f32::max);
+        let widest_annotation = self.annotation_widths[..self.revealed_rows]
+            .iter()
+            .flatten()
+            .copied()
+            .reduce(f32::max);
+        let widest = metrics.cell_width(widest_primary, widest_annotation);
         let content_width = widest.max(metrics.base_width()).min(
             metrics
                 .base_width()
@@ -205,11 +222,6 @@ impl VerticalListModel {
         } else {
             (content_width, metrics.horizontal_padding())
         };
-        let widest_primary = self.primary_widths
-            [..self.revealed_rows.min(self.primary_widths.len())]
-            .iter()
-            .copied()
-            .fold(0.0, f32::max);
         let primary_column_width =
             widest_primary.min(metrics.maximum_primary_column_width(item_width, item_trailing));
         self.geometry.window_width = window_width;
@@ -438,16 +450,23 @@ mod tests {
         )
     }
 
+    /// The chrome an annotation-less inline cell adds around its candidate.
+    fn chrome(metrics: &CandidateMetrics) -> f32 {
+        metrics.base_width() - metrics.primary_column_floor()
+    }
+
+    /// A model of annotation-less rows whose cells measure `cell_widths`.
     fn model_with(
         metrics: &CandidateMetrics,
         cell_widths: &[f32],
         scroller: ScrollerStyle,
     ) -> VerticalListModel {
-        let primary: Vec<f32> = cell_widths.iter().map(|w| w / 2.0).collect();
+        let primary: Vec<f32> = cell_widths.iter().map(|w| w - chrome(metrics)).collect();
+        let annotations = vec![None; cell_widths.len()];
         VerticalListModel::new(VerticalLayoutInput {
             metrics,
-            cell_widths,
             primary_widths: &primary,
+            annotation_widths: &annotations,
             maximum_window_width: 640.0,
             scroller,
         })
@@ -543,7 +562,47 @@ mod tests {
             overlay.geometry().primary_column_width,
             metrics.maximum_primary_column_width(640.0, overlay.geometry().item_trailing)
         );
-        assert_eq!(wide.geometry().primary_column_width, 150.0);
+        assert_eq!(
+            wide.geometry().primary_column_width,
+            300.0 - chrome(&metrics)
+        );
+    }
+
+    #[test]
+    fn width_covers_the_widest_column_plus_the_widest_annotation_across_rows() {
+        // trace (EmMeasurer, candidate font = 1 em, annotation font smaller):
+        // rows 0..=39 are one glyph wide; row 0 carries the long annotation,
+        // row 40 (the tail) is two glyphs beside a short one. Revealing the
+        // tail widens the column to two glyphs for every row, so the window
+        // must hold two glyphs PLUS the long annotation — no single row does.
+        let metrics = metrics();
+        let one_glyph = metrics.primary_column_floor();
+        let long_annotation = Some(one_glyph * 2.5);
+        let short_annotation = Some(one_glyph);
+        let mut primary = vec![one_glyph; 41];
+        primary[40] = one_glyph * 2.0;
+        let mut annotations = vec![short_annotation; 41];
+        annotations[0] = long_annotation;
+        let mut model = VerticalListModel::new(VerticalLayoutInput {
+            metrics: &metrics,
+            primary_widths: &primary,
+            annotation_widths: &annotations,
+            maximum_window_width: 640.0,
+            scroller: ScrollerStyle::Legacy { width: 15.0 },
+        });
+        assert_eq!(
+            model.geometry().item_width,
+            metrics.cell_width(one_glyph, long_annotation),
+            "opening rows: one glyph beside the long annotation"
+        );
+        model.on_viewport_scrolled(model.max_scroll_y());
+        model.on_viewport_scrolled(0.0);
+        assert_eq!(model.geometry().primary_column_width, one_glyph * 2.0);
+        assert_eq!(
+            model.geometry().item_width,
+            metrics.cell_width(one_glyph * 2.0, long_annotation),
+            "the tail's column beside row 0's annotation"
+        );
     }
 
     #[test]
@@ -562,7 +621,7 @@ mod tests {
             base + 15.0,
             "first page: base content + legacy column"
         );
-        assert!(model.geometry().primary_column_width < 150.0);
+        assert!(model.geometry().primary_column_width < 300.0 - chrome(&metrics));
         model.select(9);
         assert_eq!(
             model.geometry().window_width,
@@ -582,7 +641,10 @@ mod tests {
             "row 20 intersects the viewport"
         );
         assert_eq!(model.geometry().item_width, 300.0);
-        assert_eq!(model.geometry().primary_column_width, 150.0);
+        assert_eq!(
+            model.geometry().primary_column_width,
+            300.0 - chrome(&metrics)
+        );
         model.on_viewport_scrolled(0.0);
         assert_eq!(
             model.geometry().window_width,
