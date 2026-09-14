@@ -219,6 +219,27 @@ fn untoned_second_syllable_stays_free() {
 }
 
 #[test]
+fn leading_untoned_syllable_with_toned_tail_keys_toneless() {
+    let _lock = engine_install_lock();
+    install_fixture();
+    // Reverse partial tone (USER 2026-09-15, `kokbin5tong2` lost 國民黨):
+    // leading syllable untoned, tail toned. Must key toneless + pin, not
+    // the non-existent verbatim `tl:tingsik4`, so all three readings
+    // (`sik4` satisfied, first syllable free) surface.
+    let hanji = fetch_hanji("tingsik4");
+    for h in ["程式", "等式", "中式"] {
+        assert!(has(&hanji, h), "tingsik4 must surface {h}; got {hanji:?}");
+    }
+    // The typed tail tone still pins on this path: `tingse3` keeps 程世
+    // (sè) and drops 中西 (se, tone 1).
+    let hanji = fetch_hanji("tingse3");
+    assert!(
+        has(&hanji, "程世") && !has(&hanji, "中西"),
+        "tingse3 must surface 程世 only; got {hanji:?}"
+    );
+}
+
+#[test]
 fn partial_prefix_extensions_honor_the_typed_tone() {
     let _lock = engine_install_lock();
     install_fixture();
