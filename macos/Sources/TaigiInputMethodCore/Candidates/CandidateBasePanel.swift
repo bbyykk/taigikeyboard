@@ -105,6 +105,11 @@ class CandidateBasePanel: NSPanel, CandidateWindowDragging {
         isOpaque = false
         backgroundColor = .clear
         hasShadow = true
+        // No order animation: the window must land the instant the keystroke
+        // is handled. `.default` leaves the choice to AppKit per window type,
+        // which nothing here pins (MacishType sets `.none` on its auxiliary
+        // windows, `CodeLookupWindow.swift:74`).
+        animationBehavior = .none
         // The window follows the user to whichever space and full-screen app
         // they are typing in. `.stationary` is deliberately not set: it would
         // hold the window pinned through Mission Control, where the document it
