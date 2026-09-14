@@ -486,8 +486,9 @@ fn fetch_walker_slot0_inner(
     // the edge keys use, so a hit here is byte-identical to a
     // lattice edge's `tl:{toneless}` (Q2 BLOCK: a plain
     // tone-digit-strip would not fold a POJ/diacritic custom roman
-    // like `tâi-uân`). `or_insert` = **first-wins** on a duplicate
-    // key (Codex Q6: explicit, not `HashMap` overwrite/iteration).
+    // like `tâi-uân`). Entries under one key keep `custom` order, so
+    // the edge provider's pick is **first-wins** among the eligible
+    // (Codex Q6: explicit, not `HashMap` overwrite/iteration).
     //
     // S6 byte-identity invariant: the SAME `mode` feeds
     // `build_shadow_lattice_with_barriers` (caller) and `custom_toneless_key` (here);
@@ -496,7 +497,7 @@ fn fetch_walker_slot0_inner(
     // makes the contract local — a split-brain (POJ-aware edges,
     // mode-blind custom keys) would silently drop custom matches in
     // POJ mode.
-    let mut custom_map: std::collections::HashMap<String, &CustomEntry> =
+    let mut custom_map: std::collections::HashMap<String, Vec<&CustomEntry>> =
         std::collections::HashMap::with_capacity(custom.len());
     for entry in custom {
         if let Some(k) = custom_toneless_key(&entry.roman, mode) {
@@ -509,9 +510,9 @@ fn fetch_walker_slot0_inner(
             // disjoint from every canonical key — see
             // `phonetics::nasal_oo_alias_spelling`.
             if let Some(alias) = phonetics::nasal_oo_alias_spelling(&k) {
-                custom_map.entry(alias).or_insert(entry);
+                custom_map.entry(alias).or_default().push(entry);
             }
-            custom_map.entry(k).or_insert(entry);
+            custom_map.entry(k).or_default().push(entry);
         }
     }
     // Codex post-impl S2 P1: suppress the synth when a trailing
@@ -554,38 +555,42 @@ fn fetch_walker_slot0_inner(
         // only be synthesized from the typed tone, matching the span-local
         // list (a split — span-local toned, walker toneless — would let a
         // wrong-tone word reappear at slot 0). The §35 Final-only
-        // restriction and the §41 tone pin come from the same
+        // restriction and the §17 / §41 tone pin come from the same
         // [`crate::shadow::span_key`] derivation the span-local keys use.
-        // A3 (§41) — the tone pin is computed BEFORE the custom override
-        // below so both edge sources answer to the same pin: a custom
-        // entry synthesized past the guard would land at slot 0, where no
+        // The tone pin is computed BEFORE the custom override below so
+        // both edge sources answer to the same pin: a custom entry
+        // synthesized past the guard would land at slot 0, where no
         // downstream lexicon filter can reach it (Codex post-impl BLOCK,
         // 2026-08-20).
         let crate::shadow::SpanKey {
             key: dict_key,
             final_only: edge_final_only,
-            tone_pinned: edge_tone_pinned,
+            tone_pin: edge_tone_pin,
         } = crate::shadow::span_key(shadow, start, end, mode, barriers)?;
         // Custom override matching stays tone-INSENSITIVE: `custom_map` is
         // keyed by `custom_toneless_key` (toneless), so it is queried with
         // the toneless key — a custom word is a specific user entry, matched
-        // per the legacy toneless rule. What A3 (§41) adds is not a
+        // per the legacy toneless rule. What the tone pin adds is not a
         // different match key but an eligibility gate on the ENTRY's own
-        // reading: with the edge closed by the keyboard's space, an entry
-        // whose syllable at that boundary carries a marked tone is not the
-        // word the user asked for.
+        // reading: with the edge typed with a digit (§17) or closed by the
+        // keyboard's space (§41), an entry whose reading disagrees there is
+        // not the word the user asked for. The FIRST ELIGIBLE entry under
+        // the key wins — filtering after a first-wins pick would hide a
+        // later entry that does carry the typed tone.
         //
-        // **Unreachable in TPS today, kept for architectural symmetry.**
-        // `custom_toneless_key` (`shadow.rs`) rejects a TPS body that is not
-        // all-Bopomofo, and `custom_dictionary.db` stores TL / POJ romans —
-        // so no custom entry currently lands in `custom_map` under
-        // `InputMode::Tps`, and the tests below bite the lexicon merge, not
-        // this branch. The gate is here so BOTH edge sources answer the same
-        // pin the day custom keys gain a TPS form (§35 follow-up 4, the
-        // platform pre-query architecture): a custom entry synthesized past
-        // the pin becomes slot 0, where no downstream lexicon filter can
-        // reach it. Raised by Codex post-impl 2026-08-20; the "already
-        // fires today" part of that finding did not survive verification.
+        // **§41 branch unreachable in TPS today, kept for architectural
+        // symmetry.** `custom_toneless_key` (`shadow.rs`) rejects a TPS
+        // body that is not all-Bopomofo, and `custom_dictionary.db` stores
+        // TL / POJ romans — so no custom entry currently lands in
+        // `custom_map` under `InputMode::Tps`, and the TPS tests bite the
+        // lexicon merge, not this branch. The gate is here so BOTH edge
+        // sources answer the same pin the day custom keys gain a TPS form
+        // (§35 follow-up 4, the platform pre-query architecture): a custom
+        // entry synthesized past the pin becomes slot 0, where no
+        // downstream lexicon filter can reach it. Raised by Codex post-impl
+        // 2026-08-20; the "already fires today" part of that finding did
+        // not survive verification. The §17 branch DOES fire: TL/POJ custom
+        // entries are the common case.
         let custom_key = format!("{key_prefix}:{toneless}");
         // v3.5.8 S6 (Codex pre-impl S6 Q3, 2026-05-17) — a
         // `custom_dictionary.db` entry whose normalized toneless
@@ -597,8 +602,11 @@ fn fetch_walker_slot0_inner(
         // cost competition (segmentation safety comes from the
         // `CUSTOM_EFFECTIVE_FREQ` proxy + existing single-syllable
         // user-delta damping, not from out-scoring dict here).
-        if let Some(entry) = custom_map.get(custom_key.as_str()).filter(|entry| {
-            !edge_tone_pinned || lexicon::reading_passes_space_pin(&toneless, &entry.roman)
+        if let Some(entry) = custom_map.get(custom_key.as_str()).and_then(|entries| {
+            entries
+                .iter()
+                .copied()
+                .find(|entry| edge_tone_pin.admits_custom(&entry.roman, mode))
         }) {
             // `display_text` = the exact key the platform writes to
             // `user_frequency.db` on commit, mirroring
@@ -658,7 +666,7 @@ fn fetch_walker_slot0_inner(
         match best_candidate_for_key_with_barriers(
             &dict_key,
             &edge_final_only,
-            edge_tone_pinned,
+            &edge_tone_pin,
             raw_span,
             ctx,
         ) {
@@ -935,11 +943,10 @@ pub(crate) fn assemble_candidates(
     enabled_sources_bitmask: u32,
 ) -> Vec<RawCandidate> {
     let raw_len = raw.len() as u32;
-    // A3 (§41) — whole-buffer space pin, computed once per seam invocation
-    // (owned here so `ContinuousFetchCtx` can borrow it for the whole
-    // fetch). `None` for every non-TPS mode and for a TPS buffer whose
-    // tail is not a space-closed unmarked syllable.
-    let tps_space_pinned_body = crate::shadow::tps_space_pinned_body(raw, mode);
+    // Whole-buffer tone pin (§17 typed digits / §41 space-closed TPS
+    // tail), computed once per seam invocation for the sources that carry
+    // no span key of their own.
+    let tone_pin = crate::shadow::whole_buffer_tone_pin(raw, mode);
     LexiconHandle::with_state(|state| {
         let inv = state.syllable_inventory.as_ref();
         let prefix = state.prefix_index.as_ref();
@@ -972,11 +979,11 @@ pub(crate) fn assemble_candidates(
                 // key prefix is decided above and embedded in `keys`,
                 // so this is purely a freq-key axis.
                 mode,
-                // A3 (§41) — whole-buffer space pin for the sources that
-                // carry no span key of their own (custom entries,
-                // partial-prefix extensions). Computed from `raw` by the
-                // same rule the per-key flags use.
-                tps_space_pinned_body: tps_space_pinned_body.as_deref(),
+                // Whole-buffer tone pin for the sources that carry no span
+                // key of their own (custom entries, partial-prefix
+                // extensions). Computed from `raw` by the same rule the
+                // per-key pins use.
+                tone_pin,
             });
 
         // ---- Step 1: build keys + shadow/lattice (D1 fold).
@@ -1033,7 +1040,7 @@ pub(crate) fn assemble_candidates(
                 (Some(continuous_keys), Some(ctx)) => fetch_candidates_for_keys_with_barriers(
                     &continuous_keys.keys,
                     &continuous_keys.final_only,
-                    &continuous_keys.tone_pinned,
+                    &continuous_keys.tone_pins,
                     raw_len,
                     ctx,
                 ),

@@ -134,7 +134,7 @@ fn ctx<'a>(
         prefix_index,
         dict,
         mode,
-        tps_space_pinned_body: None,
+        tone_pin: lexicon::TonePin::None,
     }
 }
 

@@ -33,7 +33,7 @@ use lexicon::prefix_index::PrefixIndex;
 use lexicon::{
     best_candidate_for_key_with_barriers, fetch_candidates_for_keys_with_barriers,
     fetch_partial_prefix_candidates, fetch_partial_prefix_candidates_unbounded, CandidateMode,
-    ConsumedSpan, ContinuousFetchCtx, CustomEntry, RawCandidate, COVERAGE_KIND_FULL,
+    ConsumedSpan, ContinuousFetchCtx, CustomEntry, RawCandidate, TonePin, COVERAGE_KIND_FULL,
     COVERAGE_KIND_PARTIAL_PREFIX, FORM_NOTONE, PARTIAL_PREFIX_HYDRATE_CAP,
     PARTIAL_PREFIX_OUTPUT_CAP,
 };
@@ -67,7 +67,7 @@ fn ctx<'a>(
         prefix_index,
         dict,
         mode: phonetics::InputMode::Tl,
-        tps_space_pinned_body: None,
+        tone_pin: lexicon::TonePin::None,
     }
 }
 
@@ -1800,7 +1800,7 @@ fn best_candidate_for_key_returns_highest_score_on_collision() {
     let best = best_candidate_for_key_with_barriers(
         "tl:taiuan",
         &[],
-        false,
+        &TonePin::None,
         (0, 6),
         &ctx_neutral(&FrequencyMap::new(), &prefix_index, &dict),
     )
@@ -1834,7 +1834,7 @@ fn best_candidate_for_key_none_when_key_absent() {
         best_candidate_for_key_with_barriers(
             "tl:zzz",
             &[],
-            false,
+            &TonePin::None,
             (0, 3),
             &ctx_neutral(&FrequencyMap::new(), &prefix_index, &dict),
         )
@@ -1900,7 +1900,7 @@ fn continuous_drops_tl_abbrev_collision_keeps_genuine_toneless() {
     let best = best_candidate_for_key_with_barriers(
         "tl:gi",
         &[],
-        false,
+        &TonePin::None,
         (0, 2),
         &ctx_neutral(&FrequencyMap::new(), &prefix_index, &dict),
     )

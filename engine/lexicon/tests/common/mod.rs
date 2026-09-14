@@ -197,7 +197,7 @@ pub fn fetch_candidates_for_endings(
         prefix_index: ctx.prefix_index,
         dict: ctx.dict,
         mode: ctx.mode,
-        tps_space_pinned_body: ctx.tps_space_pinned_body,
+        tone_pin: ctx.tone_pin.clone(),
     };
     fetch_candidates_for_keys_with_barriers(&keys, &[], &[], input.len() as u32, &inner)
 }
