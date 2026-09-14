@@ -12,6 +12,7 @@ on:
     paths:
       - 'i18n/**'
       - 'tools/i18n/**'
+      - 'ios/Localizable.xcstrings'
       - 'ios/**/*.swift'
       - 'ios/.swift-version'
       - 'macos/**/*.swift'
@@ -22,6 +23,7 @@ on:
     paths:
       - 'i18n/**'
       - 'tools/i18n/**'
+      - 'ios/Localizable.xcstrings'
       - 'ios/**/*.swift'
       - 'ios/.swift-version'
       - 'macos/**/*.swift'
