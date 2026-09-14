@@ -231,12 +231,15 @@ pub(crate) const WALKER_SINGLE_SYLLABLE_USER_DELTA_SCALE: f64 = 0.0;
 /// v3.5.8 S6 (Codex pre-impl S6 Q1, 2026-05-17, BLOCK condition) —
 /// the **effective corpus frequency** a `custom_dictionary.db` edge is
 /// scored with in the S5 min-cost model — and, since 2026-09-14, the
-/// floor a multi-syllable edge whose word the user has SELECTED is
-/// priced at (librime records committed phrases into the same user
-/// dictionary; a selection is user-dict evidence just like a custom
-/// row). Without the floor a selected rare phrase (更新, freq 1) stays
-/// costlier than the 經+身 single-syllable split — the walker never
-/// showed it at slot 0 however often it was picked.
+/// ceiling of the user-dict floor a multi-syllable edge whose word the
+/// user has SELECTED is priced at (librime records committed phrases
+/// into the same user dictionary; a selection is user-dict evidence
+/// like a custom row). The floor scales with the selection weight —
+/// one fresh pick reaches the full tier, and fades with
+/// `USER_WEIGHT_DECAY_TAU_MS` unless re-selected (see [`edge_cost`]).
+/// Without it a selected rare phrase (更新, freq 1) stays costlier than
+/// the 經+身 single-syllable split until ~18 picks (the `ln(1+δ)`
+/// discount alone covers ≤ ln 5).
 ///
 /// A custom entry carries no corpus frequency. Rather than an explicit
 /// cost floor / discount — which would bypass the "every edge pays the
@@ -280,10 +283,13 @@ pub(crate) const CUSTOM_EFFECTIVE_FREQ: u32 = 2_000;
 ///   (`ranking::decayed_user_weight_delta`, in `0.0..=4.0`; `0.0` =
 ///   no user history / never selected / bad clock = neutral). Computed
 ///   caller-side (`continuous::fetch_walker_slot0_inner`). OOV edges always
-///   carry `0.0` and take no discount. `> 0.0` on a multi-syllable
-///   edge also floors `frequency` at [`CUSTOM_EFFECTIVE_FREQ`] (the
-///   user-dict tier), so a selected phrase beats any single-syllable
-///   split of its span.
+///   carry `0.0` and take no discount. On a multi-syllable edge it
+///   also raises `frequency` to a user-dict floor of
+///   `CUSTOM_EFFECTIVE_FREQ × min(1, δ / BOOST_ALPHA)` — one fresh
+///   selection is the full tier, so a selected phrase beats any
+///   single-syllable split of its span; the floor fades with the
+///   selection's decay and a stale single pick eventually stops
+///   overriding the corpus.
 /// - `dict_hit` — `true` iff this edge is a lexicon-backed hit
 ///   (`dict.bin` record OR a `custom_dictionary.db` entry). The OOV
 ///   branch is selected solely from this flag, **never** inferred from
@@ -336,14 +342,20 @@ pub(crate) fn edge_cost(
     // `frequency == 0`.
     // A user-selected multi-syllable word is user-dict evidence: price
     // it at least at the custom-entry tier so its span is not split
-    // into higher-frequency singles. Single-syllable edges keep the S3
-    // damping policy below (no user lift in segmentation).
-    let frequency = if syllable_count > 1 && user_weight_delta > 0.0 {
-        frequency.max(CUSTOM_EFFECTIVE_FREQ)
+    // into higher-frequency singles. One fresh selection (δ =
+    // BOOST_ALPHA) is the full tier; the floor decays with δ so a
+    // single stale pick stops overriding the corpus after months,
+    // while repeated picks (δ saturates at 4) keep it pinned. Single-
+    // syllable edges keep the S3 damping policy below (no user lift in
+    // segmentation).
+    let user_dict_floor = if syllable_count > 1 {
+        f64::from(CUSTOM_EFFECTIVE_FREQ)
+            * (user_weight_delta / f64::from(ranking::BOOST_ALPHA)).clamp(0.0, 1.0)
     } else {
-        frequency
+        0.0
     };
-    let p = (1.0 + f64::from(frequency)) / CORPUS_TOTAL_FREQ;
+    let effective_frequency = f64::from(frequency).max(user_dict_floor);
+    let p = (1.0 + effective_frequency) / CORPUS_TOTAL_FREQ;
     let mut cost = (1.0 / p).ln();
     // khiin segmenter.rs:90-92 — `cost / word_len^0.2 * n_syls^0.2`.
     let len_bias = (toneless_len.max(1) as f64).powf(LETTER_COUNT_BIAS);
@@ -764,17 +776,37 @@ mod tests {
             cold > split,
             "cold rare phrase loses the split (the bug shape)"
         );
-        let selected_once = edge_cost(1, 2, 7, 0.1, true);
+        // One fresh pick: δ = BOOST_ALPHA → full tier.
+        let one_fresh = f64::from(ranking::BOOST_ALPHA);
+        let selected_once = edge_cost(1, 2, 7, one_fresh, true);
         assert!(
             selected_once < split,
             "selected={selected_once} split={split}"
         );
+        let at_tier = ec(CUSTOM_EFFECTIVE_FREQ, 2, 7) - one_fresh.ln_1p();
+        assert!((selected_once - at_tier).abs() < 1e-9);
         // Floor, not a jump past a genuinely frequent phrase: the same
         // delta on a freq-above-floor phrase is unchanged by the floor.
-        let above = edge_cost(CUSTOM_EFFECTIVE_FREQ * 2, 2, 7, 0.1, true);
-        assert!((above - (ec(CUSTOM_EFFECTIVE_FREQ * 2, 2, 7) - 0.1f64.ln_1p())).abs() < 1e-9);
+        let above = edge_cost(CUSTOM_EFFECTIVE_FREQ * 2, 2, 7, one_fresh, true);
+        let above_expected = ec(CUSTOM_EFFECTIVE_FREQ * 2, 2, 7) - one_fresh.ln_1p();
+        assert!((above - above_expected).abs() < 1e-9);
         // Single-syllable edges are NOT floored (S3 damping policy).
         assert_eq!(edge_cost(1, 1, 3, 4.0, true), ec(1, 1, 3));
+    }
+
+    #[test]
+    fn user_dict_floor_fades_with_the_selection_weight() {
+        // Codex post-impl 2026-09-15 P2: a boolean gate never expired. The
+        // floor scales with δ: a single pick decayed to 5% of BOOST_ALPHA
+        // (~90 days at τ = 30 d) still beats the 經+身 split, but at 0.25%
+        // (~180 days) the corpus order is back; saturated repeat picks
+        // (δ = 4) stay at the full tier.
+        let split = ec(9218, 1, 4) + ec(10865, 1, 3);
+        let alpha = f64::from(ranking::BOOST_ALPHA);
+        assert!(edge_cost(1, 2, 7, alpha * 0.05, true) < split);
+        assert!(edge_cost(1, 2, 7, alpha * 0.0025, true) > split);
+        let saturated_expected = ec(CUSTOM_EFFECTIVE_FREQ, 2, 7) - 4.0f64.ln_1p();
+        assert!((edge_cost(1, 2, 7, 4.0, true) - saturated_expected).abs() < 1e-9);
     }
 
     #[test]
