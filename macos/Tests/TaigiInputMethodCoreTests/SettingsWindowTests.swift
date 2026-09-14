@@ -139,6 +139,86 @@ final class SettingsWindowTests: XCTestCase {
         XCTAssertEqual(window.title, language.string(SettingsPane.shortcuts.labelKey))
     }
 
+    /// The titlebar is transparent, so a scrolled pane would run under the
+    /// title text; the title hides while the pane is scrolled and comes back
+    /// at the top. Driven through the pane's real scroll view, the way a
+    /// wheel event would move it.
+    func testWindow_hidesTheTitleWhileTheDetailPaneIsScrolled() throws {
+        let (window, clipView) = try makeShownWindowWithPaneClipView()
+        let top = clipView.bounds.origin
+        XCTAssertEqual(window.titleVisibility, .visible)
+
+        clipView.scroll(to: NSPoint(x: top.x, y: top.y + 40))
+        XCTAssertEqual(window.titleVisibility, .hidden)
+
+        clipView.scroll(to: top)
+        XCTAssertEqual(window.titleVisibility, .visible)
+        window.close()
+    }
+
+    /// Switching panes while scrolled: the new pane opens at its top, and its
+    /// fresh scroll view is not relied on to announce that.
+    func testWindow_showsTheTitleAgainWhenThePaneChanges() throws {
+        let (window, clipView) = try makeShownWindowWithPaneClipView()
+        let top = clipView.bounds.origin
+        clipView.scroll(to: NSPoint(x: top.x, y: top.y + 40))
+        XCTAssertEqual(window.titleVisibility, .hidden)
+
+        SettingsStore().selectedSettingsPane = .general
+
+        // The pane observation hops to the main actor before it resets.
+        XCTAssertTrue(TestFixtures.spinRunLoop(until: { window.titleVisibility == .visible }))
+        window.close()
+    }
+
+    /// Visible at the clip view's top inset — where `.fullSizeContentView`
+    /// starts the content under the titlebar — hidden past it.
+    func testTitleVisibility_readsTheClipViewAgainstItsTopInset() {
+        let scrollView = Self.makeScrollView(documentHeight: 1000)
+        scrollView.contentInsets = NSEdgeInsets(top: 28, left: 0, bottom: 0, right: 0)
+        let clipView = scrollView.contentView
+
+        clipView.scroll(to: NSPoint(x: 0, y: -28))
+        XCTAssertEqual(SettingsSplitViewController.titleVisibility(for: clipView), .visible)
+        clipView.scroll(to: NSPoint(x: 0, y: 12))
+        XCTAssertEqual(SettingsSplitViewController.titleVisibility(for: clipView), .hidden)
+    }
+
+    /// Only the pane's outermost scroll view drives the title: a table nested
+    /// in it (`CustomDictionaryPage`) scrolls without the pane moving, and a
+    /// scroll view outside the detail column is someone else's.
+    func testPaneScrollView_isTheOutermostOneUnderTheDetailColumn() {
+        let detailView = NSView(frame: NSRect(x: 0, y: 0, width: 100, height: 100))
+        let paneScrollView = Self.makeScrollView(documentHeight: 1000)
+        detailView.addSubview(paneScrollView)
+        let nestedTableScrollView = Self.makeScrollView(documentHeight: 500)
+        paneScrollView.documentView?.addSubview(nestedTableScrollView)
+        let elsewhere = Self.makeScrollView(documentHeight: 100)
+
+        XCTAssertTrue(SettingsSplitViewController.isPaneScrollView(paneScrollView.contentView, in: detailView))
+        XCTAssertFalse(SettingsSplitViewController.isPaneScrollView(nestedTableScrollView.contentView, in: detailView))
+        XCTAssertFalse(SettingsSplitViewController.isPaneScrollView(elsewhere.contentView, in: detailView))
+    }
+
+    /// The 快速齒 pane on screen and laid out, with the clip view of its own
+    /// scroll view — the one a wheel event over the pane moves.
+    private func makeShownWindowWithPaneClipView() throws -> (NSWindow, NSClipView) {
+        SettingsStore().selectedSettingsPane = .shortcuts
+        let window = makeWindow(language: makeStore())
+        window.orderFrontRegardless()
+        window.contentView?.layoutSubtreeIfNeeded()
+        let split = try XCTUnwrap(window.contentViewController as? SettingsSplitViewController)
+        let detailView = try XCTUnwrap(split.splitViewItems.last?.viewController.view)
+        let scrollView = try XCTUnwrap(TestFixtures.descendants(of: detailView, as: NSScrollView.self).first)
+        return (window, scrollView.contentView)
+    }
+
+    private static func makeScrollView(documentHeight: CGFloat) -> NSScrollView {
+        let scrollView = NSScrollView(frame: NSRect(x: 0, y: 0, width: 100, height: 100))
+        scrollView.documentView = NSView(frame: NSRect(x: 0, y: 0, width: 100, height: documentHeight))
+        return scrollView
+    }
+
     /// The window follows the app's own 外觀 setting, not just the system's —
     /// the same choice the candidate window reads.
     func testWindow_followsTheAppearanceSetting() {

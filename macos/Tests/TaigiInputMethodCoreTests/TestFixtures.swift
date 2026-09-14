@@ -64,15 +64,18 @@ enum TestFixtures {
     /// Every view of type `T` in `panel`'s view tree, in tree order — the
     /// walk every suite that asserts about what a panel DRAWS starts from.
     @MainActor
-    static func descendants<T: NSView>(of panel: CandidateBasePanel, as _: T.Type) -> [T] {
-        func collect(_ view: NSView) -> [T] {
-            if let match = view as? T {
-                return [match]
-            }
-            return view.subviews.flatMap(collect)
-        }
+    static func descendants<T: NSView>(of panel: CandidateBasePanel, as type: T.Type) -> [T] {
         guard let root = panel.contentView else { return [] }
-        return collect(root)
+        return descendants(of: root, as: type)
+    }
+
+    /// Every view of type `T` under `root`, in tree order.
+    @MainActor
+    static func descendants<T: NSView>(of root: NSView, as _: T.Type) -> [T] {
+        if let match = root as? T {
+            return [match]
+        }
+        return root.subviews.flatMap { descendants(of: $0, as: T.self) }
     }
 
     /// `<repo>/fonts/font` — the shared typeface directory every platform
