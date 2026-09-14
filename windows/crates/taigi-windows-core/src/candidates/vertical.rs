@@ -1,7 +1,14 @@
 //! The vertical window's width model, selection, scrolling and slot
 //! numbering. The decide-half of `VerticalCandidatePanel.swift`
-//! (`rebuildRows` `:194-320`, scrolling `:327-386`), with the scroll viewport
-//! modelled in points so the renderer only draws and reports scrolls back.
+//! (`rebuildRows`, `widenForRevealedRows`, scrolling), with the scroll
+//! viewport modelled in points so the renderer only draws and reports
+//! scrolls back.
+//!
+//! Width follows what the viewport has revealed, not the whole list: the
+//! engine sorts low-frequency prefix extensions to the tail, and a long
+//! one at row 30 must not widen the nine rows the user actually sees. As
+//! the viewport reaches wider rows the window grows; within one list it
+//! never shrinks back, so scrolling up does not make the window jitter.
 
 use super::metrics::CandidateMetrics;
 use super::positioning::{Point, Rect};
@@ -88,6 +95,16 @@ pub struct VerticalGeometry {
 pub struct VerticalListModel {
     count: usize,
     item_height: f32,
+    metrics: CandidateMetrics,
+    /// The measured widths the geometry is re-derived from as rows are
+    /// revealed (`VerticalLayoutInput::cell_widths` / `primary_widths`).
+    cell_widths: Vec<f32>,
+    primary_widths: Vec<f32>,
+    maximum_window_width: f32,
+    scroller: ScrollerStyle,
+    /// How many rows from the top the viewport has shown so far — the
+    /// rows the width is measured over. Only ever grows within a list.
+    revealed_rows: usize,
     geometry: VerticalGeometry,
     selected_index: usize,
     /// The row the slot keys start numbering from — the row MOSTLY on
@@ -106,24 +123,78 @@ impl VerticalListModel {
     pub const SEPARATOR_HEIGHT: f32 = 1.0;
 
     /// Lays the list out (capped at [`MAX_DISPLAY_CANDIDATES`]) with the
-    /// viewport at the top.
+    /// viewport at the top, sized to the rows that opening viewport shows.
     pub fn new(input: VerticalLayoutInput<'_>) -> Self {
         let metrics = input.metrics;
         let count = input.cell_widths.len().min(MAX_DISPLAY_CANDIDATES);
         let item_height = metrics.item_height();
         let has_overflow = count > Self::VISIBLE_ROWS;
-        // Width: the widest displayed cell, floored at one slot and capped at
-        // what the screen leaves once the scroller has its share.
-        let widest = input.cell_widths[..count]
+        let visible = count.min(Self::VISIBLE_ROWS);
+        let bottom_peek = if has_overflow { item_height / 2.0 } else { 0.0 };
+        let window_height = Self::rows_height(visible, item_height) + bottom_peek;
+        let natural_content_height = Self::rows_height(count, item_height) + bottom_peek;
+        let mut model = Self {
+            count,
+            item_height,
+            metrics: metrics.clone(),
+            cell_widths: input.cell_widths[..count].to_vec(),
+            primary_widths: input.primary_widths[..count.min(input.primary_widths.len())].to_vec(),
+            maximum_window_width: input.maximum_window_width,
+            scroller: input.scroller,
+            revealed_rows: 0,
+            geometry: VerticalGeometry {
+                window_width: 0.0,
+                window_height,
+                item_width: 0.0,
+                item_trailing: 0.0,
+                primary_column_width: 0.0,
+                natural_content_height,
+            },
+            selected_index: 0,
+            anchor_row: 0,
+            scroll_y: 0.0,
+            container_height: natural_content_height,
+        };
+        model.revealed_rows = model.viewport_row_count();
+        model.resolve_width();
+        model
+    }
+
+    /// How many rows from the top the viewport currently intersects — the
+    /// peeking half row included, since its text is painted.
+    fn viewport_row_count(&self) -> usize {
+        let bottom = self.scroll_y + self.viewport_height();
+        ((bottom / self.row_height()).ceil() as usize).min(self.count)
+    }
+
+    /// The rows the viewport now shows join the revealed set; the width
+    /// fields are re-derived when that set grew.
+    fn reveal_viewport_rows(&mut self) {
+        let revealed = self.viewport_row_count();
+        if revealed > self.revealed_rows {
+            self.revealed_rows = revealed;
+            self.resolve_width();
+        }
+    }
+
+    /// Width: the widest revealed cell, floored at one slot and capped at
+    /// what the screen leaves once the scroller has its share
+    /// (`rebuildRows` / `widenForRevealedRows`).
+    fn resolve_width(&mut self) {
+        let metrics = &self.metrics;
+        let scroller = ScrollerLayout::resolve(
+            self.has_overflow(),
+            self.scroller,
+            metrics.horizontal_padding(),
+        );
+        let widest = self.cell_widths[..self.revealed_rows]
             .iter()
             .copied()
             .fold(0.0, f32::max);
-        let scroller =
-            ScrollerLayout::resolve(has_overflow, input.scroller, metrics.horizontal_padding());
         let content_width = widest.max(metrics.base_width()).min(
             metrics
                 .base_width()
-                .max(input.maximum_window_width - scroller.allowance),
+                .max(self.maximum_window_width - scroller.allowance),
         );
         let window_width = content_width + scroller.allowance;
         let (item_width, item_trailing) = if scroller.rows_span_allowance {
@@ -134,31 +205,17 @@ impl VerticalListModel {
         } else {
             (content_width, metrics.horizontal_padding())
         };
-        let widest_primary = input.primary_widths[..count.min(input.primary_widths.len())]
+        let widest_primary = self.primary_widths
+            [..self.revealed_rows.min(self.primary_widths.len())]
             .iter()
             .copied()
             .fold(0.0, f32::max);
         let primary_column_width =
             widest_primary.min(metrics.maximum_primary_column_width(item_width, item_trailing));
-        let visible = count.min(Self::VISIBLE_ROWS);
-        let bottom_peek = if has_overflow { item_height / 2.0 } else { 0.0 };
-        let geometry = VerticalGeometry {
-            window_width,
-            window_height: Self::rows_height(visible, item_height) + bottom_peek,
-            item_width,
-            item_trailing,
-            primary_column_width,
-            natural_content_height: Self::rows_height(count, item_height) + bottom_peek,
-        };
-        Self {
-            count,
-            item_height,
-            geometry,
-            selected_index: 0,
-            anchor_row: 0,
-            scroll_y: 0.0,
-            container_height: geometry.natural_content_height,
-        }
+        self.geometry.window_width = window_width;
+        self.geometry.item_width = item_width;
+        self.geometry.item_trailing = item_trailing;
+        self.geometry.primary_column_width = primary_column_width;
     }
 
     pub fn count(&self) -> usize {
@@ -350,11 +407,14 @@ impl VerticalListModel {
     }
 
     /// Half-row bias: the row MOSTLY on screen is the one the slot names.
+    /// Every scroll lands here, so this is also where the rows the viewport
+    /// now shows are revealed to the width model.
     fn update_anchor(&mut self) {
         let row_height = self.row_height();
         self.anchor_row = ((self.scroll_y.max(0.0) + row_height / 2.0) / row_height)
             .floor()
             .max(0.0) as usize;
+        self.reveal_viewport_rows();
     }
 }
 
@@ -484,6 +544,59 @@ mod tests {
             metrics.maximum_primary_column_width(640.0, overlay.geometry().item_trailing)
         );
         assert_eq!(wide.geometry().primary_column_width, 150.0);
+    }
+
+    #[test]
+    fn width_follows_the_rows_the_viewport_has_revealed() {
+        // trace: 30 base-width rows, one 300-wide cell at row 20. Opening
+        // viewport = rows 0..=9 (nine + the peek) -> base width. Scrolling
+        // to row 20 reveals it -> widens; scrolling back never shrinks.
+        let metrics = metrics();
+        let base = metrics.base_width();
+        let mut widths = vec![base; 30];
+        widths[20] = 300.0;
+        let mut model = model_with(&metrics, &widths, ScrollerStyle::Legacy { width: 15.0 });
+        let narrow = model.geometry().window_width;
+        assert_eq!(
+            narrow,
+            base + 15.0,
+            "first page: base content + legacy column"
+        );
+        assert!(model.geometry().primary_column_width < 150.0);
+        model.select(9);
+        assert_eq!(
+            model.geometry().window_width,
+            narrow,
+            "the peek row was already revealed"
+        );
+        model.on_viewport_scrolled(model.row_height() * 10.5);
+        assert_eq!(
+            model.geometry().window_width,
+            narrow,
+            "rows 10..=20 not yet fully reached"
+        );
+        model.on_viewport_scrolled(model.row_height() * 11.0);
+        assert_eq!(
+            model.geometry().window_width,
+            315.0,
+            "row 20 intersects the viewport"
+        );
+        assert_eq!(model.geometry().item_width, 300.0);
+        assert_eq!(model.geometry().primary_column_width, 150.0);
+        model.on_viewport_scrolled(0.0);
+        assert_eq!(
+            model.geometry().window_width,
+            315.0,
+            "never shrinks within a list"
+        );
+        let mut paged = model_with(&metrics, &widths, ScrollerStyle::Legacy { width: 15.0 });
+        paged.navigate(PageDown);
+        paged.navigate(PageDown);
+        assert_eq!(
+            paged.geometry().window_width,
+            315.0,
+            "a page jump reveals its page"
+        );
     }
 
     #[test]

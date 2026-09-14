@@ -1364,18 +1364,18 @@ impl CandidateWindow {
         self.after_change(before, change)
     }
 
-    fn scroll(&mut self, notches: f32) {
-        let Some(metrics) = &self.metrics else { return };
+    /// A wheel scroll; answers the frame when it revealed a wider row and
+    /// the vertical window grew for it.
+    fn scroll(&mut self, notches: f32) -> Option<WindowFrame> {
+        let metrics = self.metrics.as_ref()?;
         let step = -notches * metrics.item_height() * ROWS_PER_WHEEL_NOTCH;
-        match self.layout.as_mut() {
-            Some(LayoutModel::Vertical(model)) => {
-                model.on_viewport_scrolled(model.scroll_y() + step)
-            }
-            Some(LayoutModel::Expandable(model)) => {
-                model.on_viewport_scrolled(model.scroll_y() + step)
-            }
-            _ => {}
+        let before = self.size;
+        match self.layout.as_mut()? {
+            LayoutModel::Vertical(model) => model.on_viewport_scrolled(model.scroll_y() + step),
+            LayoutModel::Expandable(model) => model.on_viewport_scrolled(model.scroll_y() + step),
+            LayoutModel::Horizontal(_) => return None,
         }
+        self.after_change(before, None)
     }
 }
 
@@ -1417,7 +1417,9 @@ impl CandidateWindow {
     }
 
     pub fn wheel(&mut self, window: &WindowRef, delta: f32) {
-        self.scroll(delta);
+        if let Some(frame) = self.scroll(delta) {
+            window.show_at(frame.frame);
+        }
         window.invalidate();
     }
 

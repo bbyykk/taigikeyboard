@@ -158,6 +158,43 @@ final class VerticalCandidateRowMaterialisationTests: XCTestCase {
         XCTAssertEqual(hidden, [38, 39], "the hairline above and below row 39")
     }
 
+    /// The window is as wide as the rows the viewport has revealed, not the
+    /// whole list: a long candidate at row 30 — where the engine sorts
+    /// low-frequency prefix extensions — leaves the opening nine rows at
+    /// their own width, widens the window once scrolled into view, and the
+    /// window never shrinks back within the list.
+    func testWidth_followsTheRowsTheViewportHasRevealed_andNeverShrinks() {
+        let panel = makePanel()
+        var cells = Self.cells
+        let long = CandidateCellContent(text: String(repeating: "候", count: 9), annotation: "hau30")
+        cells[30] = long
+        let narrow = panel.updateCandidates(cells)
+        XCTAssertEqual(narrow.width, panel.updateCandidates(Self.cells).width, "an unrevealed row sets no width")
+        XCTAssertLessThan(narrow.width, panel.metrics.measureWidth(long))
+        _ = panel.updateCandidates(cells)
+        showForScrolling(panel)
+        defer { panel.orderOut(nil) }
+
+        // The window itself is re-placed against the caret it was shown for,
+        // which a test panel has none of; the rows are what it re-lays.
+        scrollUserViewport(of: panel, toRow: 25)
+        let rowWidths = Set(itemsByRow(in: panel).values.map(\.frame.width))
+        XCTAssertEqual(rowWidths.count, 1, "every built row was re-laid at the one new width")
+        let wide = rowWidths.first ?? 0
+        XCTAssertGreaterThanOrEqual(
+            wide, panel.metrics.measureWidth(long),
+            "row 30 is in the viewport: the rows are wide enough to render it whole",
+        )
+        XCTAssertGreaterThan(wide, narrow.width)
+
+        scrollUserViewport(of: panel, toRow: 0)
+        XCTAssertEqual(
+            Set(itemsByRow(in: panel).values.map(\.frame.width)), [wide],
+            "never shrinks within a list",
+        )
+        assertDigitsMatchSlots(in: panel)
+    }
+
     // MARK: - Helpers
 
     private func makePanel(style: CandidateWindowStyle = .sequoia) -> VerticalCandidatePanel {
