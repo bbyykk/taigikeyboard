@@ -8,8 +8,8 @@ final class StringResolverTests: XCTestCase {
     func testResolve_everyProductionLanguageHasItsOwnText() {
         let expected: [DisplayLanguage: String] = [
             .hanji: "介面語言",
-            .tailo: "kài-bīn gí-giân",
-            .poj: "kài-bīn gí-giân",
+            .tailo: "Kài-bīn gí-giân",
+            .poj: "Kài-bīn gí-giân",
             .japanese: "表示言語",
             .english: "Display Language",
         ]
