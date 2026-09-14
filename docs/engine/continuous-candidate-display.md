@@ -88,7 +88,7 @@ pub struct RawCandidate {
     pub frequency: u32,
     pub bitmask: u16,
     pub mode: CandidateMode,
-    pub recency_rank: u8,
+    pub user_weight: f64,
 }
 ```
 

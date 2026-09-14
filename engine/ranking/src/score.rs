@@ -37,18 +37,14 @@ use phonetics::taigi_unicode_base_form;
 
 const USER_FREQ_CAP: i32 = 100;
 const USER_FREQ_WEIGHT: i32 = 100;
-/// Recency window for both the legacy additive [`calculate_score`] and
-/// the Phase 9.1 lexicographic [`recency_rank`]. An entry is "recent"
-/// when `0 <= (now_ms − last_used_ms) < RECENCY_WINDOW_MS`. One hour
-/// in epoch-ms.
+/// Recency window for the legacy additive [`calculate_score`]. An entry
+/// is "recent" when `last_used_ms > 0` and
+/// `(now_ms − last_used_ms) < RECENCY_WINDOW_MS`. One hour in epoch-ms.
 ///
-/// **Path divergence (intentional)**: [`recency_rank`] (Phase 9.3a)
-/// additionally rejects `now_ms <= 0`, `last_used_ms <= 0`, and
-/// clock-skew (`now_ms < last_used_ms`) as stale; [`calculate_score`]
-/// (legacy path) keeps its pre-9.3a behaviour and only filters on
-/// `last_used_ms > 0`. Tightening the legacy guards would change
-/// scoring for the non-Continuous path and is out of scope for this
-/// slice (`~/.claude/rules/round-workflow.md` § Branching & rounds).
+/// The Continuous path no longer has a recency window: its user
+/// dimension is the continuously decayed [`decayed_user_weight_delta`]
+/// (the binary 1-hour `recency_rank` it replaced let a selected word
+/// sink back under a common homophone one hour later).
 pub const RECENCY_WINDOW_MS: i64 = 60 * 60 * 1000;
 const RECENCY_BONUS: i32 = 200;
 const EXACT_BONUS: i32 = 100;
@@ -148,6 +144,16 @@ pub struct FrequencyData {
     pub last_used_ms: i64,
 }
 
+impl FrequencyData {
+    /// This entry's decayed user-selection weight at `now_ms` —
+    /// [`decayed_user_weight_delta`] over the saturated count. The one
+    /// place the `i32` count is widened back to `u32` (negative → 0).
+    pub fn user_weight(&self, now_ms: i64) -> f64 {
+        let count = u32::try_from(self.count).unwrap_or(0);
+        decayed_user_weight_delta(count, now_ms, self.last_used_ms)
+    }
+}
+
 /// Per-candidate user-frequency map keyed by the
 /// `(display_text, canonical_tl)` PAIR identity (Core Principle #7;
 /// v3.6.1 R5). `display_text` = `hanji` if non-empty else `roman` (same
@@ -206,7 +212,7 @@ impl FrequencyMap {
     /// Tolerant pair lookup: exact `(display, tl)` first, then the legacy
     /// `(display, "")` fallback bucket. NEVER sums — the exact bucket
     /// shadows the legacy one. Returns [`FrequencyData::default`] (neutral
-    /// cold-start: `user_freq_boost(0) = 1.0`, `recency_rank(_, 0) = 1`)
+    /// cold-start: `user_freq_boost(0) = 1.0`, `decayed_user_weight_delta(0, _, 0) = 0.0`)
     /// when neither is present, so absent entries reproduce the pre-R5
     /// never-used behaviour. A `canonical_tl == ""` query consults the
     /// legacy bucket once (no redundant second probe).
@@ -242,38 +248,6 @@ impl FrequencyMap {
 pub fn user_freq_boost(count: u32) -> f32 {
     let raw = 1.0 + count as f32 * BOOST_ALPHA;
     raw.min(MAX_BOOST)
-}
-
-/// v3.5.8 Phase 9.3a — Continuous-input `SortKey.recency_rank` helper.
-/// Returns `0` ("recent") when the entry was selected strictly inside
-/// the [`RECENCY_WINDOW_MS`] window, else `1` ("stale or never").
-///
-/// The recency gate is **defensive against three classes of bad clock
-/// input**:
-/// - `now_ms <= 0` — platform shim did not inject a wall clock (e.g.
-///   on engine startup before the first `FetchAtPos` round). All
-///   entries fall through to `1` so cold-start does not falsely
-///   promote stale entries.
-/// - `last_used_ms <= 0` — entry has never been selected; the legacy
-///   `calculate_score` uses the same `last_used_ms > 0` guard.
-/// - `now_ms < last_used_ms` — clock skew (platform clock moved
-///   backwards). Treat as stale rather than recent to avoid
-///   non-monotonic ranking.
-///
-/// Otherwise: `0` when `now_ms − last_used_ms < RECENCY_WINDOW_MS`,
-/// else `1`. The strict-less-than boundary matches the inclusive
-/// `< RECENCY_WINDOW_MS` policy in `calculate_score` (the boundary
-/// is shared so the two scoring paths see the "recent / stale" axis
-/// identically).
-pub fn recency_rank(now_ms: i64, last_used_ms: i64) -> u8 {
-    if now_ms <= 0 || last_used_ms <= 0 || now_ms < last_used_ms {
-        return 1;
-    }
-    if (now_ms - last_used_ms) < RECENCY_WINDOW_MS {
-        0
-    } else {
-        1
-    }
 }
 
 /// v3.5.8 S3 — exponential **time constant** (τ) for the
@@ -319,19 +293,23 @@ pub const USER_WEIGHT_DECAY_TAU_MS: i64 = 30 * 24 * 60 * 60 * 1000;
 ///
 /// Caller-injected `now_ms` / `last_used_ms` keep this pure +
 /// stateless (same cross-platform-invariant contract as
-/// [`user_freq_boost`] / [`recency_rank`] — engine is the single
-/// source of truth, platforms MUST NOT redefine). Returns `0.0`
-/// (→ neutral weight `1.0` at the call site) for the **same three
-/// bad-clock classes [`recency_rank`] rejects**: `now_ms <= 0` (no
-/// wall clock injected), `last_used_ms <= 0` (never selected), and
+/// [`user_freq_boost`] — engine is the single source of truth,
+/// platforms MUST NOT redefine). Returns `0.0` (→ neutral weight `1.0`
+/// at the call site) for **three bad-clock classes**: `now_ms <= 0`
+/// (no wall clock injected), `last_used_ms <= 0` (never selected), and
 /// `now_ms < last_used_ms` (clock skew). The walker turns this
 /// per-edge delta into a syllable-aware log-space cost discount
 /// (single-syllable edges are damped so a hot single character cannot
 /// ride the discount to sweep the whole sentence — see
 /// `composing::lattice::cost::edge_cost`).
+///
+/// Also the Continuous candidate's `RawCandidate.user_weight` — the
+/// leading user-preference dimension of the lexicon `SortKey` and of
+/// the walker's per-edge homophone pick (2026-09-14): any selected
+/// word (`> 0.0`) precedes every never-selected one.
 pub fn decayed_user_weight_delta(count: u32, now_ms: i64, last_used_ms: i64) -> f64 {
-    // Same bad-clock guard policy as `recency_rank` — single source of
-    // truth for "is this user-frequency timestamp usable".
+    // Single source of truth for "is this user-frequency timestamp
+    // usable".
     if now_ms <= 0 || last_used_ms <= 0 || now_ms < last_used_ms {
         return 0.0;
     }
@@ -440,7 +418,7 @@ pub(crate) fn total(breakdown: &ScoreBreakdown) -> i32 {
 
 /// v3.5.8 Continuous Input Phase 5 score formula:
 ///
-/// `score = freq × (1.0 + 0.1 × max(0, syllable_count − 1)) × user_freq_boost`
+/// `score = freq × (1.0 + 0.1 × max(0, syllable_count − 1))`
 ///
 /// Pure-multiplicative `f32`, no bigram, no recency / exact / closeness /
 /// tier components — those live in the additive [`calculate_score`]
@@ -453,22 +431,19 @@ pub(crate) fn total(breakdown: &ScoreBreakdown) -> i32 {
 /// rewards multi-syllable words like `珠仔(syll=2)` over `紙/珠(syll=1)`
 /// when the user's input spans a multi-syllable reach.
 ///
-/// `user_freq_boost` is caller-supplied so this fn stays stateless;
-/// callers compose it from their own user-frequency store
-/// (`user_frequency.db` on the platform side, see
-/// `feedback_user_data_sqlite_stays_native`). `1.0` = no boost. Caller
-/// MUST pass a finite, non-negative `f32` — this fn does no clamping
-/// (it is a pure pricing formula). The downstream sort comparator in
-/// `lexicon::continuous::fetch_candidates_for_keys_with_barriers` defends against
-/// `NaN` leakage by coercing it to `f32::MIN`, but negative or `+∞`
-/// boosts will produce semantically nonsensical rankings.
+/// Purely dictionary-derived. User preference is NOT folded in here
+/// any more (2026-09-14): it is the separate, leading
+/// `RawCandidate.user_weight` dimension ([`FrequencyData::user_weight`]),
+/// so the same signal is not represented twice with different clock
+/// guards. The lexicon sort comparator defends against `NaN` by
+/// coercing it low.
 ///
 /// Cited mainstream IME parallel: khiin-rs `khiin/src/data/segmenter.rs`
 /// uses `cost = ln(1/p) / word_len_bias × syllable_bias`. We pick a
 /// simpler multiplicative form per `docs/releases/v3.5.8/plan.md` § Sort_key 公式 (PR-9.1 source-of-truth).
-pub fn calculate_continuous_score(freq: u32, syllable_count: u8, user_freq_boost: f32) -> f32 {
+pub fn calculate_continuous_score(freq: u32, syllable_count: u8) -> f32 {
     let syll_bias = 1.0 + BOOST_ALPHA * f32::from(syllable_count.saturating_sub(1));
-    freq as f32 * syll_bias * user_freq_boost
+    freq as f32 * syll_bias
 }
 
 /// Strip roman to a comparison base form: drop hyphens, drop ASCII space,
@@ -794,8 +769,8 @@ mod tests {
     #[test]
     fn continuous_score_single_syllable_baseline() {
         // syll=1 → bias = 1.0; user_freq_boost = 1.0 → score == freq.
-        assert_eq!(calculate_continuous_score(100, 1, 1.0), 100.0);
-        assert_eq!(calculate_continuous_score(0, 1, 1.0), 0.0);
+        assert_eq!(calculate_continuous_score(100, 1), 100.0);
+        assert_eq!(calculate_continuous_score(0, 1), 0.0);
     }
 
     #[test]
@@ -805,19 +780,10 @@ mod tests {
         //   syll=2 → 110.0
         //   syll=3 → 120.0
         //   syll=4 → 130.0
-        assert_eq!(calculate_continuous_score(100, 1, 1.0), 100.0);
-        assert_eq!(calculate_continuous_score(100, 2, 1.0), 110.0);
-        assert!((calculate_continuous_score(100, 3, 1.0) - 120.0).abs() < 1e-4);
-        assert_eq!(calculate_continuous_score(100, 4, 1.0), 130.0);
-    }
-
-    #[test]
-    fn continuous_score_user_freq_boost_is_multiplicative() {
-        // boost = 2.0 doubles the result regardless of syllable count.
-        assert_eq!(calculate_continuous_score(100, 1, 2.0), 200.0);
-        assert_eq!(calculate_continuous_score(100, 2, 2.0), 220.0);
-        // boost = 0.0 zeroes everything (cold-start sentinel for tests).
-        assert_eq!(calculate_continuous_score(100, 2, 0.0), 0.0);
+        assert_eq!(calculate_continuous_score(100, 1), 100.0);
+        assert_eq!(calculate_continuous_score(100, 2), 110.0);
+        assert!((calculate_continuous_score(100, 3) - 120.0).abs() < 1e-4);
+        assert_eq!(calculate_continuous_score(100, 4), 130.0);
     }
 
     #[test]
@@ -825,16 +791,16 @@ mod tests {
         // syllable_count = 0 must clamp to bias = 1.0 (saturating_sub(1)).
         // Defensive: builder caps at 1..=4 (`MAX_SYLLABLES`), but the FFI
         // contract is u8 so a zero could leak in; should not panic / wrap.
-        assert_eq!(calculate_continuous_score(50, 0, 1.0), 50.0);
+        assert_eq!(calculate_continuous_score(50, 0), 50.0);
     }
 
     #[test]
     fn continuous_score_multi_syllable_outranks_single_when_freq_equal() {
         // The whole point of the syll bias: 珠仔(syll=2) outranks 紙(syll=1)
         // at equal dictionary frequency, so multi-syll candidates surface.
-        let single = calculate_continuous_score(100, 1, 1.0);
-        let pair = calculate_continuous_score(100, 2, 1.0);
-        let quad = calculate_continuous_score(100, 4, 1.0);
+        let single = calculate_continuous_score(100, 1);
+        let pair = calculate_continuous_score(100, 2);
+        let quad = calculate_continuous_score(100, 4);
         assert!(pair > single);
         assert!(quad > pair);
     }
@@ -867,7 +833,7 @@ mod tests {
     }
 
     // -----------------------------------------------------------------------
-    // v3.5.8 Phase 9.3a — user_freq_boost + recency_rank
+    // v3.5.8 Phase 9.3a — user_freq_boost
     // -----------------------------------------------------------------------
 
     #[test]
@@ -895,56 +861,6 @@ mod tests {
         assert!((user_freq_boost(1_000_000) - MAX_BOOST).abs() < 1e-6);
         // Stale-dominance defense: even u32::MAX cannot exceed MAX_BOOST.
         assert!((user_freq_boost(u32::MAX) - MAX_BOOST).abs() < 1e-6);
-    }
-
-    #[test]
-    fn recency_rank_zero_when_inside_window() {
-        // Strict less-than boundary; `now_ms - last_used_ms == window - 1`
-        // is still recent, `== window` flips to stale.
-        let last = 1_000_000_000_i64;
-        assert_eq!(recency_rank(last + RECENCY_WINDOW_MS - 1, last), 0);
-        assert_eq!(recency_rank(last + 1, last), 0);
-    }
-
-    #[test]
-    fn recency_rank_one_at_or_outside_window() {
-        let last = 1_000_000_000_i64;
-        // Inclusive boundary at the window edge counts as stale.
-        assert_eq!(recency_rank(last + RECENCY_WINDOW_MS, last), 1);
-        // Anything older is also stale.
-        assert_eq!(recency_rank(last + 2 * RECENCY_WINDOW_MS, last), 1);
-    }
-
-    #[test]
-    fn recency_rank_one_when_now_ms_is_non_positive() {
-        // Phase 9.3a Codex risk #1: `now_ms = 0` from a platform that
-        // has not injected the wall clock must NOT falsely promote
-        // stale entries to recent. All entries fall through to rank 1.
-        let last = 1_000_000_000_i64;
-        assert_eq!(recency_rank(0, last), 1);
-        assert_eq!(recency_rank(-1, last), 1);
-        assert_eq!(recency_rank(i64::MIN, last), 1);
-    }
-
-    #[test]
-    fn recency_rank_one_when_last_used_ms_is_non_positive() {
-        // `last_used_ms = 0` = never selected. Even with a valid
-        // wall-clock `now_ms`, an unused entry stays stale.
-        let now = 1_000_000_000_i64;
-        assert_eq!(recency_rank(now, 0), 1);
-        assert_eq!(recency_rank(now, -1), 1);
-    }
-
-    #[test]
-    fn recency_rank_one_under_clock_skew() {
-        // Clock skew defense: a platform clock that moved backwards
-        // (so `now_ms < last_used_ms`) must still produce rank 1, not
-        // wrap a negative delta into the comparison.
-        let last = 1_000_000_000_i64;
-        let now = last - 5_000; // 5s earlier than the recorded selection.
-        assert_eq!(recency_rank(now, last), 1);
-        // Far backwards skew also handled.
-        assert_eq!(recency_rank(0_i64.wrapping_sub(1), last), 1);
     }
 
     #[test]
@@ -1059,7 +975,7 @@ mod tests {
     }
 
     #[test]
-    fn decayed_delta_bad_clock_classes_match_recency_rank_policy() {
+    fn decayed_delta_zero_for_bad_clock_classes() {
         let last = 1_000_000_000_000_i64;
         // now_ms <= 0 (no wall clock injected).
         assert_eq!(decayed_user_weight_delta(40, 0, last), 0.0);

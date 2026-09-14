@@ -4,18 +4,20 @@
 //! in PR-9.3a. Pins the closed Gap B from
 //! `docs/engine/continuous-input-ranking.md`:
 //!
-//! - Non-empty `FrequencyMap` raises the matching candidate's score via
-//!   `ranking::user_freq_boost(count)`.
-//! - Boost saturates at `ranking::MAX_BOOST` (5.0) — 100 selections
-//!   produce the same boost as 40, defending against stale-dominance.
-//! - `SortKey.recency_rank` flips to `0` when the entry was selected
-//!   strictly inside `RECENCY_WINDOW_MS`, and back to `1` for stale /
-//!   never-used entries.
+//! - `score` stays purely dictionary-derived (2026-09-14): a matching
+//!   `FrequencyEntry` never changes it; the user signal lives only in
+//!   `user_weight`.
+//! - `user_weight` saturates at `ranking::MAX_BOOST − 1` — 100 selections
+//!   weigh the same as 40, defending against stale-dominance.
+//! - `RawCandidate.user_weight` (the leading `SortKey` user dim) is
+//!   `ranking::decayed_user_weight_delta` of the entry — `> 0.0` for
+//!   any selected word, still `> 0.0` past the old 1-hour window, and
+//!   `0.0` for never-used entries.
 //! - Cold-start (empty map + `now_ms = 0`) reproduces pre-9.3a
 //!   behaviour byte-identically — backward-compatible with PR-9.2
 //!   platform builds that have not wired user-frequency snapshots.
 //! - Clock skew (`now_ms < last_used_ms`) and `now_ms = 0` fall through
-//!   to `recency_rank = 1` so a misbehaving platform clock cannot
+//!   to `user_weight = 0.0` so a misbehaving platform clock cannot
 //!   falsely promote stale entries.
 //!
 //! Fixture builder mirrors `tests/span_local_fetch.rs` (1:1 with the
@@ -31,7 +33,10 @@ use lexicon::prefix_index::PrefixIndex;
 use lexicon::ContinuousFetchCtx;
 use phonetics::InputMode;
 use protos::engine::FrequencyEntry;
-use ranking::{build_frequency_map, FrequencyMap, MAX_BOOST, RECENCY_WINDOW_MS};
+use ranking::{
+    build_frequency_map, FrequencyMap, BOOST_ALPHA, MAX_BOOST, RECENCY_WINDOW_MS,
+    USER_WEIGHT_DECAY_TAU_MS,
+};
 
 /// v3.5.9 D7 — collapse the six-arg ctx into one literal per test
 /// site. `fetch_candidates_for_endings` is the test-only entry per D8;
@@ -114,11 +119,11 @@ fn unique_temp_path(name: &str) -> PathBuf {
 }
 
 // ---------------------------------------------------------------------------
-// 1. Boost amplification — single candidate, increasing selection counts.
+// 1. Score stays dictionary-only; user_weight grows with count and saturates.
 // ---------------------------------------------------------------------------
 
 #[test]
-fn user_freq_boost_amplifies_score_for_matched_candidate() {
+fn selections_leave_score_untouched_and_raise_user_weight() {
     let (prefix_index, dict) = build_fixture(
         "boost-amplifies",
         &[Row {
@@ -130,7 +135,7 @@ fn user_freq_boost_amplifies_score_for_matched_candidate() {
         }],
     );
 
-    // Cold start: empty map, neutral boost, score == freq.
+    // Cold start: empty map, score == freq, no user weight.
     let cold = fetch_candidates_for_endings(
         "tai",
         0,
@@ -139,12 +144,14 @@ fn user_freq_boost_amplifies_score_for_matched_candidate() {
         &ctx(&FrequencyMap::new(), 0, &prefix_index, &dict),
     );
     assert!((cold[0].score - 100.0).abs() < 1e-4);
+    assert_eq!(cold[0].user_weight, 0.0);
 
-    // 10 selections → boost = 1.0 + 10×0.1 = 2.0 → score = 200.0.
+    // 10 fresh selections → score unchanged, user_weight = 10 × 0.1.
+    let now_ms = 1_700_000_000_000_i64;
     let map_ten = build_frequency_map(&[FrequencyEntry {
         display_text_key: "台".into(),
         count: 10,
-        last_used_ms: 1,
+        last_used_ms: now_ms,
         canonical_tl: String::new(),
     }]);
     let warm = fetch_candidates_for_endings(
@@ -152,15 +159,16 @@ fn user_freq_boost_amplifies_score_for_matched_candidate() {
         0,
         &[3],
         InputMode::Tl,
-        &ctx(&map_ten, 1_000_000_000_000, &prefix_index, &dict),
+        &ctx(&map_ten, now_ms, &prefix_index, &dict),
     );
-    assert!((warm[0].score - 200.0).abs() < 1e-4);
+    assert!((warm[0].score - 100.0).abs() < 1e-4);
+    assert!((warm[0].user_weight - 1.0).abs() < 1e-6);
 }
 
 #[test]
-fn user_freq_boost_saturates_at_max_boost_when_count_high() {
-    // 100 selections would naively produce boost = 11.0 → score = 1100.
-    // Saturation pins it at MAX_BOOST = 5.0 → score = 500.0.
+fn user_weight_saturates_when_count_high() {
+    // 100 selections would naively weigh 10.0; saturation pins the
+    // weight at MAX_BOOST − 1 = 4.0.
     let (prefix_index, dict) = build_fixture(
         "boost-saturates",
         &[Row {
@@ -171,10 +179,11 @@ fn user_freq_boost_saturates_at_max_boost_when_count_high() {
             freq: 100,
         }],
     );
+    let now_ms = 1_700_000_000_000_i64;
     let map = build_frequency_map(&[FrequencyEntry {
         display_text_key: "台".into(),
         count: 100,
-        last_used_ms: 1,
+        last_used_ms: now_ms,
         canonical_tl: String::new(),
     }]);
     let out = fetch_candidates_for_endings(
@@ -182,22 +191,22 @@ fn user_freq_boost_saturates_at_max_boost_when_count_high() {
         0,
         &[3],
         InputMode::Tl,
-        &ctx(&map, 1_000_000_000_000, &prefix_index, &dict),
+        &ctx(&map, now_ms, &prefix_index, &dict),
     );
-    let expected = 100.0_f32 * MAX_BOOST; // 500.0
+    let expected = f64::from(MAX_BOOST) - 1.0; // 4.0
     assert!(
-        (out[0].score - expected).abs() < 1e-3,
-        "expected saturated score {expected}, got {}",
-        out[0].score
+        (out[0].user_weight - expected).abs() < 1e-6,
+        "expected saturated weight {expected}, got {}",
+        out[0].user_weight
     );
 }
 
 // ---------------------------------------------------------------------------
-// 2. Recency_rank — flips to 0 inside the window, 1 outside / clock skew.
+// 2. user_weight — decayed selection weight; 0.0 on clock skew / no clock.
 // ---------------------------------------------------------------------------
 
 #[test]
-fn recency_rank_zero_when_last_used_is_within_window() {
+fn user_weight_is_one_selection_delta_when_just_selected() {
     let (prefix_index, dict) = build_fixture(
         "recency-fresh",
         &[Row {
@@ -224,11 +233,12 @@ fn recency_rank_zero_when_last_used_is_within_window() {
         &ctx(&map, now_ms, &prefix_index, &dict),
     );
     assert_eq!(out.len(), 1);
-    assert_eq!(out[0].recency_rank, 0);
+    // One selection, ~no decay → delta ≈ BOOST_ALPHA.
+    assert!((out[0].user_weight - f64::from(BOOST_ALPHA)).abs() < 1e-6);
 }
 
 #[test]
-fn recency_rank_one_when_last_used_is_outside_window() {
+fn user_weight_persists_past_the_old_one_hour_window() {
     let (prefix_index, dict) = build_fixture(
         "recency-stale",
         &[Row {
@@ -240,7 +250,8 @@ fn recency_rank_one_when_last_used_is_outside_window() {
         }],
     );
     let now_ms = 1_700_000_000_000_i64;
-    // Strictly past the 1-hour window.
+    // Past the retired 1-hour recency window: the selection must still
+    // count (the 2026-09-14 bug — 更新 sank below 警訊 after one hour).
     let last_used_ms = now_ms - RECENCY_WINDOW_MS;
     let map = build_frequency_map(&[FrequencyEntry {
         display_text_key: "台".into(),
@@ -255,13 +266,16 @@ fn recency_rank_one_when_last_used_is_outside_window() {
         InputMode::Tl,
         &ctx(&map, now_ms, &prefix_index, &dict),
     );
-    assert_eq!(out[0].recency_rank, 1);
+    let expected = f64::from(BOOST_ALPHA)
+        * (-(RECENCY_WINDOW_MS as f64) / USER_WEIGHT_DECAY_TAU_MS as f64).exp();
+    // f32 boost arithmetic → ~2e-8 slack.
+    assert!((out[0].user_weight - expected).abs() < 1e-6);
 }
 
 #[test]
-fn recency_rank_one_when_clock_skew_now_before_last_used() {
-    // Defensive: platform clock moved backwards. `recency_rank` must
-    // not wrap a negative delta into the recency comparison.
+fn user_weight_zero_when_clock_skew_now_before_last_used() {
+    // Defensive: platform clock moved backwards. `user_weight` must
+    // not turn a negative age into a boost.
     let (prefix_index, dict) = build_fixture(
         "recency-skew",
         &[Row {
@@ -287,15 +301,15 @@ fn recency_rank_one_when_clock_skew_now_before_last_used() {
         InputMode::Tl,
         &ctx(&map, now_ms, &prefix_index, &dict),
     );
-    assert_eq!(out[0].recency_rank, 1);
+    assert_eq!(out[0].user_weight, 0.0);
 }
 
 #[test]
-fn recency_rank_one_when_now_ms_is_zero() {
+fn user_weight_zero_when_now_ms_is_zero() {
     // Backward-compat with PR-9.2 platform builds that pass `now_ms = 0`
     // (no wall clock injected yet). Every entry must fall through to
-    // rank 1 — `recency_rank=0` should never appear with `now_ms=0`,
-    // even if `last_used_ms` is positive.
+    // weight 0.0 — no promotion without a clock, even if `last_used_ms`
+    // is positive.
     let (prefix_index, dict) = build_fixture(
         "recency-now-zero",
         &[Row {
@@ -320,18 +334,18 @@ fn recency_rank_one_when_now_ms_is_zero() {
         InputMode::Tl,
         &ctx(&map, 0, &prefix_index, &dict),
     );
-    assert_eq!(out[0].recency_rank, 1);
+    assert_eq!(out[0].user_weight, 0.0);
 }
 
 // ---------------------------------------------------------------------------
-// 3. End-to-end: recency_rank reordering inside the same tier.
+// 3. End-to-end: user_weight reordering inside the same tier.
 // ---------------------------------------------------------------------------
 
 #[test]
-fn recent_candidate_outranks_stale_within_same_tier_and_coverage() {
+fn selected_candidate_outranks_never_selected_within_same_tier_and_coverage() {
     // Two homophones under `tl:tai`, both Tier 0 (full-buffer `tai`),
-    // same coverage. Identical raw freq. Only `recency_rank` differs.
-    // The recent one must surface first.
+    // same coverage. Identical raw freq. Only `user_weight` differs.
+    // The selected one must surface first.
     let (prefix_index, dict) = build_fixture(
         "recency-reorder",
         &[
@@ -371,11 +385,56 @@ fn recent_candidate_outranks_stale_within_same_tier_and_coverage() {
     assert_eq!(
         displays,
         vec!["代", "台"],
-        "recent entry 「代」 must precede stale 「台」 inside same tier + coverage; \
+        "selected entry 「代」 must precede never-selected 「台」 inside same tier + coverage; \
          got {displays:?}"
     );
-    assert_eq!(out[0].recency_rank, 0);
-    assert_eq!(out[1].recency_rank, 1);
+    assert!(out[0].user_weight > 0.0);
+    assert_eq!(out[1].user_weight, 0.0);
+}
+
+#[test]
+fn rare_selected_homophone_outranks_common_never_selected_after_hours() {
+    // The 2026-09-14 bug shape (`kingsin` → 更新 freq 1 vs 敬神 freq 25):
+    // a selected word 25× rarer than its never-selected homophone, last
+    // picked two hours ago, must still lead — user preference is a
+    // lexicographic dim above dictionary score, not a ×5-capped boost.
+    let (prefix_index, dict) = build_fixture(
+        "rare-selected-reorder",
+        &[
+            Row {
+                toneless_key: "kingsin",
+                hanzi: "敬神",
+                tl: "kìng-sîn",
+                syll: 2,
+                freq: 25,
+            },
+            Row {
+                toneless_key: "kingsin",
+                hanzi: "更新",
+                tl: "king-sin",
+                syll: 2,
+                freq: 1,
+            },
+        ],
+    );
+    let now_ms = 1_700_000_000_000_i64;
+    let map = build_frequency_map(&[FrequencyEntry {
+        display_text_key: "更新".into(),
+        count: 1,
+        last_used_ms: now_ms - 2 * RECENCY_WINDOW_MS,
+        canonical_tl: "king-sin".into(),
+    }]);
+    let out = fetch_candidates_for_endings(
+        "kingsin",
+        0,
+        &[7],
+        InputMode::Tl,
+        &ctx(&map, now_ms, &prefix_index, &dict),
+    );
+    let displays: Vec<&str> = out.iter().map(|c| c.display_text.as_str()).collect();
+    assert_eq!(displays, vec!["更新", "敬神"], "got {displays:?}");
+    // The capped boost alone could never do this: 1 × 1.1 × 1.1 < 27.5.
+    assert!(out[0].score < out[1].score);
 }
 
 // ---------------------------------------------------------------------------
@@ -435,11 +494,11 @@ fn empty_freq_map_with_zero_now_matches_pre_9_3a_behaviour() {
         "cold-start ordering: Tier 0 phrase first; within Tier 1, \
          post-S8 higher-freq short 「台」 precedes lower-freq longer 「台灣」"
     );
-    // All recency ranks should be `1` (stale/never) since `now_ms = 0`.
+    // Every user_weight should be `0.0` (never) since `now_ms = 0`.
     assert!(
-        out.iter().all(|c| c.recency_rank == 1),
-        "cold-start: every recency_rank must be 1; got {:?}",
-        out.iter().map(|c| c.recency_rank).collect::<Vec<_>>()
+        out.iter().all(|c| c.user_weight == 0.0),
+        "cold-start: every user_weight must be 0.0; got {:?}",
+        out.iter().map(|c| c.user_weight).collect::<Vec<_>>()
     );
 }
 
@@ -452,9 +511,8 @@ fn mismatched_display_text_key_leaves_score_neutral() {
     // Codex post-impl P3 #3: a `FrequencyEntry` whose `display_text_key`
     // does NOT match any fetched candidate's `display_text` must leave
     // every candidate at the cold-start neutral baseline. Pins the
-    // contract that `record_to_candidate` only applies the boost when
-    // the key actually hits — silent drops on miss, not "boost
-    // anyway".
+    // contract that `record_to_candidate` only applies the weight when
+    // the key actually hits — silent drops on miss.
     let (prefix_index, dict) = build_fixture(
         "mismatched-key",
         &[Row {
@@ -480,10 +538,9 @@ fn mismatched_display_text_key_leaves_score_neutral() {
         &ctx(&map, 1_700_000_000_500, &prefix_index, &dict),
     );
     assert_eq!(out.len(), 1);
-    // boost = 1.0 → score == freq.
     assert!((out[0].score - 100.0).abs() < 1e-4);
-    // No matching entry → recency_rank stays 1.
-    assert_eq!(out[0].recency_rank, 1);
+    // No matching entry → user_weight stays 0.0.
+    assert_eq!(out[0].user_weight, 0.0);
 }
 
 #[test]
@@ -492,7 +549,7 @@ fn duplicate_keys_in_freq_map_apply_last_write_winner_to_candidate() {
     // key last-write-wins policy documented at
     // `ranking::build_frequency_map`. Two entries for the same display
     // text — the latter (`count = 7`) must win and reach
-    // `record_to_candidate`. boost(7) = 1.7 → score = freq × 1.7.
+    // `record_to_candidate`: user_weight = 7 × 0.1 (fresh).
     let (prefix_index, dict) = build_fixture(
         "duplicate-keys",
         &[Row {
@@ -506,14 +563,14 @@ fn duplicate_keys_in_freq_map_apply_last_write_winner_to_candidate() {
     let map = build_frequency_map(&[
         FrequencyEntry {
             display_text_key: "台".into(),
-            count: 1, // would yield boost 1.1 → score 110.0
+            count: 1, // would yield user_weight 0.1
             last_used_ms: 1_700_000_000_000,
             canonical_tl: String::new(),
         },
         FrequencyEntry {
             display_text_key: "台".into(),
-            count: 7, // last-write-winner: boost 1.7 → score 170.0
-            last_used_ms: 1_700_000_000_500,
+            count: 7, // last-write-winner: user_weight 0.7
+            last_used_ms: 1_700_000_001_000,
             canonical_tl: String::new(),
         },
     ]);
@@ -525,21 +582,20 @@ fn duplicate_keys_in_freq_map_apply_last_write_winner_to_candidate() {
         &ctx(&map, 1_700_000_001_000, &prefix_index, &dict),
     );
     assert_eq!(out.len(), 1);
-    let expected = 100.0_f32 * (1.0 + 7.0 * 0.1);
+    let expected = 7.0 * f64::from(BOOST_ALPHA);
     assert!(
-        (out[0].score - expected).abs() < 1e-3,
-        "expected last-write boost score {expected}, got {}",
-        out[0].score
+        (out[0].user_weight - expected).abs() < 1e-6,
+        "expected last-write user_weight {expected}, got {}",
+        out[0].user_weight
     );
 }
 
 #[test]
-fn taiuantaigi_phrase_keeps_slot_one_when_boosted() {
-    // Phase 9 motivating case + Phase 9.3a user-freq plumb combined:
-    // 「臺灣台語」 already wins on Tier 1; one selection raises its
-    // score even further. Slot #1 must still be 「臺灣台語」 and its
-    // boosted score must be strictly larger than the cold-start
-    // baseline.
+fn taiuantaigi_phrase_keeps_slot_one_when_selected() {
+    // Phase 9 motivating case + user-freq plumb combined: 「臺灣台語」
+    // already wins on Tier 0; selections leave its dictionary score
+    // untouched and give it a positive user weight. Slot #1 must still
+    // be 「臺灣台語」.
     let (prefix_index, dict) = build_fixture(
         "taiuantaigi-boosted",
         &[
@@ -581,12 +637,12 @@ fn taiuantaigi_phrase_keeps_slot_one_when_boosted() {
         &ctx(&map, now_ms, &prefix_index, &dict),
     );
     assert_eq!(out[0].display_text, "臺灣台語");
-    // 4-syll bias 1.3 × freq 12 × user_freq_boost(3) = 1.3 × 1.3 × 12 = 20.28.
-    let expected = 12.0_f32 * 1.3 * 1.3;
+    // 4-syll bias 1.3 × freq 12 = 15.6 — no user term in the score.
+    let expected = 12.0_f32 * 1.3;
     assert!(
         (out[0].score - expected).abs() < 1e-3,
-        "expected boosted score {expected}, got {}",
+        "expected dictionary-only score {expected}, got {}",
         out[0].score
     );
-    assert_eq!(out[0].recency_rank, 0, "selected within window → recent");
+    assert!(out[0].user_weight > 0.0, "selected → positive user weight");
 }

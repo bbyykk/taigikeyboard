@@ -38,7 +38,8 @@ use lexicon::{
     PARTIAL_PREFIX_OUTPUT_CAP,
 };
 use phonetics::InputMode;
-use ranking::FrequencyMap;
+use protos::engine::FrequencyEntry;
+use ranking::{build_frequency_map, FrequencyMap};
 
 /// v3.5.9 D7 — build the shared `ContinuousFetchCtx` at a test site
 /// with explicit `freq_map` / `now_ms` / `custom`. Pins
@@ -109,10 +110,17 @@ struct Row<'a> {
 /// keyed on `tl:<toneless_key> + 0xFF + rowid_le_4` and stays sorted by
 /// inserting rows in ascending key order (caller-controlled).
 fn build_fixture(name: &str, rows: &[Row<'_>]) -> (PrefixIndex, DictionaryReader) {
+    let sourced: Vec<(u16, &Row<'_>)> = rows.iter().map(|r| (1u16 << 11, r)).collect();
+    build_fixture_sourced(name, &sourced)
+}
+
+/// [`build_fixture`] with an explicit per-row source bitmask, for tests
+/// that exercise the `source_rank` dimension.
+fn build_fixture_sourced(name: &str, rows: &[(u16, &Row<'_>)]) -> (PrefixIndex, DictionaryReader) {
     // 1. dict.bin v2.
     let dict_rows: Vec<(u16, u32, u8, &str, &str)> = rows
         .iter()
-        .map(|r| (1u16 << 11, r.freq, r.syll, r.hanzi, r.tl))
+        .map(|(bitmask, r)| (*bitmask, r.freq, r.syll, r.hanzi, r.tl))
         .collect();
     let dict_bytes = build_tkdb_v3(b"TKDB", &dict_rows);
     let dict_path = write_temp(&format!("phase5-{name}.dict.bin"), &dict_bytes);
@@ -121,7 +129,7 @@ fn build_fixture(name: &str, rows: &[Row<'_>]) -> (PrefixIndex, DictionaryReader
     // 2. dictionary.fst — entries must be inserted in ascending byte
     // order. Sort by `tl:<key> + 0xFF + rowid` before insertion.
     let mut fst_keys: Vec<Vec<u8>> = Vec::new();
-    for (idx, r) in rows.iter().enumerate() {
+    for (idx, (_, r)) in rows.iter().enumerate() {
         let rowid = (idx + 1) as u32;
         let mut entry = Vec::with_capacity(r.toneless_key.len() + 4 + 5);
         entry.extend_from_slice(b"tl:");
@@ -247,7 +255,7 @@ fn tsua_surfaces_zhi_zhuah_zhu_across_two_spans() {
 
     // v3.5.8 SortKey expected order (post-S8; per
     // `docs/releases/v3.5.8/plan.md` § Phase 9 sort_key formula):
-    //   (coverage_kind, tier, recency_rank, -adjusted_score, -freq,
+    //   (coverage_kind, tier, -user_weight, -adjusted_score, -freq,
     //    -coverage_bytes, source_rank, stable_idx)
     //
     // - Tier 0 (full-buffer): 紙 + 珠仔, sorted by score desc → 紙 then 珠仔.
@@ -760,7 +768,7 @@ fn taixyz_invalid_tail_yields_empty_tier1_top() {
 #[test]
 fn stable_idx_preserves_insertion_order_at_fetch_boundary() {
     // Three candidates under the SAME toneless key "tai" with identical
-    // SortKey dimensions 0..7 (coverage_kind, tier, recency_rank,
+    // SortKey dimensions 0..7 (coverage_kind, tier, -user_weight,
     // -score, -freq, -coverage, source_rank). Only `stable_idx`
     // (the last dim) differentiates.
     // The sort MUST keep them in pre-sort fetch order — which is FST
@@ -1805,6 +1813,8 @@ fn best_candidate_for_key_returns_highest_score_on_collision() {
         &ctx_neutral(&FrequencyMap::new(), &prefix_index, &dict),
     )
     .expect("key has dict hits");
+    assert_eq!(best.span_frequency, 5000, "key's max frequency");
+    let best = best.candidate;
     assert_eq!(best.display_text, "臺灣", "highest-score row must win");
     assert_eq!(best.hanji.as_deref(), Some("臺灣"));
     assert_eq!(best.roman, "tâi-uân");
@@ -1813,6 +1823,99 @@ fn best_candidate_for_key_returns_highest_score_on_collision() {
     // roman/hanji/freq/syll off it).
     assert_eq!(best.consumed_span, (0, 6));
     assert_eq!(best.coverage_kind, COVERAGE_KIND_FULL);
+}
+
+#[test]
+fn best_candidate_for_key_breaks_score_tie_by_source_rank_like_the_list() {
+    // Codex post-impl 2026-09-14 P2 (intended change): the edge pick now
+    // runs the full `SortKey` order, so an exact score tie falls to
+    // `source_rank` before FST rowid — production `kap` 洽/甲 (both 4927):
+    // the old strict-`>` score compare kept the first rowid 洽, the list
+    // led with kautian 甲, and the user saw slot 0 disagree with the list.
+    // Now both say 甲. (Fixture uses the taigitv bit: the kautian bit is
+    // dropped from the effective bitmask when a row has no kautian
+    // subtag, which `build_tkdb_v3` never sets.)
+    const TAIGITV_BIT: u16 = 1 << 1;
+    let first_unknown = Row {
+        toneless_key: "kap",
+        hanzi: "洽",
+        tl: "kap",
+        syll: 1,
+        freq: 4927,
+    };
+    let second_ranked = Row {
+        toneless_key: "kap",
+        hanzi: "甲",
+        tl: "kap",
+        syll: 1,
+        freq: 4927,
+    };
+    let (prefix_index, dict) = build_fixture_sourced(
+        "s2-best-source-tie",
+        &[(1u16 << 11, &first_unknown), (TAIGITV_BIT, &second_ranked)],
+    );
+    let best = best_candidate_for_key_with_barriers(
+        "tl:kap",
+        &[],
+        &TonePin::None,
+        (0, 3),
+        &ctx_neutral(&FrequencyMap::new(), &prefix_index, &dict),
+    )
+    .expect("key has dict hits");
+    assert_eq!(
+        best.candidate.display_text, "甲",
+        "kautian row wins the score tie"
+    );
+}
+
+#[test]
+fn best_candidate_for_key_prefers_selected_row_but_keeps_span_frequency_of_key() {
+    // 2026-09-14 更新/敬神 bug: the walker's edge word follows the user's
+    // selection ahead of dictionary frequency (one pick of the 50×
+    // rarer 台灣 beats never-selected 臺灣), while `span_frequency`
+    // stays the key's max so the edge's segmentation cost is unchanged.
+    let (prefix_index, dict) = build_fixture(
+        "s2-best-selected",
+        &[
+            Row {
+                toneless_key: "taiuan",
+                hanzi: "台灣",
+                tl: "tâi-uân",
+                syll: 2,
+                freq: 100,
+            },
+            Row {
+                toneless_key: "taiuan",
+                hanzi: "臺灣",
+                tl: "tâi-uân",
+                syll: 2,
+                freq: 5000,
+            },
+        ],
+    );
+    let now_ms = 1_700_000_000_000_i64;
+    let map = build_frequency_map(&[FrequencyEntry {
+        display_text_key: "台灣".into(),
+        count: 1,
+        last_used_ms: now_ms - 1_000,
+        canonical_tl: "tâi-uân".into(),
+    }]);
+    let best = best_candidate_for_key_with_barriers(
+        "tl:taiuan",
+        &[],
+        &TonePin::None,
+        (0, 6),
+        &ctx(&map, now_ms, &[], &prefix_index, &dict),
+    )
+    .expect("key has dict hits");
+    assert_eq!(
+        best.candidate.display_text, "台灣",
+        "selected row wins the edge"
+    );
+    assert_eq!(
+        best.span_frequency, 5000,
+        "segmentation evidence is the key's max"
+    );
 }
 
 #[test]
@@ -1906,7 +2009,7 @@ fn continuous_drops_tl_abbrev_collision_keeps_genuine_toneless() {
     )
     .expect("genuine toneless candidate exists");
     assert_eq!(
-        best.display_text, "語",
+        best.candidate.display_text, "語",
         "best_candidate_for_key_with_barriers must skip the tl_abbrev collision"
     );
 }

@@ -41,7 +41,7 @@
 //!   using `BOOST_ALPHA` / `MAX_BOOST` from `ranking::score`; the
 //!   platform's `user_frequency.db` stays native. Cold-start safe
 //!   defaults = `&FrequencyMap::new()` + `now_ms = 0` (boost = 1.0,
-//!   recency_rank = 1 everywhere).
+//!   user_weight = 0.0 everywhere).
 //!
 //! # Ordering
 //!
@@ -65,9 +65,7 @@ use unicode_normalization::UnicodeNormalization;
 
 use crate::dictionary_reader::{DictionaryReader, DictionaryRecord, Filter};
 use crate::prefix_index::PrefixIndex;
-use ranking::{
-    calculate_continuous_score, recency_rank, source_tier_rank, user_freq_boost, FrequencyMap,
-};
+use ranking::{calculate_continuous_score, source_tier_rank, FrequencyMap};
 
 /// `RawCandidate.form` discriminator. Every candidate this module emits
 /// carries the notone form: span-local keys are `<prefix>:<toneless>`
@@ -256,16 +254,16 @@ pub struct RawCandidate {
     /// Derived by [`derive_mode`] from `DictionaryRecord.hanzi`.
     /// Metadata-only in Phase 9.2 — not consulted by [`SortKey`].
     pub mode: CandidateMode,
-    /// v3.5.8 Phase 9.3a — `0` when this candidate's matching
-    /// `FrequencyEntry` was selected strictly inside the
-    /// `RECENCY_WINDOW_MS` window; `1` otherwise (stale, never used,
-    /// or clock-skew). Computed once by [`record_to_candidate`] from
-    /// the caller-built `FrequencyMap` + `now_ms`, and read verbatim
-    /// by [`SortKey::new`]. Internal: NOT emitted on
-    /// `CandidateMessage` today — platform UI does not yet render a
-    /// "recently used" affordance, so adding a wire field is
-    /// premature (PR-9.3c may revisit).
-    pub recency_rank: u8,
+    /// Time-decayed user-selection weight for this candidate's
+    /// `(display_text, canonical_tl)` pair
+    /// ([`ranking::FrequencyData::user_weight`]; `0.0` = never selected,
+    /// no wall clock, or clock-skew). Leading user-preference dimension
+    /// of [`SortKey`] and of the walker's per-edge pick
+    /// ([`best_candidate_for_key_with_barriers`]) — any selected word
+    /// outranks every never-selected homophone. Rationale:
+    /// `docs/engine/continuous-input-ranking.md` §3.2. Internal — NOT
+    /// emitted on `CandidateMessage`.
+    pub user_weight: f64,
     /// v3.5.8 Phase 9 Item 10 — coverage kind for the new partial-prefix
     /// path. [`COVERAGE_KIND_FULL`] for the existing
     /// `fetch_candidates_for_keys_with_barriers` lookup-exact path;
@@ -273,11 +271,11 @@ pub struct RawCandidate {
     /// [`fetch_partial_prefix_candidates`] hits.
     ///
     /// Internal axis only — does NOT enter `CandidateMessage` (same
-    /// pattern as [`recency_rank`]; see
+    /// pattern as [`user_weight`](Self::user_weight); see
     /// `docs/engine/continuous-candidate-display.md` §15.5). Consumed
     /// solely by [`SortKey`] to push every partial-prefix candidate
     /// strictly below every full-syllable candidate in lexicographic
-    /// order, irrespective of `tier`, score, recency, dict freq, or
+    /// order, irrespective of `tier`, user weight, score, dict freq, or
     /// source rank.
     pub coverage_kind: u8,
     /// v3.5.8 Phase 9 Item 12 — `true` for candidates synthesized from
@@ -291,7 +289,7 @@ pub struct RawCandidate {
     /// survivor wins, so a custom entry always beats a `dict.bin`
     /// duplicate. Internal axis only — NOT emitted on
     /// `CandidateMessage` (same pattern as [`coverage_kind`] /
-    /// `recency_rank`).
+    /// `user_weight`).
     pub is_custom: bool,
 }
 
@@ -764,7 +762,7 @@ fn merge_custom_dedupe_sort(
 /// `docs/releases/v3.5.8/plan.md` § Phase 9 sort_key formula:
 ///
 /// ```text
-/// (coverage_kind, tier, recency_rank, -adjusted_score,
+/// (coverage_kind, tier, -user_weight, -adjusted_score,
 ///  -freq, -coverage_bytes, source_tier_rank, stable_idx)
 /// ```
 ///
@@ -789,7 +787,7 @@ fn merge_custom_dedupe_sort(
 /// up each candidate by that pair, computes
 /// [`ranking::user_freq_boost`] (saturated at
 /// [`ranking::MAX_BOOST`]), and derives
-/// `SortKey.recency_rank` via [`ranking::recency_rank`]
+/// `SortKey.neg_user_weight` via [`ranking::decayed_user_weight_delta`]
 /// (which guards against `now_ms <= 0`, `last_used_ms <= 0`, and
 /// clock skew). NaN scores (only reachable if the boost helper
 /// produces a non-finite value — which it cannot under the
@@ -1094,10 +1092,12 @@ pub fn fetch_partial_prefix_candidates_unbounded(
 }
 
 /// v3.5.8 S2 — single best dictionary candidate for one exact FST
-/// key. Returns the highest-`score` [`record_to_candidate`] over
-/// `prefix_index.lookup_exact(key)` (NaN coerced low via
-/// [`NonNanF32`]; ties keep the first FST rowid for determinism), or
-/// `None` when the key has no dict hit. PR-9.6 — the walker reads the
+/// key. Returns the [`SortKey`]-first [`record_to_candidate`] over
+/// `prefix_index.lookup_exact(key)` (user-selected word before
+/// dictionary frequency; NaN coerced low via [`NonNanF64`]; ties keep
+/// the first FST rowid for determinism) together with the key's
+/// max frequency ([`EdgeBest::span_frequency`]), or `None` when the
+/// key has no dict hit. PR-9.6 — the walker reads the
 /// SAME `ctx.enabled_sources_bitmask` filter the span-local path
 /// applies (`composing::continuous::assemble_candidates` builds one
 /// [`ContinuousFetchCtx`] for both), so a whole-sentence parse never
@@ -1112,9 +1112,9 @@ pub fn fetch_partial_prefix_candidates_unbounded(
 /// provider so the walker stays pure + shadow-space native and the
 /// lexicon candidate construction is **reused, not duplicated**
 /// (Codex pre-impl S2 Q1b, 2026-05-16). `consumed_span` is stamped
-/// onto the returned candidate verbatim; the walker only reads
-/// `roman` / `hanji` / `frequency` / `syllable_count` /
-/// `display_text` off it.
+/// onto the returned candidate verbatim; the walker reads `roman` /
+/// `hanji` / `syllable_count` / `user_weight` off the candidate and
+/// prices the edge on [`EdgeBest::span_frequency`].
 ///
 /// `tps_final_only` is the §35 barrier restriction for this edge's key
 /// (byte offsets of Final-only pattern slots, family prefix included).
@@ -1128,9 +1128,10 @@ pub fn best_candidate_for_key_with_barriers(
     tone_pin: &TonePin,
     consumed_span: ConsumedSpan,
     ctx: &ContinuousFetchCtx<'_>,
-) -> Option<RawCandidate> {
+) -> Option<EdgeBest> {
     let filter = Filter::from_enabled_bitmask(ctx.enabled_sources_bitmask);
-    let mut best: Option<RawCandidate> = None;
+    let mut best: Option<(SortKey, RawCandidate)> = None;
+    let mut span_frequency = 0;
     // A multi-syllable edge MAY span a stripped separator (§31 cross-space
     // phrase edges), which is why the caller computes and passes
     // `tps_final_only` in edge coordinates rather than this fn assuming
@@ -1144,17 +1145,42 @@ pub fn best_candidate_for_key_with_barriers(
         &filter,
         ctx,
         |cand| {
-            // Strict `>`: on a tie the FIRST rowid stays (determinism).
-            let better = match &best {
-                None => true,
-                Some(b) => NonNanF32::new(cand.score) > NonNanF32::new(b.score),
-            };
-            if better {
-                best = Some(cand);
+            span_frequency = span_frequency.max(cand.frequency);
+            // Same `SortKey` order as the span-local list so slot 0 and the
+            // list agree on the edge's word. Every homophone here shares
+            // `coverage_kind` / `consumed_span`, so `raw_len =
+            // consumed_span.1` pins `tier` equal and only the user-weight /
+            // score / freq / source dims decide; strict `<` keeps the
+            // first FST rowid on a full tie.
+            let key = SortKey::new(&cand, consumed_span.1, 0);
+            if best.as_ref().is_none_or(|(b, _)| key < *b) {
+                best = Some((key, cand));
             }
         },
     );
-    best
+    best.map(|(_, candidate)| EdgeBest {
+        candidate,
+        span_frequency,
+    })
+}
+
+/// One lattice edge's word, as picked by
+/// [`best_candidate_for_key_with_barriers`], plus the evidence that the
+/// edge's span IS a dictionary word.
+#[derive(Debug)]
+pub struct EdgeBest {
+    /// The homophone the user sees for this edge — user-selected word
+    /// first, then dictionary frequency (the [`SortKey`] order).
+    pub candidate: RawCandidate,
+    /// Highest `dict.bin` frequency among the key's homophones that
+    /// pass the edge's source / tone-pin / barrier filters — not the
+    /// picked word's own. The walker prices the edge's segmentation on
+    /// this so a rarer preferred homophone does not price its span out
+    /// of the best path: "is this span a word" is decoupled from "which
+    /// word". (`candidate.user_weight` is likewise the span's max, since
+    /// user weight is the leading pick dimension.) Rationale + numbers:
+    /// `docs/engine/continuous-input-ranking.md` §3.2.
+    pub span_frequency: u32,
 }
 
 /// Does the exact hanzi `hanji` resolve to a dictionary entry of
@@ -1786,16 +1812,12 @@ fn record_to_candidate(
     // on commit (`display_text` key + `canonical_tl` reading). The
     // tolerant `get` falls back to the legacy `tl == ""` bucket on an
     // exact miss; absent entries fall through to `FrequencyData::default()`
-    // (count = 0, last_used_ms = 0) → `user_freq_boost(0) = 1.0` and
-    // `recency_rank(_, 0) = 1`, reproducing the cold-start neutral path.
-    let freq_data = freq_map.get(&display_text, &canonical_tl);
-    // `FrequencyData.count` is `i32` (legacy `calculate_score` cap
-    // domain). Saturate the negative side to 0; the wire builder
-    // already saturates the positive side at `i32::MAX`.
-    let count_u32 = u32::try_from(freq_data.count).unwrap_or(0);
-    let boost = user_freq_boost(count_u32);
-    let score = calculate_continuous_score(frequency, syllable_count, boost);
-    let recency = recency_rank(now_ms, freq_data.last_used_ms);
+    // (count = 0, last_used_ms = 0) → `user_weight = 0.0`, the cold-start
+    // neutral path.
+    let user_weight = freq_map
+        .get(&display_text, &canonical_tl)
+        .user_weight(now_ms);
+    let score = calculate_continuous_score(frequency, syllable_count);
     RawCandidate {
         consumed_span,
         syllable_count,
@@ -1808,7 +1830,7 @@ fn record_to_candidate(
         frequency,
         bitmask,
         mode,
-        recency_rank: recency,
+        user_weight,
         coverage_kind,
         // dict.bin FST hit — `source_tier_rank` derives the rank from
         // `bitmask`; `is_custom = false` keeps the kautian/taigitv/…
@@ -1887,14 +1909,12 @@ fn custom_entry_to_candidate(
     // `record_to_candidate`. For a hanji-absent custom/OOV entry
     // `display_text == canonical_tl`; the tolerant `get` still falls back
     // to the legacy `tl == ""` bucket on an exact miss.
-    let freq_data = freq_map.get(&display_text, &canonical_tl);
-    let count_u32 = u32::try_from(freq_data.count).unwrap_or(0);
-    let boost = user_freq_boost(count_u32);
-    // `frequency = 0` (D4) → `calculate_continuous_score` reduces to
-    // the boost-only term; the candidate floats on `source_rank` /
-    // dedupe, not raw freq.
-    let score = calculate_continuous_score(0, 1, boost);
-    let recency = recency_rank(now_ms, freq_data.last_used_ms);
+    let user_weight = freq_map
+        .get(&display_text, &canonical_tl)
+        .user_weight(now_ms);
+    // `frequency = 0` (D4) → score 0; the candidate floats on
+    // `user_weight` / `source_rank` / dedupe, not raw freq.
+    let score = calculate_continuous_score(0, 1);
     RawCandidate {
         consumed_span: (0, raw_len),
         syllable_count: 1,
@@ -1910,7 +1930,7 @@ fn custom_entry_to_candidate(
         // `dedupe_by_roman_hanji_span` (`source_tier_rank` short-circuits).
         bitmask: 0,
         mode,
-        recency_rank: recency,
+        user_weight,
         coverage_kind,
         is_custom: true,
     }
@@ -1977,10 +1997,10 @@ fn dedupe_by_roman_hanji_span(out: &mut Vec<RawCandidate>) {
 // `docs/releases/v3.5.8/plan.md` § Phase 9 (+ whole-sentence lattice + walker S8). Field
 // order in this struct matches `#[derive(Ord)]`'s lexicographic
 // comparison; `Reverse<T>` flips individual dimensions whose policy
-// is descending. NaN-safe because scores are wrapped in `NonNanF32`
-// which coerces NaN to `f32::MIN` at construction.
+// is descending. NaN-safe because floats are wrapped in `NonNanF64`
+// which coerces NaN to `f64::MIN` at construction.
 //
-// Order: coverage_kind, tier, recency_rank, -score, -freq,
+// Order: coverage_kind, tier, -user_weight, -score, -freq,
 // -coverage, source_rank, stable_idx. S8 moved `-coverage` from
 // dim 3 (above score) down to dim 6 (a weak tiebreak below
 // score/freq): the slot-0 whole-sentence walker now owns phrase
@@ -2005,16 +2025,15 @@ struct SortKey {
     /// (`docs/releases/v3.5.8/plan.md` § Phase 9 / `docs/engine/continuous-input-
     /// ranking.md` §1.1).
     tier: u8,
-    /// `0` = recent (`last_used_ms` within
-    /// `ranking::RECENCY_WINDOW_MS`), `1` = stale, never used, or
-    /// clock-skew. Populated by `record_to_candidate` from the
-    /// caller-built `FrequencyMap` + `now_ms` (Phase 9.3a). PR-9.1
-    /// carried a sentinel `1`; that contract is now lifted.
-    recency_rank: u8,
+    /// Descending: [`RawCandidate::user_weight`] — a selected word
+    /// (`> 0.0`) precedes every never-selected one (`0.0`) whatever
+    /// their dictionary frequency. `f64` so two selections seconds
+    /// apart do not collapse into a tie.
+    neg_user_weight: Reverse<NonNanF64>,
     /// Descending: higher `freq × syll_bias × boost` wins.
-    neg_score: Reverse<NonNanF32>,
+    neg_score: Reverse<NonNanF64>,
     /// Descending: raw freq as a secondary tie-break independent of
-    /// adjusted_score (only differs when boost ≠ 1.0 once 9.3a lands).
+    /// the syllable-biased score.
     neg_freq: Reverse<u32>,
     /// Descending: longer coverage wins — but only as a weak tiebreak
     /// AFTER `neg_score` / `neg_freq`. v3.5.8 whole-sentence lattice + walker S8
@@ -2051,8 +2070,8 @@ impl SortKey {
         Self {
             coverage_kind: candidate.coverage_kind,
             tier,
-            recency_rank: candidate.recency_rank,
-            neg_score: Reverse(NonNanF32::new(candidate.score)),
+            neg_user_weight: Reverse(NonNanF64::new(candidate.user_weight)),
+            neg_score: Reverse(NonNanF64::new(f64::from(candidate.score))),
             neg_freq: Reverse(candidate.frequency),
             neg_coverage: Reverse(coverage_bytes),
             source_rank,
@@ -2061,35 +2080,35 @@ impl SortKey {
     }
 }
 
-/// `f32` newtype with a total order via [`f32::total_cmp`] after
-/// coercing `NaN` to [`f32::MIN`]. Lets [`SortKey`] derive `Ord`
+/// `f64` newtype with a total order via [`f64::total_cmp`] after
+/// coercing `NaN` to [`f64::MIN`]. Lets [`SortKey`] derive `Ord`
 /// without a hand-written comparator, while still defending against
 /// `NaN` leakage from a contract-violating `user_freq_boost`
 /// (`calculate_continuous_score` docs).
 #[derive(Debug, Clone, Copy)]
-struct NonNanF32(f32);
+struct NonNanF64(f64);
 
-impl NonNanF32 {
-    fn new(v: f32) -> Self {
-        Self(if v.is_nan() { f32::MIN } else { v })
+impl NonNanF64 {
+    fn new(v: f64) -> Self {
+        Self(if v.is_nan() { f64::MIN } else { v })
     }
 }
 
-impl PartialEq for NonNanF32 {
+impl PartialEq for NonNanF64 {
     fn eq(&self, other: &Self) -> bool {
         self.0.total_cmp(&other.0) == std::cmp::Ordering::Equal
     }
 }
 
-impl Eq for NonNanF32 {}
+impl Eq for NonNanF64 {}
 
-impl PartialOrd for NonNanF32 {
+impl PartialOrd for NonNanF64 {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         Some(self.cmp(other))
     }
 }
 
-impl Ord for NonNanF32 {
+impl Ord for NonNanF64 {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         self.0.total_cmp(&other.0)
     }
@@ -2107,8 +2126,8 @@ mod sort_key_tests {
     /// Convenience builder so each test only specifies the dimensions
     /// it exercises. Fields not exercised default to neutral values:
     /// `frequency = 0`, `bitmask = 0` (→ source rank = default = 5),
-    /// `score = 0.0`, `syllable_count = 1`, `recency_rank = 1` (stale
-    /// = the cold-start default in PR-9.3a).
+    /// `score = 0.0`, `syllable_count = 1`, `user_weight = 0.0` (never
+    /// selected = the cold-start default).
     fn cand(
         span_start: u32,
         span_end: u32,
@@ -2116,16 +2135,16 @@ mod sort_key_tests {
         frequency: u32,
         bitmask: u16,
     ) -> RawCandidate {
-        cand_with_recency(span_start, span_end, score, frequency, bitmask, 1)
+        cand_with_user_weight(span_start, span_end, score, frequency, bitmask, 0.0)
     }
 
-    fn cand_with_recency(
+    fn cand_with_user_weight(
         span_start: u32,
         span_end: u32,
         score: f32,
         frequency: u32,
         bitmask: u16,
-        recency_rank: u8,
+        user_weight: f64,
     ) -> RawCandidate {
         RawCandidate {
             consumed_span: (span_start, span_end),
@@ -2139,16 +2158,16 @@ mod sort_key_tests {
             frequency,
             bitmask,
             mode: CandidateMode::Hant,
-            recency_rank,
+            user_weight,
             coverage_kind: COVERAGE_KIND_FULL,
             is_custom: false,
         }
     }
 
     /// v3.5.8 Phase 9 Item 10 — partial-prefix variant for the new
-    /// `coverage_kind` dim. Defaults to recency_rank=1 (stale) so
-    /// tests can isolate the coverage_kind axis without mixing in
-    /// recency boosts.
+    /// `coverage_kind` dim. Defaults to user_weight=0.0 (never
+    /// selected) so tests can isolate the coverage_kind axis without
+    /// mixing in user preference.
     fn cand_partial(
         span_start: u32,
         span_end: u32,
@@ -2156,7 +2175,7 @@ mod sort_key_tests {
         frequency: u32,
         bitmask: u16,
     ) -> RawCandidate {
-        let mut c = cand_with_recency(span_start, span_end, score, frequency, bitmask, 1);
+        let mut c = cand_with_user_weight(span_start, span_end, score, frequency, bitmask, 0.0);
         c.coverage_kind = COVERAGE_KIND_PARTIAL_PREFIX;
         c
     }
@@ -2270,33 +2289,43 @@ mod sort_key_tests {
     }
 
     #[test]
-    fn sort_key_reads_recency_rank_from_candidate() {
-        // Phase 9.3a contract: `SortKey::new` reads `candidate
-        // .recency_rank` verbatim — no sentinel, no recomputation.
-        // The default `cand()` builder seeds rank = 1 (stale), and
-        // `cand_with_recency` lets a test explicitly seed rank = 0.
+    fn sort_key_reads_user_weight_from_candidate() {
+        // `SortKey::new` reads `candidate.user_weight` verbatim — no
+        // sentinel, no recomputation.
         let raw_len: u32 = 3;
-        let stale = SortKey::new(&cand(0, 3, 1.0, 1, 0), raw_len, 0);
-        assert_eq!(stale.recency_rank, 1);
-        let recent = SortKey::new(&cand_with_recency(0, 3, 1.0, 1, 0, 0), raw_len, 1);
-        assert_eq!(recent.recency_rank, 0);
+        let never = SortKey::new(&cand(0, 3, 1.0, 1, 0), raw_len, 0);
+        assert_eq!(never.neg_user_weight, Reverse(NonNanF64::new(0.0)));
+        let selected = SortKey::new(&cand_with_user_weight(0, 3, 1.0, 1, 0, 0.1), raw_len, 1);
+        assert_eq!(selected.neg_user_weight, Reverse(NonNanF64::new(0.1)));
     }
 
     #[test]
-    fn recency_rank_zero_beats_one_when_tier_coverage_equal() {
-        // Phase 9.3a headline behaviour: within the same `(tier)`
-        // bucket, a recently-used candidate must precede a stale one
-        // even if scores otherwise tie. Post-S8, `recency_rank`
-        // (dim 3) sits directly above `-adjusted_score` (dim 4), so
-        // it triggers reliably here with equal score / freq / coverage
-        // / bitmask (coverage is now the weak dim 6 tiebreak).
+    fn selected_word_beats_never_selected_regardless_of_score() {
+        // Headline behaviour (2026-09-14 更新/敬神 bug): within the same
+        // `(coverage_kind, tier)` bucket a word the user selected ONCE
+        // (weight 0.1) precedes a never-selected homophone whose
+        // dictionary score is 25× higher — user preference is a
+        // lexicographic dim above `-score`, not a capped multiplier.
         let raw_len: u32 = 3;
-        let recent = cand_with_recency(0, 3, 100.0, 100, 0, 0);
-        let stale = cand_with_recency(0, 3, 100.0, 100, 0, 1);
+        let selected_rare = cand_with_user_weight(0, 3, 1.1, 1, 0, 0.1);
+        let never_common = cand(0, 3, 27.5, 25, 0);
         assert!(
-            SortKey::new(&recent, raw_len, 0) < SortKey::new(&stale, raw_len, 1),
-            "recency_rank=0 (recent) must precede recency_rank=1 (stale)"
+            SortKey::new(&selected_rare, raw_len, 1) < SortKey::new(&never_common, raw_len, 0),
+            "user_weight > 0 must precede user_weight == 0 whatever the score"
         );
+    }
+
+    #[test]
+    fn higher_user_weight_beats_lower_when_both_selected() {
+        // Two selected homophones: the heavier (more / more recent
+        // selections) wins; score only breaks a weight tie.
+        let raw_len: u32 = 3;
+        let heavy_rare = cand_with_user_weight(0, 3, 1.0, 1, 0, 2.0);
+        let light_common = cand_with_user_weight(0, 3, 100.0, 100, 0, 0.5);
+        assert!(SortKey::new(&heavy_rare, raw_len, 1) < SortKey::new(&light_common, raw_len, 0));
+        let tie_high = cand_with_user_weight(0, 3, 100.0, 100, 0, 0.5);
+        let tie_low = cand_with_user_weight(0, 3, 1.0, 1, 0, 0.5);
+        assert!(SortKey::new(&tie_high, raw_len, 1) < SortKey::new(&tie_low, raw_len, 0));
     }
 
     #[test]
@@ -2316,17 +2345,18 @@ mod sort_key_tests {
     #[test]
     fn coverage_kind_full_beats_partial_regardless_of_other_dims() {
         // Item 10 headline invariant: a partial-prefix candidate with
-        // MAX freq + MAX score + recent recency + best source rank
+        // MAX freq + MAX score + a heavy user weight + best source rank
         // must STILL lose to a full-syllable candidate with min freq,
-        // min score, stale recency, and worst source rank — the
+        // min score, never selected, and worst source rank — the
         // leading `coverage_kind` dim is load-bearing.
         // Both candidates have `end == raw_len` so their `tier`
         // dimension is identical (0) — the regression this guards
         // against is a tier-0 partial beating a tier-1 full when
         // `coverage_kind` is mis-ordered.
         let raw_len: u32 = 3;
-        let full_weak = cand_with_recency(0, 3, 0.001, 1, 0, 1);
-        let partial_strong = cand_partial(0, 3, f32::MAX, u32::MAX, KAUTIAN_BIT_U16);
+        let full_weak = cand_with_user_weight(0, 3, 0.001, 1, 0, 0.0);
+        let mut partial_strong = cand_partial(0, 3, f32::MAX, u32::MAX, KAUTIAN_BIT_U16);
+        partial_strong.user_weight = 4.0;
         // Sanity: the partial helper sets `coverage_kind = 1` while
         // the full helper leaves it at the default `0`.
         assert_eq!(full_weak.coverage_kind, COVERAGE_KIND_FULL);
@@ -2599,7 +2629,7 @@ mod item12_custom_dedupe_tests {
             frequency: 100,
             bitmask,
             mode: derive_mode(hanji),
-            recency_rank: 1,
+            user_weight: 0.0,
             coverage_kind: COVERAGE_KIND_FULL,
             is_custom: false,
         }

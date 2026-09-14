@@ -66,9 +66,10 @@ pub(crate) struct EdgeChoice {
     /// `CUSTOM_EFFECTIVE_FREQ`, Codex S6 Q1 — NOT a cost special-case).
     pub is_custom: bool,
     /// Frequency the edge is scored with on the **dict** branch of
-    /// [`super::cost::edge_cost`]: the chosen `dict.bin` candidate's
-    /// raw frequency, or `super::cost::CUSTOM_EFFECTIVE_FREQ` for a
-    /// custom edge (S6 proxy). `0` and **unused** for a synthesized OOV
+    /// [`super::cost::edge_cost`]: the key's max raw frequency across
+    /// its homophones (`lexicon::EdgeBest::span_frequency` — segmentation
+    /// evidence, not the chosen word's own), or
+    /// `super::cost::CUSTOM_EFFECTIVE_FREQ` for a custom edge (S6 proxy). `0` and **unused** for a synthesized OOV
     /// edge (RC0: OOV cost is char-keyed, never frequency-based).
     pub frequency: u32,
     /// Syllable count of the chosen candidate (`>= 1`). Dict/custom:

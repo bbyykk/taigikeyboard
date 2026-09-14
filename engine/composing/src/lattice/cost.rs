@@ -254,8 +254,9 @@ pub(crate) const CUSTOM_EFFECTIVE_FREQ: u32 = 2_000;
 
 /// Min-cost for one lattice edge (**lower = better**).
 ///
-/// - `frequency` — the chosen dictionary candidate's raw
-///   `DictionaryRecord.frequency`; **unused when `dict_hit == false`**.
+/// - `frequency` — the edge key's max raw `DictionaryRecord.frequency`
+///   across its homophones (`lexicon::EdgeBest::span_frequency`);
+///   **unused when `dict_hit == false`**.
 ///   Raw frequency, never a ranked `score` (Codex pre-impl S5 Q3:
 ///   `c.score` must not feed the walker cost — that double-counts the
 ///   record-selection signal).
