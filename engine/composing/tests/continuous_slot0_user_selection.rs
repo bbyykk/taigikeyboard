@@ -133,6 +133,38 @@ fn one_selection_moves_rare_homophone_to_slot0_even_hours_later() {
 }
 
 #[test]
+fn selected_rare_phrase_alone_under_its_key_beats_the_single_syllable_split() {
+    // Device repro 2026-09-14 (敬神/警訊 sources toggled off): 更新 is the
+    // ONLY word under `kingsin`, so the span's max frequency is its own 1
+    // and cold start segments as 經+身 (synth 經身). One selection must
+    // still lift 更新 to slot 0 — user-dict floor in `edge_cost`.
+    let _lock = engine_install_lock();
+    let rows: Vec<Row> = fixture_rows()
+        .into_iter()
+        .filter(|r| r.hanzi != "敬神")
+        .collect();
+    let dict_path = write_temp("dictionary.bin", &build_tkdb_v3(&rows));
+    let fst_path = build_dictionary_fst_tl_toned(&rows);
+    let assoc_path = write_temp("association.bin", &empty_association_bin());
+    let syllables_path = build_syllables_fst_tl(&["king1", "king3", "sin1", "sin5"]);
+    install_lexicon(&fst_path, &dict_path, &assoc_path, &syllables_path);
+
+    let cold = fetch_hanji_with_freq("kingsin", Vec::new(), 0);
+    assert_eq!(
+        cold[0], "經身",
+        "cold start splits the rare phrase; got {cold:?}"
+    );
+
+    let hanji = fetch_hanji_with_freq(
+        "kingsin",
+        vec![selected("更新", "king-sin", 1, TWO_HOURS_MS)],
+        NOW_MS,
+    );
+    assert_eq!(hanji[0], "更新", "got {hanji:?}");
+    assert!(!hanji.iter().any(|h| h == "經身"), "got {hanji:?}");
+}
+
+#[test]
 fn more_selected_homophone_beats_less_selected_one() {
     let _lock = engine_install_lock();
     install_fixture();

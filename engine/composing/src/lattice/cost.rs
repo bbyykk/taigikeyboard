@@ -230,7 +230,13 @@ pub(crate) const WALKER_SINGLE_SYLLABLE_USER_DELTA_SCALE: f64 = 0.0;
 
 /// v3.5.8 S6 (Codex pre-impl S6 Q1, 2026-05-17, BLOCK condition) —
 /// the **effective corpus frequency** a `custom_dictionary.db` edge is
-/// scored with in the S5 min-cost model.
+/// scored with in the S5 min-cost model — and, since 2026-09-14, the
+/// floor a multi-syllable edge whose word the user has SELECTED is
+/// priced at (librime records committed phrases into the same user
+/// dictionary; a selection is user-dict evidence just like a custom
+/// row). Without the floor a selected rare phrase (更新, freq 1) stays
+/// costlier than the 經+身 single-syllable split — the walker never
+/// showed it at slot 0 however often it was picked.
 ///
 /// A custom entry carries no corpus frequency. Rather than an explicit
 /// cost floor / discount — which would bypass the "every edge pays the
@@ -274,7 +280,10 @@ pub(crate) const CUSTOM_EFFECTIVE_FREQ: u32 = 2_000;
 ///   (`ranking::decayed_user_weight_delta`, in `0.0..=4.0`; `0.0` =
 ///   no user history / never selected / bad clock = neutral). Computed
 ///   caller-side (`continuous::fetch_walker_slot0_inner`). OOV edges always
-///   carry `0.0` and take no discount.
+///   carry `0.0` and take no discount. `> 0.0` on a multi-syllable
+///   edge also floors `frequency` at [`CUSTOM_EFFECTIVE_FREQ`] (the
+///   user-dict tier), so a selected phrase beats any single-syllable
+///   split of its span.
 /// - `dict_hit` — `true` iff this edge is a lexicon-backed hit
 ///   (`dict.bin` record OR a `custom_dictionary.db` entry). The OOV
 ///   branch is selected solely from this flag, **never** inferred from
@@ -325,6 +334,15 @@ pub(crate) fn edge_cost(
     // A dict record with frequency 0 is still dict-priced (Codex
     // pre-impl Q2): the OOV branch is gated on `dict_hit`, never
     // `frequency == 0`.
+    // A user-selected multi-syllable word is user-dict evidence: price
+    // it at least at the custom-entry tier so its span is not split
+    // into higher-frequency singles. Single-syllable edges keep the S3
+    // damping policy below (no user lift in segmentation).
+    let frequency = if syllable_count > 1 && user_weight_delta > 0.0 {
+        frequency.max(CUSTOM_EFFECTIVE_FREQ)
+    } else {
+        frequency
+    };
     let p = (1.0 + f64::from(frequency)) / CORPUS_TOTAL_FREQ;
     let mut cost = (1.0 / p).ln();
     // khiin segmenter.rs:90-92 — `cost / word_len^0.2 * n_syls^0.2`.
@@ -723,15 +741,40 @@ mod tests {
     #[test]
     fn user_preference_discounts_multi_syllable_cost() {
         // A phrase edge with a positive decayed delta costs strictly
-        // less than the same edge with no user history; the discount is
-        // exactly `ln(1 + delta)` in log space.
-        let neutral = ec(50, 2, 4);
-        let preferred = edge_cost(50, 2, 4, 1.0, true);
+        // less than the same edge with no user history; above the
+        // user-dict floor the discount is exactly `ln(1 + delta)`.
+        let neutral = ec(CUSTOM_EFFECTIVE_FREQ + 1, 2, 4);
+        let preferred = edge_cost(CUSTOM_EFFECTIVE_FREQ + 1, 2, 4, 1.0, true);
         assert!(
             preferred < neutral,
             "preferred={preferred} neutral={neutral}"
         );
         assert!((preferred - (neutral - 1.0f64.ln_1p())).abs() < 1e-9);
+    }
+
+    #[test]
+    fn selected_rare_phrase_is_floored_to_user_dict_tier() {
+        // 2026-09-14 device repro (`kingsin` with 敬神/警訊 sources off):
+        // 更新 freq 1 alone under its key must still beat the 經 (9218) +
+        // 身 (10865) split once the user has selected it — a selection is
+        // user-dict evidence, priced like a custom entry.
+        let split = ec(9218, 1, 4) + ec(10865, 1, 3);
+        let cold = ec(1, 2, 7);
+        assert!(
+            cold > split,
+            "cold rare phrase loses the split (the bug shape)"
+        );
+        let selected_once = edge_cost(1, 2, 7, 0.1, true);
+        assert!(
+            selected_once < split,
+            "selected={selected_once} split={split}"
+        );
+        // Floor, not a jump past a genuinely frequent phrase: the same
+        // delta on a freq-above-floor phrase is unchanged by the floor.
+        let above = edge_cost(CUSTOM_EFFECTIVE_FREQ * 2, 2, 7, 0.1, true);
+        assert!((above - (ec(CUSTOM_EFFECTIVE_FREQ * 2, 2, 7) - 0.1f64.ln_1p())).abs() < 1e-9);
+        // Single-syllable edges are NOT floored (S3 damping policy).
+        assert_eq!(edge_cost(1, 1, 3, 4.0, true), ec(1, 1, 3));
     }
 
     #[test]
