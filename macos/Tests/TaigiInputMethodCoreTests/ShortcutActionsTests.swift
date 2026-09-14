@@ -50,15 +50,15 @@ final class ShortcutActionsTests: XCTestCase {
         XCTAssertEqual(
             labels(.japanese),
             [
-                "入力モードを切り替える",
+                "台羅／白話字を切り替える",
                 "候補の表示を切り替え",
-                "漢字／ローマ字を切り替える",
+                "漢字／ローマ字モードを切り替える",
                 "記号メニューを開く",
                 "設定メニューを開く",
                 "Telex の説明を開く",
             ],
         )
-        XCTAssertEqual(labels(.english).first, "Switch Input Mode")
+        XCTAssertEqual(labels(.english).first, "Switch Tâi-lô or Pe̍h-ōe-jī")
         // The trap this replaced: composing a row from the setting's own label produced a doubled
         // verb — "括弧で併記を切り替える", "Toggle Annotate in Brackets".
         XCTAssertFalse(labels(.japanese).contains { $0.contains("併記を切り替えるを") })
