@@ -1,8 +1,9 @@
 # Partial-tone input drops the typed tone (`teng5-sek` → wrong-tone candidates lead)
 
-Status: **investigation only, nothing decided**. No round is open; no release scope is implied.
-Root cause confirmed against production artifacts; the fix direction at the end is a proposal
-awaiting USER approval.
+Status: **fixed in the same PR** (USER 2026-09-14 「確認 root cause 是否為真, if yes, fix this
+issue in the same pr」). Root cause confirmed against production artifacts and by Codex pre-impl
+(CONFIRM, 2026-09-14); the fix is the candidate-layer tone pin described in § Resolution.
+The sections below are the investigation as written before the fix.
 
 ## Symptom (USER report, 2026-09-14)
 
@@ -104,7 +105,51 @@ exact + prefix lookup (`engine/lexicon/src/search.rs:109-112`). `poj:teng5sek` i
 `poj:teng5sek4`, so the search tab honors the partial tone that the keyboard candidate strip drops.
 Same input, two different answers.
 
-## Proposed fix direction (not approved)
+## Resolution (same PR)
+
+Engine-only, all four platforms (`make build`, not `make dict`). One post-lookup tone
+constraint type, `lexicon::TonePin { None, TpsSpaceEnd(body), TypedTones { mode, typed } }`, replaces the
+§41 `tone_pinned: bool` + `ContinuousFetchCtx::tps_space_pinned_body` pair, and every candidate
+path — span-local exact, walker slot 0, partial-prefix extension, custom merge and the walker's
+per-edge custom override — asks the same `TonePin::admits(matched_key, reading)`.
+
+- `composing::shadow::span_tone_pin`: a TL/POJ span with ≥ 1 ASCII digit → `TypedTones { mode, typed }`
+  (`teng5sek`); the lookup body stays toneless for a partial span (no partial FST family
+  exists) and verbatim for a fully-toned one (unchanged); TPS space-end → `TpsSpaceEnd`; English
+  never pinned. `whole_buffer_tone_pin` / `build_partial_prefix_key` are two projections of one
+  `whole_buffer_span_key` (the fused shadow with its space barriers through `span_key`).
+- `lexicon::continuous::reading_passes_typed_tones`: walks the record's numeric-tone face
+  (`phonetics::tl_num_syllable_ends_from_tl` / `poj_num_syllable_ends_from_tl`, the reconstruction
+  `SyllableReach` already measures on) syllable by syllable against the typed text — letters must
+  align (nasal `onn`↔`oonn` alias tried per syllable, on the full and the mid-syllable match;
+  other misalignment, typed text the face cannot account for, or a face without letter-bearing
+  syllables REJECTS, never fails open, so an alias spelling cannot smuggle a wrong tone past the
+  pin), a digit right after them must equal the face's tone, no digit leaves the syllable free.
+  Typed text ending inside a syllable ends the walk with everything so far honored — the same walk
+  serves the exact and partial-prefix paths.
+- Custom entries: `TonePin::admits_custom` folds the roman through `canonical_tl_form` before the
+  walk (skipped when nothing is pinned); the walker's `custom_map` now keeps every entry per
+  toneless key and picks the first **eligible** one.
+
+Codex pre-impl corrections folded in: `teng5se` rejects 中西 `teng-se` (first syllable disagrees);
+fully-toned input pins custom entries too (their matching is toneless); first-eligible custom
+selection; alias alignment instead of fail-open. Codex post-impl (SHIP-WITH-FIXES) folded in:
+the mid-syllable match accepts the alias spelling too (`si7hoonn` → 是乎 `sī-honnh`), strict
+fail-closed on unconsumed typed text / bad slices. Remaining text-only detection gap recorded in
+§17: `tengsek4` (only the last syllable toned) still keys the nonexistent verbatim `poj:tengsek4`
+(the direct phrase-key lookup misses; the walker synth may still surface 頂色).
+
+Verified on production artifacts (`candidate_dump`, mask 67104195): `teng5-sek` → 程式 only;
+`teng5se` → 程世 + 程式 extension, 中西 gone; `teng5s` → tone-5 extensions only; `ho5onn` no longer
+reads as the `hoonn` alias (予 hōo / 好 hònn gone, 和唔 hô-onn stays). Byte-identical for
+`tengsek`, `taigi`, `hoonn`, `chiah`, `tai5gi2`, `tai5`, `gua2`, `tai5g`, `kesithau` (POJ), the TL
+set, all TPS probes and English.
+
+Tests: `engine/composing/tests/continuous_partial_tone.rs` (4 of 5 fail on the pre-fix engine),
+`lexicon::continuous::typed_tone_pin_tests`, `shadow.rs` unit tests. Docs: §17 case 3 and §41
+custom bullet in `behavioral-invariants.md`, dogfood S46.
+
+## Proposed fix direction (as written before the fix)
 
 Keep the toneless lookup — the no-tone "show all tones" affordance is the feature (§17 case 2) — and
 add the missing post-lookup filter: for a partial-tone TL/POJ span, pin each syllable the user *did*

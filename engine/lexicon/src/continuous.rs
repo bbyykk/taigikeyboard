@@ -353,19 +353,161 @@ pub struct ContinuousFetchCtx<'a> {
     /// the romanization fallback for the freq key, NOT to alter
     /// dictionary lookup.
     pub mode: phonetics::InputMode,
-    /// A3 (§41) — the typed buffer's fused TPS notone body when its TAIL
-    /// syllable was closed by the keyboard's space (so the user pinned
-    /// that syllable's unmarked tone: 1 for an open rime, 4 for a stop
-    /// coda), else `None`.
-    ///
-    /// Only whole-buffer candidate sources need it: `custom_dictionary.db`
-    /// entries are synthesized at `(0, raw_len)` with no per-key body of
-    /// their own, so the tone check has nothing else to align against.
-    /// Dictionary hits align against their own matched FST key instead.
-    /// `None` for every non-TPS mode and for a TPS buffer that does not
-    /// end on a space-closed unmarked syllable — the legacy all-tones
+    /// The whole typed buffer's [`TonePin`] — the tone constraint the
+    /// sources that carry no span key of their own answer to:
+    /// `custom_dictionary.db` entries are synthesized at `(0, raw_len)`,
+    /// and partial-prefix extensions are hydrated from a strict prefix of
+    /// the buffer, so neither has a per-key pin to align against.
+    /// Dictionary hits on the exact / walker paths carry their own
+    /// per-key pin instead. [`TonePin::None`] is the legacy all-tones
     /// behavior.
-    pub tps_space_pinned_body: Option<&'a str>,
+    pub tone_pin: TonePin,
+}
+
+/// Post-lookup tone constraint on the readings one continuous lookup
+/// returns. The FST only has two romanization key families per record —
+/// the fused toneless one and the fully-toned one
+/// (`dictionary/build/create_fst.py`) — so every tone the user typed
+/// that the key cannot express is re-applied HERE, after the lookup, by
+/// checking each candidate's canonical reading against what was typed.
+/// Built by `composing::shadow::span_key` (per key) and
+/// `composing::shadow::whole_buffer_tone_pin` (whole buffer); consumed
+/// through [`TonePin::admits`] on every candidate path — span-local,
+/// walker slot 0, partial-prefix, custom merge — so the layers cannot
+/// disagree on which readings qualify.
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub enum TonePin {
+    /// No tone constraint: a toneless TL/POJ span (the deliberate
+    /// "show all tones" affordance, §17 case 2), any English span (a
+    /// digit there is not a tone), or a TPS span not closed by the space.
+    #[default]
+    None,
+    /// A3 (§41) — a TPS span whose TAIL syllable was closed by the
+    /// keyboard's space with no tone mark of its own: only the unmarked
+    /// tone (1 on an open rime, 4 on a stop coda) may surface. Carries
+    /// the fused `tps_notone` body of the span / buffer, which is what
+    /// the whole-buffer sources align against; the exact / walker paths
+    /// align against the MATCHED key instead (a §35 substituted reading
+    /// reconstructs to the matched key, never the typed one).
+    TpsSpaceEnd(String),
+    /// §17 case 3 — a TL/POJ span carrying at least one ASCII tone digit:
+    /// the hyphenless typed body with its digits (`teng5sek`) and the
+    /// mode whose numeric-tone face it is read against. Every syllable
+    /// the user toned must match that tone; a syllable left untoned is
+    /// unconstrained, so `teng5sek` keeps 程式 `têng-sek` (5 + 4 stop
+    /// coda) and drops 等式 `téng-sek` / 中式 `teng-sek`. Also set for a
+    /// fully-toned span (`teng5sek4`): the verbatim toned key already
+    /// filters the dictionary hits there, but custom entries are matched
+    /// toneless and need the pin.
+    TypedTones {
+        mode: phonetics::InputMode,
+        typed: String,
+    },
+}
+
+impl TonePin {
+    /// Does `reading` (a canonical TL reading — `DictionaryRecord.tl`, or
+    /// a custom roman folded through `phonetics::api::canonical_tl_form`)
+    /// satisfy this pin? `matched_key` is the FST key the reading came
+    /// back under on the exact / walker paths; the whole-buffer sources
+    /// (custom merge, partial-prefix extensions) pass `None` and the pin
+    /// aligns against its own carried body — for a strict-prefix
+    /// extension the matched key runs past the pin point, and a custom
+    /// entry has no key at all.
+    pub fn admits(&self, matched_key: Option<&str>, reading: &str) -> bool {
+        match self {
+            TonePin::None => true,
+            TonePin::TpsSpaceEnd(body) => {
+                reading_passes_space_pin(matched_key.unwrap_or(body), reading)
+            }
+            TonePin::TypedTones { mode, typed } => {
+                reading_passes_typed_tones(*mode, typed, reading)
+            }
+        }
+    }
+
+    /// [`TonePin::admits`] for a `custom_dictionary.db` entry: custom
+    /// entries are synthesized whole-buffer (no matched key), and their
+    /// roman may be stored in the user's native POJ form, so it is folded
+    /// to canonical TL first — the same fold `custom_entry_to_candidate`
+    /// applies for the identity key. The fold is skipped when nothing is
+    /// pinned, the common toneless-buffer case.
+    pub fn admits_custom(&self, roman: &str, mode: phonetics::InputMode) -> bool {
+        matches!(self, TonePin::None)
+            || self.admits(None, &phonetics::api::canonical_tl_form(roman, mode))
+    }
+}
+
+/// §17 case 3 — does `reading` carry the tones in `typed` (the
+/// hyphenless typed body with its ASCII digits, `teng5sek`), read on
+/// `mode`'s numeric-tone face?
+///
+/// Walks the reading's numeric-tone face — the same
+/// `phonetics::tl_num_syllable_ends_from_tl` /
+/// `poj_num_syllable_ends_from_tl` reconstruction [`SyllableReach`]
+/// measures on, so the syllable boundaries are the build pipeline's —
+/// syllable by syllable against the typed text: the syllable's letters
+/// must be the next thing typed, then a typed digit right after them
+/// must equal the face's tone; no digit there leaves that syllable
+/// unconstrained. The typed text ending inside a syllable (at its
+/// boundary, or mid-syllable on the partial-prefix path) ends the walk
+/// with everything so far honored, so the same walk serves the exact and
+/// the prefix paths.
+///
+/// Fail-closed everywhere else: a syllable whose letters are NOT the
+/// next thing typed — after the one alias the build indexes beside the
+/// canonical spelling (nasal `onn` ↔ `oonn`,
+/// `phonetics::nasal_oo_alias_spelling`, tried per syllable on both the
+/// full and the mid-syllable match) — a face the typed text runs past,
+/// or a face that does not slice into letter-bearing syllables, all
+/// REJECT. The toneless guards already established the spelling
+/// matches, so a misalignment means the tone digits cannot be placed,
+/// and letting such a reading through would let a wrong-tone word past
+/// the pin on the strength of an alias spelling.
+fn reading_passes_typed_tones(mode: phonetics::InputMode, typed: &str, reading: &str) -> bool {
+    let (face, ends) = match mode {
+        phonetics::InputMode::Poj => phonetics::poj_num_syllable_ends_from_tl(reading),
+        phonetics::InputMode::Tl => phonetics::tl_num_syllable_ends_from_tl(reading),
+        // Never built for these modes (`composing::shadow::span_tone_pin`):
+        // TPS tones are marks, English digits are not tones.
+        phonetics::InputMode::Tps | phonetics::InputMode::English => return true,
+    };
+    let mut cursor = 0usize;
+    let mut start = 0usize;
+    for end in ends {
+        let end = end as usize;
+        let Some(syllable) = face.get(start..end) else {
+            return false;
+        };
+        start = end;
+        let letters = syllable.trim_end_matches(|c: char| c.is_ascii_digit());
+        if letters.is_empty() {
+            return false;
+        }
+        let face_tone = syllable[letters.len()..].chars().next();
+        let alias = phonetics::nasal_oo_alias_spelling(letters);
+        let rest = &typed[cursor..];
+        let consumed = if rest.starts_with(letters) {
+            letters.len()
+        } else if let Some(alias) = alias.as_deref().filter(|alias| rest.starts_with(alias)) {
+            alias.len()
+        } else if letters.starts_with(rest) || alias.is_some_and(|alias| alias.starts_with(rest)) {
+            // Typed text ends inside this syllable (its boundary, or
+            // mid-syllable on the partial-prefix path): every typed digit
+            // so far was honored.
+            return true;
+        } else {
+            return false;
+        };
+        cursor += consumed;
+        if let Some(typed_tone) = typed[cursor..].chars().next().filter(char::is_ascii_digit) {
+            if Some(typed_tone) != face_tone {
+                return false;
+            }
+            cursor += 1;
+        }
+    }
+    cursor == typed.len()
 }
 
 /// Span aliases for [`fetch_candidates_for_keys_with_barriers`]: `(start_byte, end_byte)`
@@ -439,7 +581,7 @@ fn is_unmarked_tps_tone(tone: char) -> bool {
 ///
 /// `reading` is a canonical TL reading — `DictionaryRecord.tl` for a
 /// dictionary hit, `CustomEntry.roman` for a custom entry.
-pub fn reading_passes_space_pin(tps_body: &str, reading: &str) -> bool {
+fn reading_passes_space_pin(tps_body: &str, reading: &str) -> bool {
     let body = match tps_body.strip_prefix("tps:") {
         Some(body) => body,
         // Bare body — the whole-buffer form, TPS by construction.
@@ -468,12 +610,12 @@ pub fn reading_passes_space_pin(tps_body: &str, reading: &str) -> bool {
 /// `poj_abbrev` / `tps_abbrev` acronym-collision guard
 /// ([`matches_continuous_toneless_key`] — continuous input is
 /// phonetic-syllable, not acronym; normal-mode `lexicon::search` keeps
-/// acronym matching), and the A3 (§41) space pin when `tone_pinned`
-/// (`ㄒㄧ`␣ keeps si1, drops si2/5/7; `ㄐㄧㆵ`␣ keeps tsit4, drops tsit8).
+/// acronym matching), and the key's [`TonePin`] — the A3 (§41) space pin
+/// (`ㄒㄧ`␣ keeps si1, drops si2/5/7; `ㄐㄧㆵ`␣ keeps tsit4, drops tsit8)
+/// or the §17 typed-tone pin (`teng5sek` keeps têng-sek, drops téng-sek).
 /// Without the pin on the walker side the span-local list and the
 /// whole-sentence slot 0 would disagree and a wrong-tone word would
-/// reappear at index 0 — the same split the explicit-tone fix (§17) closed
-/// for TL/POJ digits.
+/// reappear at index 0.
 ///
 /// Exact hits are always `COVERAGE_KIND_FULL`: the key came from a valid
 /// syllable ending. Partial-prefix hits go through
@@ -482,7 +624,7 @@ pub fn reading_passes_space_pin(tps_body: &str, reading: &str) -> bool {
 fn exact_candidates_for_key(
     key: &str,
     tps_final_only: &[usize],
-    tone_pinned: bool,
+    tone_pin: &TonePin,
     consumed_span: ConsumedSpan,
     filter: &Filter,
     ctx: &ContinuousFetchCtx<'_>,
@@ -502,7 +644,7 @@ fn exact_candidates_for_key(
             if !matches_continuous_toneless_key(matched_key, &record.tl) {
                 return;
             }
-            if tone_pinned && !reading_passes_space_pin(matched_key, &record.tl) {
+            if !tone_pin.admits(Some(matched_key), &record.tl) {
                 return;
             }
             let effective = DictionaryReader::effective_source_bitmask(
@@ -541,14 +683,15 @@ fn exact_candidates_for_key(
 /// custom word while they are still typing toward the first syllable
 /// boundary. See `docs/engine/continuous-input-ranking.md` §10.10.
 ///
-/// A3 (§41) — a custom entry is synthesized whole-buffer, so the space pin
-/// applies to it exactly as to a dictionary hit: with the tail syllable
-/// space-closed, an entry whose reading carries a marked tone there is not
-/// what the user asked for. Skipping this would let the "only tone 1/4"
-/// promise leak through the custom source, which is appended AFTER
-/// dictionary filtering. On the partial-prefix path the typed body is a
-/// strict prefix of the entry's reading, so the check lands on the
-/// syllable the space closed, not on the entry's own tail.
+/// A custom entry is synthesized whole-buffer, so the buffer's
+/// [`TonePin`] applies to it exactly as to a dictionary hit: with the
+/// tail syllable space-closed (§41), or a syllable typed with its digit
+/// (§17), an entry whose reading disagrees there is not what the user
+/// asked for. Custom matching itself is toneless, so skipping this would
+/// let the tone promise leak through the custom source, which is appended
+/// AFTER dictionary filtering. On the partial-prefix path the typed body
+/// is a strict prefix of the entry's reading, so the check lands on the
+/// syllables typed so far, not on the entry's own tail.
 ///
 /// **Dedupe** (Item 12): `dict.bin` is already collapsed by
 /// `dictionary/build/merge_csv.py:107`'s `groupby(["hanzi", "_tl_key"])`,
@@ -580,10 +723,8 @@ fn merge_custom_dedupe_sort(
     coverage_kind: u8,
 ) -> Vec<RawCandidate> {
     for entry in ctx.custom {
-        if let Some(pinned_body) = ctx.tps_space_pinned_body {
-            if !reading_passes_space_pin(pinned_body, &entry.roman) {
-                continue;
-            }
+        if !ctx.tone_pin.admits_custom(&entry.roman, ctx.mode) {
+            continue;
         }
         out.push(custom_entry_to_candidate(
             entry,
@@ -667,7 +808,7 @@ fn merge_custom_dedupe_sort(
 pub fn fetch_candidates_for_keys_with_barriers(
     keys: &[(ConsumedSpan, String)],
     tps_final_only: &[Vec<usize>],
-    tps_tone_pinned: &[bool],
+    tone_pins: &[TonePin],
     raw_len: u32,
     ctx: &ContinuousFetchCtx<'_>,
 ) -> Vec<RawCandidate> {
@@ -689,11 +830,11 @@ pub fn fetch_candidates_for_keys_with_barriers(
             .get(key_index)
             .map(|offsets| offsets.as_slice())
             .unwrap_or(&[]);
-        // A3 (§41) — this span ends on the keyboard space the shadow
-        // stripped, so only its unmarked tone may surface. A short or
-        // empty slice means "no pin", the legacy all-tones shape.
-        let tone_pinned = tps_tone_pinned.get(key_index).copied().unwrap_or(false);
-        exact_candidates_for_key(key, final_only, tone_pinned, *span, &filter, ctx, |cand| {
+        // `tone_pins[i]` is the tone constraint for `keys[i]` (§17 typed
+        // digits / §41 space-closed TPS tail). A short or empty slice
+        // means "no pin", the legacy all-tones shape.
+        let tone_pin = tone_pins.get(key_index).unwrap_or(&TonePin::None);
+        exact_candidates_for_key(key, final_only, tone_pin, *span, &filter, ctx, |cand| {
             out.push(cand)
         });
     }
@@ -915,15 +1056,13 @@ pub fn fetch_partial_prefix_candidates_unbounded(
                     continue;
                 }
             }
-            // A3 (§41) — space-pinned tail: a strict-prefix extension is
-            // only eligible when the syllable the space closed carries the
-            // unmarked tone. Checked against the TYPED body (the pin
-            // point), not the matched key — the matched key runs past the
-            // pin into the extension's later syllables.
-            if let Some(pinned_body) = ctx.tps_space_pinned_body {
-                if !reading_passes_space_pin(pinned_body, &record.tl) {
-                    continue;
-                }
+            // Tone pin: a strict-prefix extension is only eligible when
+            // the syllables typed so far carry the typed tones (§17) / the
+            // space-closed unmarked tone (§41). Checked against the TYPED
+            // body (the pin point), not the matched key — the matched key
+            // runs past the pin into the extension's later syllables.
+            if !ctx.tone_pin.admits(None, &record.tl) {
+                continue;
             }
             // Syllable reach: a strict-prefix extension may not carry a
             // syllable the user never typed into (`tsuisi` must not surface
@@ -965,7 +1104,8 @@ pub fn fetch_partial_prefix_candidates_unbounded(
 /// re-surfaces a word whose only source the user toggled off. Only the
 /// lookup fields of `ctx` are read (`prefix_index` / `dict` /
 /// `freq_map` / `now_ms` / `enabled_sources_bitmask`); `custom` /
-/// `mode` / `tps_space_pinned_body` belong to the whole-buffer merge.
+/// `mode` / `tone_pin` belong to the whole-buffer merge — this edge's
+/// own pin arrives as `tone_pin`.
 ///
 /// The whole-sentence walker (`composing::lattice::walker`) calls
 /// this once per lattice edge through a dispatch-injected edge
@@ -985,7 +1125,7 @@ pub fn fetch_partial_prefix_candidates_unbounded(
 pub fn best_candidate_for_key_with_barriers(
     key: &str,
     tps_final_only: &[usize],
-    tone_pinned: bool,
+    tone_pin: &TonePin,
     consumed_span: ConsumedSpan,
     ctx: &ContinuousFetchCtx<'_>,
 ) -> Option<RawCandidate> {
@@ -999,7 +1139,7 @@ pub fn best_candidate_for_key_with_barriers(
     exact_candidates_for_key(
         key,
         tps_final_only,
-        tone_pinned,
+        tone_pin,
         consumed_span,
         &filter,
         ctx,
@@ -3060,5 +3200,120 @@ mod nasal_oo_alias_face_tests {
     fn leaves_a_cross_seam_face_alone() {
         assert!(matches_continuous_toneless_key("tl:loonng", "lóo-nn̄g"));
         assert!(!matches_continuous_toneless_key("tl:lonng", "lóo-nn̄g"));
+    }
+}
+
+#[cfg(test)]
+mod typed_tone_pin_tests {
+    use super::{reading_passes_typed_tones as passes, TonePin};
+    use phonetics::InputMode::{Poj, Tl};
+
+    // §17 case 3 — the reported shape. Faces via `poj_num_syllable_ends_from_tl`:
+    // trace: 程式 tîng-sik → POJ têng-sek → `teng5sek4` ends [5, 9];
+    //        等式 tíng-sik → `teng2sek4`; 中式 ting-sik → `teng1sek4`.
+    // Typed `teng5sek`: `teng` + `5` == 5 ✓, `sek` + no digit → free.
+    #[test]
+    fn partial_tone_pins_the_toned_syllable_and_frees_the_rest() {
+        assert!(passes(Poj, "teng5sek", "tîng-sik"));
+        assert!(!passes(Poj, "teng5sek", "tíng-sik"));
+        assert!(!passes(Poj, "teng5sek", "ting-sik"));
+    }
+
+    // Reverse partial (`tengsek4`): first syllable free, second pinned to 4.
+    // 程式 sik4 ✓; a tone-8 second syllable is rejected.
+    // trace: 色 sik → `sek4`; 熟 si̍k → `sek8`.
+    #[test]
+    fn untoned_leading_syllable_is_free_and_later_digit_still_pins() {
+        assert!(passes(Poj, "tengsek4", "tîng-sik"));
+        assert!(!passes(Poj, "tengsek4", "tîng-si̍k"));
+    }
+
+    // Fully toned: every syllable pinned (the verbatim key covers dictionary
+    // hits; custom entries rely on this).
+    #[test]
+    fn fully_toned_pins_every_syllable() {
+        assert!(passes(Tl, "ting5sik4", "tîng-sik"));
+        assert!(!passes(Tl, "ting5sik8", "tîng-sik"));
+        assert!(!passes(Tl, "ting2sik4", "tîng-sik"));
+    }
+
+    // Partial-prefix path: the typed text may end at a boundary or
+    // mid-syllable; everything typed so far must still be honored.
+    // trace: 中西 ting-se → `teng1se1`; 程世 tîng-sè → `teng5se3`.
+    #[test]
+    fn prefix_typed_text_ending_early_keeps_the_pins_so_far() {
+        assert!(passes(Poj, "teng5se", "tîng-sè"));
+        assert!(!passes(Poj, "teng5se", "ting-se"));
+        assert!(passes(Poj, "teng5s", "tîng-sik"));
+        assert!(!passes(Poj, "teng2s", "tîng-sik"));
+        // Typed runs past a 2-syllable reading into a 3rd: 中西區 ting-se-khu.
+        assert!(passes(Poj, "teng1sekhu", "ting-se-khu"));
+        assert!(!passes(Poj, "teng5sekhu", "ting-se-khu"));
+    }
+
+    // Fail-closed: typed text the face cannot account for is a reject —
+    // a 3-syllable typed body against a 2-syllable reading.
+    // trace: 中西 ting-se → `teng1se1`, exhausted with `khu` unconsumed.
+    #[test]
+    fn typed_text_running_past_the_face_rejects() {
+        assert!(!passes(Poj, "teng1sekhu", "ting-se"));
+    }
+
+    // Nasal-`oo` alias: the typed spelling `hoonn` reaches 好 `hònn` through
+    // the alias key; the pin must still place the digit and reject a
+    // wrong tone rather than fail open on the spelling difference.
+    // trace: 好玄 hònn-hiân → tl_num `honn3hian5`; alias per syllable `hoonn`.
+    #[test]
+    fn nasal_oo_alias_spelling_still_pins_the_tone() {
+        assert!(passes(Tl, "hoonn3hian", "hònn-hiân"));
+        assert!(!passes(Tl, "hoonn5hian", "hònn-hiân"));
+        assert!(passes(Tl, "honn3hian", "hònn-hiân"));
+    }
+
+    // Codex post-impl 2026-09-14: the typed text may end INSIDE an alias
+    // spelling too. Production: `si7honn` offers 是乎 `sī-honnh`, so
+    // `si7hoonn` (alias, one letter short of `hoonnh`) must as well.
+    // trace: sī-honnh → tl_num `si7honnh4`; syllable 2 letters `honnh`,
+    //        alias `hoonnh`; rest `hoonn` is a prefix of the alias.
+    #[test]
+    fn typed_text_ending_inside_an_alias_spelling_passes() {
+        assert!(passes(Tl, "si7honn", "sī-honnh"));
+        assert!(passes(Tl, "si7hoonn", "sī-honnh"));
+        assert!(passes(Tl, "si7hoonnh", "sī-honnh"));
+        assert!(!passes(Tl, "si2hoonn", "sī-honnh"));
+    }
+
+    // A syllable whose letters are not the next thing typed cannot place
+    // its digit → reject (the toneless guards own spelling; this must not
+    // fail open on a mismatch). `ho5onn` is `ho` + `onn`, not the alias.
+    // trace: 好 hònn → `honn3`, alias `hoonn` — neither is a prefix of `ho5onn`.
+    #[test]
+    fn misaligned_letters_reject() {
+        assert!(!passes(Tl, "ho5onn", "hònn"));
+        // 和唔 hô-onn → `ho5onn1` aligns and passes.
+        assert!(passes(Tl, "ho5onn", "hô-onn"));
+    }
+
+    #[test]
+    fn admits_dispatches_per_variant() {
+        assert!(TonePin::None.admits(None, "tíng-sik"));
+        let typed = TonePin::TypedTones {
+            mode: Poj,
+            typed: "teng5sek".to_owned(),
+        };
+        assert!(typed.admits(Some("poj:tengsek"), "tîng-sik"));
+        assert!(!typed.admits(Some("poj:tengsek"), "tíng-sik"));
+        // Custom entries: folded to canonical TL first (POJ-form roman in
+        // POJ mode), and never folded when nothing is pinned.
+        assert!(typed.admits_custom("têng-sek", Poj));
+        assert!(!typed.admits_custom("téng-sek", Poj));
+        assert!(TonePin::None.admits_custom("téng-sek", Poj));
+        // TPS: exact path aligns on the matched key, whole-buffer on the body.
+        // trace: 詩 si → tps notone `ㄒㄧ`, tone 1 → passes; 是 sī tone 7 → rejected.
+        let space = TonePin::TpsSpaceEnd("ㄒㄧ".to_owned());
+        assert!(space.admits(None, "si"));
+        assert!(!space.admits(None, "sī"));
+        assert!(space.admits(Some("tps:ㄒㄧ"), "si"));
+        assert!(!space.admits(Some("tps:ㄒㄧ"), "sī"));
     }
 }

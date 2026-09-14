@@ -3,7 +3,7 @@
 // strip, lattice build, and derived span / partial-prefix / custom-key
 // helpers.
 
-use lexicon::{ConsumedSpan, SyllableInventory};
+use lexicon::{ConsumedSpan, SyllableInventory, TonePin};
 use phonetics::InputMode;
 use unicode_normalization::UnicodeNormalization;
 
@@ -340,12 +340,12 @@ fn lattice_from_canonical_with_barriers(
 pub(crate) struct ContinuousKeys {
     pub keys: Vec<(ConsumedSpan, String)>,
     pub final_only: Vec<Vec<usize>>,
-    /// A3 (§41) — `tone_pinned[i]` marks a key whose span ENDS on a
-    /// stripped TPS keyboard space: the user closed that syllable with
-    /// the space, which in TPS means its unmarked tone (1 for an open
-    /// rime, 4 for a stop coda). The lookup layer keeps only candidates
-    /// whose reading carries that tone at the same syllable boundary.
-    pub tone_pinned: Vec<bool>,
+    /// `tone_pins[i]` is the post-lookup tone constraint for `keys[i]`
+    /// ([`span_key`] → [`span_tone_pin`]): the §17 typed digits of a
+    /// TL/POJ span, or the §41 unmarked tone of a TPS span closed by the
+    /// keyboard's space. The lookup layer keeps only candidates whose
+    /// reading honors it.
+    pub tone_pins: Vec<TonePin>,
     pub shadow: String,
     pub shadow_to_raw_end: Vec<usize>,
     pub lattice: Lattice,
@@ -358,7 +358,7 @@ pub(crate) struct ContinuousKeys {
 pub(crate) struct LeftAnchoredKeys {
     pub keys: Vec<(ConsumedSpan, String)>,
     pub final_only: Vec<Vec<usize>>,
-    pub tone_pinned: Vec<bool>,
+    pub tone_pins: Vec<TonePin>,
 }
 
 pub(crate) fn build_continuous_keys(
@@ -371,7 +371,7 @@ pub(crate) fn build_continuous_keys(
     let LeftAnchoredKeys {
         keys,
         final_only,
-        tone_pinned,
+        tone_pins,
     } = left_anchored_keys_and_restrictions(
         &shadow,
         &shadow_to_raw_end,
@@ -383,7 +383,7 @@ pub(crate) fn build_continuous_keys(
     ContinuousKeys {
         keys,
         final_only,
-        tone_pinned,
+        tone_pins,
         shadow,
         shadow_to_raw_end,
         lattice,
@@ -476,7 +476,7 @@ pub(crate) fn left_anchored_keys_and_restrictions(
 
     let mut out = Vec::with_capacity(lattice.edges().len());
     let mut restrictions: Vec<Vec<usize>> = Vec::with_capacity(lattice.edges().len());
-    let mut tone_pinned: Vec<bool> = Vec::with_capacity(lattice.edges().len());
+    let mut tone_pins: Vec<TonePin> = Vec::with_capacity(lattice.edges().len());
     for &(start, end) in lattice.edges() {
         if start != 0 {
             continue;
@@ -498,20 +498,20 @@ pub(crate) fn left_anchored_keys_and_restrictions(
         let Some(SpanKey {
             key,
             final_only,
-            tone_pinned: pinned,
+            tone_pin,
         }) = span_key(shadow, 0, end, mode, barriers)
         else {
             continue;
         };
         let raw_end = shadow_to_raw_end[end];
         restrictions.push(final_only);
-        tone_pinned.push(pinned);
+        tone_pins.push(tone_pin);
         out.push(((0u32, raw_end as u32), key));
     }
     LeftAnchoredKeys {
         keys: out,
         final_only: restrictions,
-        tone_pinned,
+        tone_pins,
     }
 }
 
@@ -524,9 +524,9 @@ pub(crate) struct SpanKey {
     /// [`key_final_only_offsets`] — KEY byte offsets of the glyph before
     /// each barrier inside / at the end of the span.
     pub final_only: Vec<usize>,
-    /// [`span_end_pins_unmarked_tone`] — the span closes on a stripped TPS
-    /// space without a tone mark of its own.
-    pub tone_pinned: bool,
+    /// [`span_tone_pin`] — the §17 typed digits of a TL/POJ span, or the
+    /// §41 unmarked tone of a TPS span closed on a stripped space.
+    pub tone_pin: TonePin,
 }
 
 /// Derive the lookup key triple for `shadow[start..end]`. `None` when the
@@ -539,8 +539,9 @@ pub(crate) struct SpanKey {
 ///   barrier exactly at `start` is a boundary the span opens on, not one
 ///   it contains, so it is excluded; one at `end` is included (the user
 ///   closed that syllable).
-/// - **The tone pin is global.** [`span_end_pins_unmarked_tone`] compares
-///   the whole-shadow `end` against the unshifted `barriers`.
+/// - **The tone pin is global.** [`span_end_pins_unmarked_tone`] (inside
+///   [`span_tone_pin`]) compares the whole-shadow `end` against the
+///   unshifted `barriers`.
 ///
 /// The left-anchored path passes `start = 0`, where the two conventions
 /// coincide.
@@ -562,48 +563,76 @@ pub(crate) fn span_key(
         .filter(|&&b| b > start && b <= end)
         .map(|&b| b - start)
         .collect();
+    let tone_pin = span_tone_pin(span, &body, end, mode, barriers);
     Some(SpanKey {
         key: format!("{prefix}:{body}"),
         final_only: key_final_only_offsets(span, &body, mode, &span_barriers, prefix.len() + 1),
-        tone_pinned: span_end_pins_unmarked_tone(span, end, mode, barriers),
+        tone_pin,
     })
 }
 
-/// A3 (§41) — the typed buffer's fused TPS notone body when its TAIL
-/// syllable was closed by the keyboard's space, else `None`. This is the
-/// whole-buffer counterpart of [`span_end_pins_unmarked_tone`]: sources
-/// synthesized at `(0, raw_len)` (custom-dictionary entries) and the
-/// partial-prefix extensions carry no span key of their own, so the
-/// lookup layer aligns their readings against this body instead.
-///
-/// Trailing spaces are the pin signal, so they are trimmed off first; a
-/// tail that already carries a tone mark is NOT pinned (it took the
-/// verbatim toned key). The body itself is the buffer with every space
-/// and tone mark removed — byte-identical in shape to the `tps:<notone>`
-/// FST family the readings reconstruct into.
-pub(crate) fn tps_space_pinned_body(raw: &str, mode: InputMode) -> Option<String> {
-    if !matches!(mode, InputMode::Tps) {
-        return None;
+/// The post-lookup tone constraint for `span` (whose lookup body is
+/// `body`), one rule per mode family:
+/// - **TL / POJ**: a span carrying at least one ASCII tone digit pins
+///   the tones it typed — [`TonePin::TypedTones`] over the hyphenless
+///   span verbatim (`teng5sek`). The lookup body is toneless for a
+///   partial-tone span (there is no partial-tone FST family, §17 case 3)
+///   and verbatim for a fully-toned one (§17 case 1); the pin re-applies
+///   the typed digits after the lookup either way, and is what keeps a
+///   toneless-matched custom entry honest for a fully-toned span. A span
+///   with no digit stays unpinned — the "show all tones" affordance.
+/// - **TPS**: [`span_end_pins_unmarked_tone`] → [`TonePin::TpsSpaceEnd`]
+///   over the toneless body (§41).
+/// - **English**: never pinned — a digit there is not a tone.
+pub(crate) fn span_tone_pin(
+    span: &str,
+    body: &str,
+    span_end: usize,
+    mode: InputMode,
+    barriers: &[usize],
+) -> TonePin {
+    match mode {
+        InputMode::Tl | InputMode::Poj if span.bytes().any(|b| b.is_ascii_digit()) => {
+            TonePin::TypedTones {
+                mode,
+                typed: span.to_owned(),
+            }
+        }
+        InputMode::Tps if span_end_pins_unmarked_tone(span, span_end, mode, barriers) => {
+            TonePin::TpsSpaceEnd(body.to_owned())
+        }
+        _ => TonePin::None,
     }
-    let trimmed = raw.trim_end_matches(' ');
-    if trimmed.len() == raw.len() {
-        return None;
-    }
-    if trimmed
-        .chars()
-        .next_back()
-        .is_some_and(phonetics::is_tps_tone_mark)
-    {
-        return None;
-    }
-    // Same two shadow passes the span keys are built from — separator strip
-    // then mode-aware tone strip — so this body is byte-identical to the
-    // `tps:<notone>` form a span-local key would carry for the same buffer.
-    // Rolling a bespoke char filter here would be a second, drifting
-    // definition of "fused toneless surface".
-    let (separatorless, _) = build_separator_shadow(trimmed, mode);
-    let body = strip_tones_for_mode(&separatorless, mode);
-    (!body.is_empty()).then_some(body)
+}
+
+/// The whole typed buffer's [`TonePin`] — the counterpart of
+/// [`span_tone_pin`] for the sources that carry no span key of their own:
+/// custom-dictionary entries are synthesized at `(0, raw_len)` and the
+/// partial-prefix extensions are hydrated from a strict prefix of the
+/// buffer, so the lookup layer aligns their readings against this pin
+/// instead. One projection of [`whole_buffer_span_key`], so it is
+/// exactly the pin a span-local key over the whole buffer would carry:
+/// a TL/POJ buffer with a typed digit anywhere → [`TonePin::TypedTones`];
+/// a TPS buffer whose TAIL syllable was closed by the keyboard's space
+/// (a trailing-space barrier at the shadow end, no mark of its own) →
+/// [`TonePin::TpsSpaceEnd`] over the fused toneless body (§41); English,
+/// toneless TL/POJ and an un-closed TPS tail → none.
+pub(crate) fn whole_buffer_tone_pin(raw: &str, mode: InputMode) -> TonePin {
+    whole_buffer_span_key(raw, mode)
+        .map(|k| k.tone_pin)
+        .unwrap_or_default()
+}
+
+/// The whole buffer as ONE span through [`span_key`]: the
+/// [`fused_shadow_with_barriers`] pipeline (the same passes the lattice
+/// path runs, offset maps discarded) and the tone rule of every other
+/// key site. Shared by [`build_partial_prefix_key`] (takes the key) and
+/// [`whole_buffer_tone_pin`] (takes the pin) so the two cannot drift.
+/// `None` when the tone-ruled body is empty (empty / digit-only /
+/// bare-tone-mark / space-only buffer).
+fn whole_buffer_span_key(raw: &str, mode: InputMode) -> Option<SpanKey> {
+    let (shadow, barriers) = fused_shadow_with_barriers(raw, mode);
+    span_key(&shadow, 0, shadow.len(), mode, &barriers)
 }
 
 /// A3 (§41) — true when the span ending at `span_end` (shadow
@@ -935,12 +964,21 @@ fn strip_ascii_tone_digits(s: &str) -> String {
 /// ([`strip_tones_for_mode`]), [`build_partial_prefix_key`] keeps a fully
 /// toned buffer verbatim ([`fst_body_for_span`]).
 fn fused_shadow(raw: &str, mode: InputMode) -> String {
+    fused_shadow_with_barriers(raw, mode).0
+}
+
+/// [`fused_shadow`] plus the stripped-space barriers (shadow
+/// coordinates) the TPS separator pass leaves behind — the §41 pin
+/// signal for a whole-buffer key. Hyphen barriers are not returned: they
+/// gate the §35 ambiguity expansion, which the whole-buffer callers
+/// discard, and never pin a tone.
+fn fused_shadow_with_barriers(raw: &str, mode: InputMode) -> (String, Vec<usize>) {
     let lower = raw.to_ascii_lowercase();
     let (canonical, _) = canonicalize_poj_shadow(&lower, mode);
     let (hyphenless, _) = build_hyphen_shadow(&canonical);
     // TPS-only space strip; no-op for TL/POJ/English and space-free input.
-    let (shadow, _) = build_separator_shadow(&hyphenless, mode);
-    shadow
+    let (shadow, _, barriers) = build_separator_shadow_with_barriers(&hyphenless, mode);
+    (shadow, barriers)
 }
 
 /// v3.5.8 S6 (Codex pre-impl S6 Q2, 2026-05-17, BLOCK condition) —
@@ -1298,26 +1336,21 @@ pub(crate) fn build_partial_prefix_key(
     raw: &str,
     mode: InputMode,
 ) -> Option<(ConsumedSpan, String)> {
-    if raw.is_empty() {
-        return None;
-    }
-    // consumed_span stays (0, raw.len()) below, so the offset maps
-    // `fused_shadow` discards are irrelevant here.
-    let shadow = fused_shadow(raw, mode);
     // Explicit-tone fix — tone-aware body, same [`span_key`] rule as
     // `left_anchored_keys_and_restrictions` / the walker edge: a fully-toned
     // whole buffer (`tai5`) yields the verbatim `tl:tai5` prefix so the
     // Step 4b `lookup_prefix` extension scan only surfaces tone-5-initial
     // keys, never the all-tone `tl:tai` range. Toneless / mixed buffers
     // keep the toneless prefix (the partial-prefix path's normal "typing
-    // toward the first boundary" behavior). See [`fst_body_for_span`].
-    // v3.5.9 D / C-3b + D Fork 7b — TPS reaches this builder via the
-    // unified `assemble_candidates` empty-keys fallthrough and always
-    // takes the toneless branch (`is_tps_tone_mark` strip), so a raw
-    // `ㄉㄧˊ` shadow still yields the `tps:ㄉㄧ` toneless key. No
-    // barriers: the whole buffer is one span, so the §35 / §41 metadata
-    // is discarded.
-    let key = span_key(&shadow, 0, shadow.len(), mode, &[])?.key;
+    // toward the first boundary" behavior; a mixed buffer's typed digits
+    // travel as the whole-buffer [`TonePin`] instead). See
+    // [`fst_body_for_span`]. v3.5.9 D / C-3b + D Fork 7b — TPS reaches
+    // this builder via the unified `assemble_candidates` empty-keys
+    // fallthrough and always takes the toneless branch (`is_tps_tone_mark`
+    // strip), so a raw `ㄉㄧˊ` shadow still yields the `tps:ㄉㄧ` toneless
+    // key. The §35 / §41 metadata of the key is discarded here — the
+    // whole buffer is one span; [`whole_buffer_tone_pin`] carries the pin.
+    let key = whole_buffer_span_key(raw, mode)?.key;
     Some(((0u32, raw.len() as u32), key))
 }
 
@@ -1340,7 +1373,7 @@ mod tests {
         let k = span_key("ㄎㄛㆻㄫㄉㄞ", 6, 18, InputMode::Tps, &[12]).expect("body");
         assert_eq!(k.key, "tps:ㆻㄫㄉㄞ");
         assert_eq!(k.final_only, vec![7]);
-        assert!(!k.tone_pinned);
+        assert_eq!(k.tone_pin, TonePin::None);
     }
 
     // trace (barrier at start): span 12..18 = `ㄉㄞ`; barrier 12 is the
@@ -1352,12 +1385,12 @@ mod tests {
         let k = span_key("ㄎㄛㆻㄫㄉㄞ", 12, 18, InputMode::Tps, &[12, 18]).expect("body");
         assert_eq!(k.key, "tps:ㄉㄞ");
         assert_eq!(k.final_only, vec![7]);
-        assert!(k.tone_pinned);
+        assert_eq!(k.tone_pin, TonePin::TpsSpaceEnd("ㄉㄞ".to_owned()));
 
         let opens_on_barrier =
             span_key("ㄎㄛㆻㄫㄉㄞ", 12, 18, InputMode::Tps, &[12]).expect("body");
         assert!(opens_on_barrier.final_only.is_empty());
-        assert!(!opens_on_barrier.tone_pinned);
+        assert_eq!(opens_on_barrier.tone_pin, TonePin::None);
     }
 
     // trace (cross-barrier): span 0..18 runs THROUGH barrier 9 → the
@@ -1370,12 +1403,12 @@ mod tests {
         let through = span_key("ㄎㄛㆻㄫㄉㄞ", 0, 18, InputMode::Tps, &[9]).expect("body");
         assert_eq!(through.key, "tps:ㄎㄛㆻㄫㄉㄞ");
         assert_eq!(through.final_only, vec![10]);
-        assert!(!through.tone_pinned);
+        assert_eq!(through.tone_pin, TonePin::None);
 
         let stops = span_key("ㄎㄛㆻㄫㄉㄞ", 0, 9, InputMode::Tps, &[9]).expect("body");
         assert_eq!(stops.key, "tps:ㄎㄛㆻ");
         assert_eq!(stops.final_only, vec![10]);
-        assert!(stops.tone_pinned);
+        assert_eq!(stops.tone_pin, TonePin::TpsSpaceEnd("ㄎㄛㆻ".to_owned()));
     }
 
     // A3 (§41) — space-pin predicates. `ㄒㄧ` is two 3-byte Bopomofo
@@ -1440,43 +1473,107 @@ mod tests {
     }
 
     #[test]
-    fn buffer_pin_body_strips_the_trailing_space() {
+    fn whole_buffer_pin_strips_the_trailing_space() {
         assert_eq!(
-            tps_space_pinned_body("ㄒㄧ ", InputMode::Tps).as_deref(),
-            Some("ㄒㄧ"),
+            whole_buffer_tone_pin("ㄒㄧ ", InputMode::Tps),
+            TonePin::TpsSpaceEnd("ㄒㄧ".to_owned())
         );
         // Repeated trailing spaces are one pin, not several.
         assert_eq!(
-            tps_space_pinned_body("ㄒㄧ  ", InputMode::Tps).as_deref(),
-            Some("ㄒㄧ"),
+            whole_buffer_tone_pin("ㄒㄧ  ", InputMode::Tps),
+            TonePin::TpsSpaceEnd("ㄒㄧ".to_owned())
         );
         // Interior spaces are boundaries; the body is the fused surface.
         assert_eq!(
-            tps_space_pinned_body("ㄍㄠ ㄉㄞ ", InputMode::Tps).as_deref(),
-            Some("ㄍㄠㄉㄞ"),
+            whole_buffer_tone_pin("ㄍㄠ ㄉㄞ ", InputMode::Tps),
+            TonePin::TpsSpaceEnd("ㄍㄠㄉㄞ".to_owned())
         );
     }
 
     #[test]
-    fn buffer_pin_body_is_none_without_a_trailing_space() {
-        assert_eq!(tps_space_pinned_body("ㄒㄧ", InputMode::Tps), None);
+    fn whole_buffer_pin_is_none_without_a_trailing_space() {
+        assert_eq!(whole_buffer_tone_pin("ㄒㄧ", InputMode::Tps), TonePin::None);
+        // An interior space alone is a boundary, not a pin.
+        assert_eq!(
+            whole_buffer_tone_pin("ㄍㄠ ㄉㄞ", InputMode::Tps),
+            TonePin::None
+        );
     }
 
     #[test]
-    fn buffer_pin_body_is_none_for_a_marked_tail() {
-        assert_eq!(tps_space_pinned_body("ㄒㄧˋ ", InputMode::Tps), None);
+    fn whole_buffer_pin_is_none_for_a_marked_tail() {
+        assert_eq!(
+            whole_buffer_tone_pin("ㄒㄧˋ ", InputMode::Tps),
+            TonePin::None
+        );
     }
 
     #[test]
-    fn buffer_pin_body_is_none_outside_tps() {
+    fn whole_buffer_pin_is_none_for_toneless_or_english_buffers() {
         for mode in [InputMode::Tl, InputMode::Poj, InputMode::English] {
-            assert_eq!(tps_space_pinned_body("tai ", mode), None);
+            assert_eq!(whole_buffer_tone_pin("tai ", mode), TonePin::None);
+            assert_eq!(whole_buffer_tone_pin("taigi", mode), TonePin::None);
+        }
+        // English digits are not tones.
+        assert_eq!(
+            whole_buffer_tone_pin("tai5", InputMode::English),
+            TonePin::None
+        );
+    }
+
+    #[test]
+    fn whole_buffer_pin_is_none_for_a_space_only_buffer() {
+        assert_eq!(whole_buffer_tone_pin(" ", InputMode::Tps), TonePin::None);
+        assert_eq!(whole_buffer_tone_pin("", InputMode::Tps), TonePin::None);
+    }
+
+    // §17 case 3 — a TL/POJ buffer with any typed digit pins the typed
+    // tones: hyphens are stripped, case folded, the digits kept verbatim,
+    // and the family prefix follows the mode. Partial (`teng5-sek`) and
+    // fully-toned (`teng5sek4`) buffers pin alike — the pin is what keeps
+    // toneless-matched custom entries honest for the fully-toned case.
+    #[test]
+    fn whole_buffer_pin_carries_typed_tones_for_tl_poj() {
+        assert_eq!(
+            whole_buffer_tone_pin("teng5-sek", InputMode::Poj),
+            typed_tones(InputMode::Poj, "teng5sek")
+        );
+        assert_eq!(
+            whole_buffer_tone_pin("Teng5sek4", InputMode::Tl),
+            typed_tones(InputMode::Tl, "teng5sek4")
+        );
+        // Digit-only buffer has no body → no pin.
+        assert_eq!(whole_buffer_tone_pin("5", InputMode::Tl), TonePin::None);
+    }
+
+    fn typed_tones(mode: InputMode, typed: &str) -> TonePin {
+        TonePin::TypedTones {
+            mode,
+            typed: typed.to_owned(),
         }
     }
 
     #[test]
-    fn buffer_pin_body_is_none_for_a_space_only_buffer() {
-        assert_eq!(tps_space_pinned_body(" ", InputMode::Tps), None);
+    fn span_key_pins_typed_tones_only_for_a_digit_bearing_tl_poj_span() {
+        // Partial: toneless lookup body + typed-tone pin.
+        let k = span_key("teng5sek", 0, 8, InputMode::Poj, &[]).expect("body");
+        assert_eq!(k.key, "poj:tengsek");
+        assert_eq!(k.tone_pin, typed_tones(InputMode::Poj, "teng5sek"));
+        // Fully toned: verbatim toned key AND the pin.
+        let k = span_key("teng5sek4", 0, 9, InputMode::Tl, &[]).expect("body");
+        assert_eq!(k.key, "tl:teng5sek4");
+        assert_eq!(k.tone_pin, typed_tones(InputMode::Tl, "teng5sek4"));
+        // Toneless: unpinned (the all-tones affordance).
+        let k = span_key("tengsek", 0, 7, InputMode::Poj, &[]).expect("body");
+        assert_eq!(k.tone_pin, TonePin::None);
+        // English: digits are not tones.
+        let k = span_key("teng5sek", 0, 8, InputMode::English, &[]).expect("body");
+        assert_eq!(k.key, "tl:tengsek");
+        assert_eq!(k.tone_pin, TonePin::None);
+        // Interior sub-span of a longer shadow pins its own slice only.
+        let k = span_key("teng5sek", 5, 8, InputMode::Poj, &[]).expect("body");
+        assert_eq!(k.key, "poj:sek");
+        assert_eq!(k.tone_pin, TonePin::None);
     }
 
     use super::*;

@@ -26,7 +26,8 @@ use phonetics::{canonicalize_poj_syllable, canonicalize_syllable};
 use protos::engine::composing_request::Method;
 use protos::engine::effect::Kind;
 use protos::engine::{
-    AppConfig, ComposingRequest, ComposingResponse, Effect, EnterContinuous, FetchAtPos, Start,
+    AppConfig, ComposingRequest, ComposingResponse, CustomDictEntry, Effect, EnterContinuous,
+    FetchAtPos, Start,
 };
 
 pub const SEPARATOR: u8 = 0xFF;
@@ -454,4 +455,31 @@ pub fn fetch_at_pos_response(
     )
     .expect("EnterContinuous");
     dispatch::handle(&req(Method::FetchAtPos(fetch)), &mut engine, config).expect("FetchAtPos")
+}
+
+/// [`fetch_at_pos_response`] under `config(input_mode)` with
+/// `custom_dictionary.db` entries attached, reduced to the candidate hanji
+/// in display order (roman-only candidates dropped). An empty `custom`
+/// leaves the lexicon whole-buffer custom merge unexercised.
+pub fn fetch_hanji_with_custom(
+    raw: &str,
+    input_mode: &str,
+    custom: Vec<CustomDictEntry>,
+) -> Vec<String> {
+    let resp = fetch_at_pos_response(
+        &config(input_mode),
+        raw,
+        FetchAtPos {
+            custom_entries: custom,
+            ..Default::default()
+        },
+    );
+    resp.continuous
+        .map(|c| {
+            c.candidates
+                .into_iter()
+                .filter_map(|cand| cand.hanji)
+                .collect()
+        })
+        .unwrap_or_default()
 }
