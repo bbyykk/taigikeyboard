@@ -925,6 +925,7 @@ fn strip_char_shadow_with_barriers(input: &str, skip: char) -> (String, Vec<usiz
 /// Contract mirrors [`build_hyphen_shadow`]: `map` has length
 /// `shadow.len() + 1`; index `k` is the input byte offset right after the
 /// last input char that contributed the `k`-th shadow byte; `map[0] = 0`.
+#[cfg(test)]
 fn build_separator_shadow(input: &str, mode: InputMode) -> (String, Vec<usize>) {
     let (shadow, map, _) = build_separator_shadow_with_barriers(input, mode);
     (shadow, map)
