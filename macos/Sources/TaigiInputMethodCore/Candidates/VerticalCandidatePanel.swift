@@ -43,8 +43,12 @@ final class VerticalCandidatePanel: CandidateBasePanel {
     private static let separatorHeight: CGFloat = 1
 
     private var cells: [CandidateCellContent] = []
-    /// `metrics.measurePrimaryWidth` per cell, measured once per list.
+    /// `metrics.measurePrimaryWidth` / `metrics.annotationWidth` per cell,
+    /// measured once per list. Kept apart rather than summed per cell: the
+    /// window is sized to the widest column plus the widest annotation, which
+    /// need not be the same row (`resolveWidth`).
     private var primaryWidths: [CGFloat] = []
+    private var annotationWidths: [CGFloat] = []
     /// How many rows from the top the viewport has shown so far — the rows
     /// the width is measured over. Only ever grows within a list.
     private var revealedRows = 0
@@ -170,6 +174,7 @@ final class VerticalCandidatePanel: CandidateBasePanel {
     override func clear() {
         cells = []
         primaryWidths = []
+        annotationWidths = []
         revealedRows = 0
         selectedIndex = 0
         anchorRow = 0
@@ -261,6 +266,7 @@ final class VerticalCandidatePanel: CandidateBasePanel {
         // Width: the rows the opening viewport shows set it; the rest join
         // as the viewport reaches them.
         primaryWidths = cells.map { metrics.measurePrimaryWidth($0.text) }
+        annotationWidths = cells.map { metrics.annotationWidth($0.annotation) }
         revealedRows = rowsIntersectingViewport(minY: 0, height: windowHeight)
         let geometry = resolveWidth()
         rowsContainer.frame.size = NSSize(width: geometry.itemWidth, height: naturalContentHeight)
@@ -289,14 +295,19 @@ final class VerticalCandidatePanel: CandidateBasePanel {
     }
 
     /// The widths every row of the current list renders at, from the revealed
-    /// rows: the widest revealed cell, floored at one slot and capped at what
-    /// the screen leaves once the scroller has its share — a long phrase
-    /// widens the window rather than truncating inside a fixed one.
+    /// rows: the widest revealed candidate column plus the widest revealed
+    /// annotation — which can come from different rows, since every row's
+    /// annotation starts at the column's edge — floored at one slot and
+    /// capped at what the screen leaves once the scroller has its share. A
+    /// long phrase widens the window rather than truncating inside a fixed
+    /// one; sizing to the widest single row truncated kuānn beside 汗 once
+    /// 舅仔 / kǔ-á had widened the column.
     private func resolveWidth() -> (windowWidth: CGFloat, itemWidth: CGFloat, itemTrailing: CGFloat, primaryColumnWidth: CGFloat) {
-        let revealed = cells.indices.prefix(revealedRows)
-        let widest = revealed
-            .map { metrics.cellWidth(for: cells[$0], primaryWidth: primaryWidths[$0]) }
-            .max() ?? 0
+        let widestPrimary = primaryWidths.prefix(revealedRows).max() ?? 0
+        let widest = metrics.inlineRowWidth(
+            primaryColumnWidth: widestPrimary,
+            annotationWidth: annotationWidths.prefix(revealedRows).max() ?? 0,
+        )
         let scroller = scrollerLayout(hasOverflow: cells.count > Self.visibleRows)
         let contentWidth = min(
             max(widest, metrics.baseWidth),
@@ -310,7 +321,6 @@ final class VerticalCandidatePanel: CandidateBasePanel {
         // sets the column — clamped to what the capped window can actually
         // hold, since a column wider than the cell would push text past its
         // edge.
-        let widestPrimary = revealed.map { primaryWidths[$0] }.max() ?? 0
         let primaryColumnWidth = min(
             widestPrimary,
             metrics.maximumPrimaryColumnWidth(

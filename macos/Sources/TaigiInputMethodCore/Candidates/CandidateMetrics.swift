@@ -387,24 +387,27 @@ extension CandidateMetrics {
     /// and a shared template view would drag its Auto Layout state into every
     /// measurement.
     func measureWidth(_ cell: CandidateCellContent) -> CGFloat {
-        cellWidth(for: cell, primaryWidth: measurePrimaryWidth(cell.text))
-    }
-
-    /// `measureWidth` for a cell whose primary text is already measured: the
-    /// vertical layout measures every primary once for its column and hands
-    /// the widths back in, so a two-hundred-row list is not measured twice.
-    func cellWidth(for cell: CandidateCellContent, primaryWidth: CGFloat) -> CGFloat {
-        let text = max(primaryColumnFloor, primaryWidth)
+        let primaryWidth = measurePrimaryWidth(cell.text)
         switch cellArrangement {
         case .inline:
-            return horizontalPadding + indexColumnWidth + text
-                + annotationWidth(cell.annotation) + horizontalPadding
+            return inlineRowWidth(primaryColumnWidth: primaryWidth, annotationWidth: annotationWidth(cell.annotation))
         case .stacked:
             // The two scripts are on top of each other, so the cell is as wide
             // as the WIDER of them — not as wide as both plus a gap.
             return horizontalPadding + indexColumnWidth
-                + max(text, annotationTextWidth(cell.annotation)) + horizontalPadding
+                + max(primaryColumnFloor, primaryWidth, annotationTextWidth(cell.annotation))
+                + horizontalPadding
         }
+    }
+
+    /// The width an inline row needs for a candidate column `primaryColumnWidth`
+    /// wide (floored at one glyph) with `annotationWidth` — gap included,
+    /// `annotationWidth(_:)` — beside it. Takes the two columns apart because a
+    /// list whose rows share one candidate column is as wide as the widest
+    /// column PLUS the widest annotation, which can come from different rows.
+    func inlineRowWidth(primaryColumnWidth: CGFloat, annotationWidth: CGFloat) -> CGFloat {
+        horizontalPadding + indexColumnWidth + max(primaryColumnFloor, primaryColumnWidth)
+            + annotationWidth + horizontalPadding
     }
 
     /// The candidate column's width for `text` alone — what the vertical layout

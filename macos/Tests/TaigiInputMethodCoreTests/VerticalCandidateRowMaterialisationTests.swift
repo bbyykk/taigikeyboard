@@ -195,6 +195,40 @@ final class VerticalCandidateRowMaterialisationTests: XCTestCase {
         assertDigitsMatchSlots(in: panel)
     }
 
+    /// The window is as wide as the widest revealed candidate column PLUS
+    /// the widest revealed annotation, which need not be one row: `kuann7`
+    /// opens on one-glyph rows beside `kuānn`, and its tail holds 舅仔 / kǔ-á
+    /// — two glyphs beside a short annotation. Once the tail has been
+    /// revealed the column is two glyphs wide for every row, and a window
+    /// sized to the widest single row left `kuānn` truncated to `k…`.
+    func testWidth_coversTheWidestColumnPlusTheWidestAnnotation_acrossRows() {
+        let panel = makePanel()
+        let longAnnotation = "kuānn"
+        var cells = [CandidateCellContent(text: "汗", annotation: longAnnotation)]
+        cells += (1 ..< 40).map { _ in CandidateCellContent(text: "冠", annotation: "kuàn") }
+        cells.append(CandidateCellContent(text: "舅仔", annotation: "kǔ-á"))
+        _ = panel.updateCandidates(cells)
+        showForScrolling(panel)
+        defer { panel.orderOut(nil) }
+
+        scrollUserViewport(of: panel, toRow: cells.count - 1)
+        scrollUserViewport(of: panel, toRow: 0)
+        panel.contentView?.layoutSubtreeIfNeeded()
+
+        let labels = TestFixtures.descendants(of: panel, as: NSTextField.self)
+        guard let annotation = labels.first(where: { $0.stringValue == longAnnotation }),
+              let candidate = labels.first(where: { $0.stringValue == "汗" })
+        else { return XCTFail("row 0 is built with both scripts") }
+        XCTAssertGreaterThanOrEqual(
+            candidate.frame.width, panel.metrics.measurePrimaryWidth("舅仔"),
+            "the revealed tail widened the column every row shares",
+        )
+        XCTAssertGreaterThanOrEqual(
+            annotation.frame.width, annotation.intrinsicContentSize.width,
+            "the annotation beside the one-glyph candidate renders whole in the two-glyph column",
+        )
+    }
+
     // MARK: - Helpers
 
     private func makePanel(style: CandidateWindowStyle = .sequoia) -> VerticalCandidatePanel {
