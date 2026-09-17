@@ -24,7 +24,7 @@ kautian subcollections (腔調 + 姓名附錄 toggles + 語音差異 詞級擴�
 
 ### iPad external keyboard — hardware-key composing in the iOS extension (USER-scoped 2026-09-18)
 
-**Status**: PR1 MERGED `1634eceb` (#77, 2026-09-18). PR2 in progress (branch `feat/ipad-hardware-shortcuts`). PR3 not started. Dogfood S47 / S48 pending (USER 2026-09-18 「最後再 dogfood」).
+**Status**: PR1 MERGED `1634eceb` (#77, 2026-09-18). PR2 = #78 open (branch `feat/ipad-hardware-shortcuts`). PR3 in progress (branch `feat/ipad-hardware-caret`, stacked on PR2). TPS hardware mapping = open USER decision (row below). Dogfood S47 / S48 pending (USER 2026-09-18 「最後再 dogfood」).
 USER 2026-09-18: 「for ios, design and implement iPad 外接鍵盤, 鍵盤佈局, 設定、快速齒、外觀等等選單參考 macOS 實作」.
 
 **Why**: the keyboard extension has no hardware-key path at all (`grep pressesBegan ios/` = 0 hits, 2026-09-18). With a Magic Keyboard attached a letter reaches the host through the `UIResponder.insertText` override (`KeyboardExtension/KeyboardViewController.swift:298`) and never composes. macOS already owns the whole key contract (`macos/.../Controller/ComposingKeyIntent.swift`, `ComposingAction.swift`, `ComposingKeyBindings.swift`, `Settings/ShortcutSettingsView.swift`); iPad mirrors it.
@@ -51,13 +51,14 @@ iOS deviation, deliberate: idle Backspace / letters / punctuation route through 
 |---|---|---|
 | PR1 | classifier + dispatcher + slot keys/labels + navigation + compact bar + setting toggle + S47 | MERGED #77 |
 | PR2 | 快速齒 pane on iOS (Settings › 鍵盤 › 快速齒, iPad): the seven `HardwareComposingAction` rows + the four switches that apply on iOS (`HardwareShortcutAction`: toggleRomanization ⌃⌘C, cycleCandidateDisplayMode ⌃⌘H, toggleTranslateSwapped `` ` ``, showSymbolPicker ⌃⌘,), recorder = an invisible first responder's `pressesBegan` (`HardwareKeyCaptureView`), storage `composingShortcut.<raw>` / `hardwareShortcut.<raw>` in the App Group with the desktop's `"<d/c/o/s>\|<hex>"` chord encoding (`HardwareKeyChord`); `HardwareKeyBindings` resolves duplicates (stored beats default, last writer wins, always-bound pool restored, a chord on both rosters fires the shortcut); Space with the bar up = `commitAlternateScript`, ⇧slot = the same aimed at a slot (`ActionHandler.handleAlternateScript` → `alternateCommit`, the twin of macOS `CandidateDocumentText.resolvedAlternate`) | in progress |
-| PR3 | TPS hardware mapping (QWERTY → bopomofo via the TPS `TaigiLayouts` table), ⌥← / ⌥→ caret (`MoveCaret` bridge), compact-bar appearance review | not started |
+| PR3 | ⌥← / ⌥→ composing caret: `Preedit.caret_utf16` now honoured on iOS (`updatePreedit(_:caretUTF16:)` → `setMarkedText(_:caretUTF16:)`), `RustEngineBridge.composingMoveCaret` + `ComposingManager.moveCaret`, `HardwareKeyIntent` tier 0 on exactly ⌥, read-only pane row. Compact-bar appearance: nothing to add — the bar already follows 候選詞文字大小 / theme (`CandidateTheme`), and macOS's 外觀 items (window layout / size) have no on-screen analogue. | in progress |
+| — | **TPS hardware mapping — USER-decided, not built.** The on-screen TPS grid (`TaigiLayouts.tps_iPhone`, Android `tps.json`) is the app's own arrangement, not the 注音 standard; only row 1 carries a QWERTY legend (`1`…`0` popups). Rows 2–4 map positionally to `q…p / a…; / z…,` at best, and the five bottom-row symbols (ㄌ ㆡ ㄙ ㆨ ㆤ) have no physical key. Options: (a) positional grid + a chosen row for the five, (b) the ROC 注音 standard positions where a symbol exists there, (c) no hardware TPS (letters pass through as text). Until decided, a hardware key under TPS types its ASCII (S47 ⑧ records what happens). | open |
 
 **Rejected**: `UIKeyCommand` table (swallows keys before `UIKeyInput`, and cannot express "only while composing"); `keyCommands` for slot keys (same); Telex scheme on iOS (iOS has no `ToneInputScheme`; digits stay tones, letters pick).
 
 **Decided under auto mode (2026-09-18)**: the iOS global roster carries the four switches only; `openLastSettingsPane` (an extension cannot open its host app without a URL round-trip) and `showTelexGuide` (no Telex scheme on iOS) are left out. Idle Return / unbound Return mid-composition fall to the fixed rule (newline / commit as typed) so the key that sends is never swallowed.
 
-**Dogfood**: S47 (PR1), S48 (PR2).
+**Dogfood**: S47 (PR1), S48 (PR2), S49 (PR3).
 
 ---
 

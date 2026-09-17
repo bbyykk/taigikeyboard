@@ -126,6 +126,44 @@ final class ComposingManagerContinuousTests: XCTestCase {
         )
     }
 
+    // MARK: - moveCaret (iPad external keyboard)
+
+    /// The caret rides `UpdatePreedit` as a UTF-16 offset and nothing is
+    /// fetched; the next append lands at the caret, and the composition
+    /// still commits from the raw buffer as a whole.
+    func testMoveCaret_stepsInsidePendingTail_thenAppendInsertsThere() {
+        manager.startComposing(with: "tai")
+        spy.effects.removeAll()
+
+        manager.moveCaret(.left)
+
+        let display = manager.composingText
+        XCTAssertEqual(
+            spy.effects,
+            [.updatePreedit(display, caretUTF16: display.utf16.count - 1)],
+            "a move re-renders the same text with the caret one back, and fetches nothing",
+        )
+        XCTAssertEqual(manager.rawInput, "tai", "the buffer is untouched")
+
+        manager.appendCharacter("k")
+        XCTAssertEqual(manager.rawInput, "taki", "Append inserts at the caret")
+
+        spy.effects.removeAll()
+        manager.moveCaret(.right)
+        manager.moveCaret(.right)
+        XCTAssertEqual(
+            spy.effects.count, 1,
+            "one step back to the end; the second, at the edge, is a no-op with no effects",
+        )
+
+        manager.commitRawInput()
+        XCTAssertFalse(manager.isComposing)
+        XCTAssertTrue(
+            spy.effects.contains { if case .commitTextReplacingPreedit = $0 { return true }; return false },
+            "the whole buffer commits",
+        )
+    }
+
     // MARK: - fetchContinuousCandidates
 
     /// `fetchContinuousCandidates` is a two-phase wrapper over
