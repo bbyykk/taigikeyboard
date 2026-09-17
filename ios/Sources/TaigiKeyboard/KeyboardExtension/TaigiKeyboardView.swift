@@ -15,6 +15,8 @@ struct TaigiKeyboardView: View {
     @ObservedObject var autocompleteContext: AutocompleteContext
     @ObservedObject var keyboardContext: KeyboardContext
     let composingManager: ComposingManager
+    /// Nil where there is no extension (the theme preview panel).
+    let hardwareKeyboard: HardwareKeyboardState?
 
     let onSuggestionTap: (AutocompleteSuggestion) -> Void
     let onTranslateToggle: () -> Void
@@ -41,6 +43,7 @@ struct TaigiKeyboardView: View {
         autocompleteContext: AutocompleteContext,
         keyboardContext: KeyboardContext,
         composingManager: ComposingManager,
+        hardwareKeyboard: HardwareKeyboardState? = nil,
         onSuggestionTap: @escaping (AutocompleteSuggestion) -> Void,
         onTranslateToggle: @escaping () -> Void,
         onCandidateDisplayModeChange: @escaping (CandidateDisplayMode) -> Void,
@@ -54,6 +57,7 @@ struct TaigiKeyboardView: View {
         self.autocompleteContext = autocompleteContext
         self.keyboardContext = keyboardContext
         self.composingManager = composingManager
+        self.hardwareKeyboard = hardwareKeyboard
         self.onSuggestionTap = onSuggestionTap
         self.onTranslateToggle = onTranslateToggle
         self.onCandidateDisplayModeChange = onCandidateDisplayModeChange
@@ -261,6 +265,76 @@ struct TaigiKeyboardView: View {
         }
     }
 
+
+    // MARK: - Candidate Bar
+
+    /// The candidate bar, in the toolbar slot and in the collapsed (external
+    /// keyboard) frame alike, so the two cannot drift.
+    private func candidateBar(
+        suggestions: [AutocompleteSuggestion],
+        selectedCandidateIndex: Int,
+        isTranslateSwapped: Bool,
+        candidateDisplayMode: CandidateDisplayMode,
+        candidateStyle: CandidateView.Style,
+        isTPSLayout: Bool,
+        orMapsToER: Bool,
+        englishAutocompleteView: AnyView?,
+    ) -> some View {
+        CandidateView(
+            suggestions: suggestions,
+            selectedCandidateIndex: selectedCandidateIndex,
+            onSuggestionTap: onSuggestionTap,
+            isTranslateSwapped: isTranslateSwapped,
+            candidateDisplayMode: candidateDisplayMode,
+            onSettingsTap: {
+                let wasOpen = panels.isSettingsExpanded
+                panels.closeAll()
+                expandState.collapse()
+                if !wasOpen {
+                    panels.isSettingsExpanded = true
+                }
+            },
+            onLayoutTap: {
+                let wasOpen = panels.isLayoutExpanded
+                panels.closeAll()
+                expandState.collapse()
+                if !wasOpen {
+                    panels.isLayoutExpanded = true
+                }
+            },
+            onSymbolTap: {
+                let wasOpen = panels.isSymbolExpanded
+                panels.closeAll()
+                expandState.collapse()
+                if !wasOpen {
+                    panels.isSymbolExpanded = true
+                }
+            },
+            onDismissKeyboard: { [unowned services] in
+                panels.closeAll()
+                services.actionHandler.handle(.dismissKeyboard)
+            },
+            currentInputMode: currentInputMode,
+            onInputModeChange: { newMode in
+                currentInputMode = newMode
+                settings.inputMode = newMode
+                panels.closeAll()
+            },
+            englishAutocompleteView: englishAutocompleteView,
+            isComposing: composingManager.isComposing,
+            isTPSLayout: isTPSLayout,
+            orMapsToER: orMapsToER,
+        )
+        .environmentObject(expandState)
+        .candidateViewStyle(candidateStyle)
+        // Only a composition's candidates take a slot key; NextWord and
+        // English rows share the bar but are not pickable by key.
+        .environment(
+            \.showsCandidateSlotKeys,
+            (hardwareKeyboard?.isAttached ?? false) && composingManager.isComposing,
+        )
+    }
+
     // MARK: - Core Keyboard View
 
     /// Builds the KeyboardView with button content, style, and toolbar.
@@ -319,7 +393,30 @@ struct TaigiKeyboardView: View {
                     params.view
                 }
             },
-            collapsedView: { $0.view },
+            collapsedView: { params in
+                // External keyboard attached (`HardwareKeyboardState`): the key
+                // rows give way to the candidate bar alone. KeyboardKit's own
+                // collapsed frame carries the "open keyboard" control, which
+                // brings the rows back until the keyboard is detached.
+                Keyboard.CollapsedView(openKeyboardAction: {
+                    // The controller's `applyHardwareKeyboardCollapse` is the
+                    // one writer of the collapsed flag; this only asks.
+                    hardwareKeyboard?.wantsOnScreenKeys = true
+                }) {
+                    candidateBar(
+                        suggestions: suggestions,
+                        selectedCandidateIndex: selectedCandidateIndex,
+                        isTranslateSwapped: isTranslateSwapped,
+                        candidateDisplayMode: candidateDisplayMode,
+                        candidateStyle: candidateStyle,
+                        isTPSLayout: isTPSLayout,
+                        orMapsToER: orMapsToER,
+                        // KeyboardKit's English suggestion strip lives in the
+                        // toolbar slot only; the collapsed frame has none.
+                        englishAutocompleteView: nil,
+                    )
+                }
+            },
             emojiKeyboard: { _ in
                 // KeyboardKit 10: ISEmojiView requires explicit height
                 emojiKeyboardView()
@@ -327,53 +424,16 @@ struct TaigiKeyboardView: View {
             },
             toolbar: { params in
                 // Unified CandidateView; English mode passes in KeyboardKit's default view
-                CandidateView(
+                candidateBar(
                     suggestions: suggestions,
                     selectedCandidateIndex: selectedCandidateIndex,
-                    onSuggestionTap: onSuggestionTap,
                     isTranslateSwapped: isTranslateSwapped,
                     candidateDisplayMode: candidateDisplayMode,
-                    onSettingsTap: {
-                        let wasOpen = panels.isSettingsExpanded
-                        panels.closeAll()
-                        expandState.collapse()
-                        if !wasOpen {
-                            panels.isSettingsExpanded = true
-                        }
-                    },
-                    onLayoutTap: {
-                        let wasOpen = panels.isLayoutExpanded
-                        panels.closeAll()
-                        expandState.collapse()
-                        if !wasOpen {
-                            panels.isLayoutExpanded = true
-                        }
-                    },
-                    onSymbolTap: {
-                        let wasOpen = panels.isSymbolExpanded
-                        panels.closeAll()
-                        expandState.collapse()
-                        if !wasOpen {
-                            panels.isSymbolExpanded = true
-                        }
-                    },
-                    onDismissKeyboard: { [unowned services] in
-                        panels.closeAll()
-                        services.actionHandler.handle(.dismissKeyboard)
-                    },
-                    currentInputMode: currentInputMode,
-                    onInputModeChange: { newMode in
-                        currentInputMode = newMode
-                        settings.inputMode = newMode
-                        panels.closeAll()
-                    },
-                    englishAutocompleteView: currentInputMode == .english ? AnyView(params.view) : nil,
-                    isComposing: composingManager.isComposing,
+                    candidateStyle: candidateStyle,
                     isTPSLayout: isTPSLayout,
                     orMapsToER: orMapsToER,
+                    englishAutocompleteView: currentInputMode == .english ? AnyView(params.view) : nil,
                 )
-                .environmentObject(expandState)
-                .candidateViewStyle(candidateStyle)
             },
         )
         .keyboardButtonStyle { params in

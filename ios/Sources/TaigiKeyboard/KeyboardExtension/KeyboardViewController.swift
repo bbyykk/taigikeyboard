@@ -45,6 +45,10 @@ class KeyboardViewController: KeyboardInputViewController, ComposingDelegate {
     /// Colors / font / corner already update in place via `TaigiKeyboardView`.
     var lastResolvedKeyHeightScale: Double?
 
+    /// Previous 外接齒盤 collapse toggle, so `syncSettings()` only re-applies
+    /// the collapse when that setting changed.
+    var lastIsHardwareKeyboardCompact: Bool?
+
     /// Previous 候選詞顯示 mode. The 文/A key's presence is baked into the
     /// layout; a host-app change re-renders through the keyboard context in
     /// `syncSettings()` (the in-keyboard picker already goes through it).
@@ -54,6 +58,13 @@ class KeyboardViewController: KeyboardInputViewController, ComposingDelegate {
     /// Pointer-equality detects field switches without touching the iOS 26
     /// SDK's broken `documentIdentifier` UUID bridge.
     private var lastTextInputID: ObjectIdentifier?
+
+    /// External keyboard: attached / collapse state, read by the hardware-key
+    /// path and by `TaigiKeyboardView` (slot labels, collapsed bar).
+    let hardwareKeyboard = HardwareKeyboardState()
+    /// Hardware presses this extension consumed in `pressesBegan`, so their
+    /// `pressesEnded` / `pressesCancelled` are not forwarded either.
+    var handledHardwarePresses = Set<UIPress>()
 
     var emojiService: EmojiService {
         if emojiServiceStorage == nil {
@@ -101,6 +112,10 @@ class KeyboardViewController: KeyboardInputViewController, ComposingDelegate {
 
         // Guard keyboardCase against KeyboardKit 10 internal path overriding state
         setupKeyboardCaseProtection()
+
+        hardwareKeyboard.onChange = { [weak self] in
+            self?.applyHardwareKeyboardCollapse()
+        }
     }
 
     override func viewDidAppear(_ animated: Bool) {
@@ -145,6 +160,7 @@ class KeyboardViewController: KeyboardInputViewController, ComposingDelegate {
             autocompleteContext: state.autocompleteContext,
             keyboardContext: state.keyboardContext,
             composingManager: composingManager,
+            hardwareKeyboard: hardwareKeyboard,
             onSuggestionTap: { [unowned self] suggestion in
                 services.actionHandler.handle(suggestion)
             },

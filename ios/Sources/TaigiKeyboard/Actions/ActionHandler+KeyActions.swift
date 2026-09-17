@@ -7,8 +7,12 @@ import KeyboardKit
 extension ActionHandler {
     // MARK: - Character Input
 
-    /// Returns true if handled (skip KeyboardKit default)
-    func handleCharacterInput(_ char: String) -> Bool {
+    /// Returns true if handled (skip KeyboardKit default).
+    /// `letterCase` overrides the on-screen Shift state (a hardware key).
+    func handleCharacterInput(
+        _ char: String,
+        letterCase: RustEngineBridge.CaseTransformLetterCase? = nil,
+    ) -> Bool {
         let currentCase = keyboardContext.keyboardCase
         let autoCap = keyboardContext.settings.isAutocapitalizationEnabled
 
@@ -25,7 +29,7 @@ extension ActionHandler {
         // auto-cap is consumed by `capitalizeCandidate` instead.
         let processedChar = RustEngineBridge.transformInputCase(
             char,
-            letterCase: currentCase.asLetterCase,
+            letterCase: letterCase ?? currentCase.asLetterCase,
             mode: settings.inputMode,
         )
 

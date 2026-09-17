@@ -164,6 +164,8 @@ extension KeyboardViewController {
         lastResolvedKeyHeightScale = keyboardSettings
             .resolvedAppearance(for: state.keyboardContext.colorScheme).keyHeightScale
         lastCandidateDisplayMode = state.keyboardContext.candidateDisplayMode
+        // Left nil so the first syncSettings() applies the collapse once.
+        lastIsHardwareKeyboardCompact = nil
     }
 
     /// Called at initial setup and from syncSettings() when input mode changes.
@@ -259,6 +261,13 @@ extension KeyboardViewController {
             setupLogger.debug("[SETTINGS] CandidateDisplayMode changed: \(lastCandidateDisplayMode?.rawValue ?? "nil") -> \(currentCandidateDisplayMode.rawValue)")
             lastCandidateDisplayMode = currentCandidateDisplayMode
             state.keyboardContext.notifyDisplayChange()
+        }
+
+        // The 外接齒盤 collapse toggle lands here from the host app.
+        let currentHardwareKeyboardCompact = keyboardSettings.isHardwareKeyboardCompact
+        if lastIsHardwareKeyboardCompact != currentHardwareKeyboardCompact {
+            lastIsHardwareKeyboardCompact = currentHardwareKeyboardCompact
+            applyHardwareKeyboardCollapse()
         }
 
         // Sync auto-capitalization override from KeyboardKit settings

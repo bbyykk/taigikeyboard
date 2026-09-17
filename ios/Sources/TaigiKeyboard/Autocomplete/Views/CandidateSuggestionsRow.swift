@@ -17,6 +17,7 @@ struct CandidateSuggestionsRow: View {
     let englishAutocompleteView: AnyView?
 
     @EnvironmentObject private var expandState: CandidateExpandState
+    @Environment(\.showsCandidateSlotKeys) private var showsSlotKeys
     @Environment(\.candidateTheme) private var theme
 
     // Resolves the expand-chevron a11y label under the display-language picker (live-switch on read).
@@ -26,10 +27,17 @@ struct CandidateSuggestionsRow: View {
         HStack(spacing: 0) {
             if suggestions.isEmpty {
                 Spacer()
-            } else if currentInputMode == .english, let englishView = englishAutocompleteView {
-                englishView
-                    .frame(maxHeight: .infinity)
-                    .autocompleteToolbarStyle(englishCandidateToolbarStyle)
+            } else if currentInputMode == .english {
+                // English suggestions come from KeyboardKit's own strip; a
+                // frame with none to hand over (the collapsed bar) stays empty
+                // rather than drawing them as Taigi cells.
+                if let englishView = englishAutocompleteView {
+                    englishView
+                        .frame(maxHeight: .infinity)
+                        .autocompleteToolbarStyle(englishCandidateToolbarStyle)
+                } else {
+                    Spacer()
+                }
             } else {
                 taigiCandidateList
 
@@ -92,6 +100,9 @@ struct CandidateSuggestionsRow: View {
                             orMapsToER: orMapsToER,
                             isSelected: selectedCandidateIndex == index,
                             isFirstCandidate: index == 0,
+                            shortcutLabel: showsSlotKeys
+                                ? HardwareCandidatePage.slotLabel(forIndex: index, selected: selectedCandidateIndex)
+                                : nil,
                             onTap: onSuggestionTap,
                         )
                         .id("candidate_\(index)")

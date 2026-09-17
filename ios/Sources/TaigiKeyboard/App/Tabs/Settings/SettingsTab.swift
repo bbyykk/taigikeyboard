@@ -21,6 +21,7 @@ struct SettingsTab: View {
     @State private var isTpsOrMappedToER: Bool
     @State private var toolbarAutoCollapse: Bool
     @State private var isGlobeKeyEnabled: Bool
+    @State private var isHardwareKeyboardCompact: Bool
     @State private var showResetSettingsAlert = false
     @State private var diagnosticCopied = false
     @State private var diagnosticText = ""
@@ -60,6 +61,7 @@ struct SettingsTab: View {
         _isTpsOrMappedToER = State(initialValue: settings.isTpsOrMappedToER)
         _toolbarAutoCollapse = State(initialValue: settings.isToolbarAutoCollapse)
         _isGlobeKeyEnabled = State(initialValue: settings.isGlobeKeyEnabled)
+        _isHardwareKeyboardCompact = State(initialValue: settings.isHardwareKeyboardCompact)
     }
 
     var body: some View {
@@ -205,6 +207,24 @@ struct SettingsTab: View {
                     }
                     .onChange(of: isGlobeKeyEnabled) { _, newValue in
                         settings.isGlobeKeyEnabled = newValue
+                    }
+
+                    // iPad only: iPhone has no external-keyboard layout to collapse.
+                    if UIDevice.current.userInterfaceIdiom == .pad {
+                        Toggle(isOn: $isHardwareKeyboardCompact) {
+                            HStack {
+                                Label {
+                                    Text(lang.string(.settingsHardwareKeyboardCompact))
+                                } icon: {
+                                    Image(latinSystemName: SettingsIcons.hardwareKeyboard)
+                                        .foregroundColor(AppStyle.accentBlue)
+                                }
+                                SettingInfoButton(description: lang.string(.settingsHardwareKeyboardCompactInfo))
+                            }
+                        }
+                        .onChange(of: isHardwareKeyboardCompact) { _, newValue in
+                            settings.isHardwareKeyboardCompact = newValue
+                        }
                     }
                 } header: {
                     Text(lang.string(.settingsKeyboardSectionTitle))

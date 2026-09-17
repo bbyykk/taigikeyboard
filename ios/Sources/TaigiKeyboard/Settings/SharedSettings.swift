@@ -83,6 +83,7 @@ final class SharedSettings {
 
     private static let isTpsOrMappedToERKey: SettingsKey<Bool> = .bool("tpsOrMapsToER", default: true)
     private static let isToolbarAutoCollapseKey: SettingsKey<Bool> = .bool("toolbarAutoCollapse", default: true)
+    private static let isHardwareKeyboardCompactKey: SettingsKey<Bool> = .bool("hardwareKeyboardCompact", default: true)
 
     /// Globe key has a device-dependent default (`DeviceCapabilities.prefersGlobeKeyByDefault`)
     /// so the getter is hand-written; the descriptor is reused for writes
@@ -437,6 +438,16 @@ final class SharedSettings {
         set { userDefaults.set(newValue, for: Self.isToolbarAutoCollapseKey) }
     }
 
+    // MARK: - Hardware Keyboard
+
+    /// Hide the on-screen key rows while an external keyboard is attached
+    /// (default: true). The candidate bar stays; typing comes from the
+    /// hardware keys (`HardwareKeyIntent`).
+    var isHardwareKeyboardCompact: Bool {
+        get { userDefaults.value(for: Self.isHardwareKeyboardCompactKey) }
+        set { userDefaults.set(newValue, for: Self.isHardwareKeyboardCompactKey) }
+    }
+
     // MARK: - Globe Key
 
     /// Globe key toggle. Default depends on device type for backward compatibility:
@@ -643,6 +654,7 @@ final class SharedSettings {
         isKautianNameAppendixEnabled = true
         // Toolbar
         isToolbarAutoCollapse = true
+        isHardwareKeyboardCompact = true
         // Globe key: remove stored value so device-based default takes effect
         userDefaults.remove(Self.isGlobeKeyEnabledKey)
         // TPS
