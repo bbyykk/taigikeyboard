@@ -361,6 +361,366 @@
         }
       }
     },
+    "i18n_desktop_actionCommitAlternateScript": {
+      "comment": "Shortcut row: commit the highlighted candidate in the other script (漢羅).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cross-Mode Output"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "モード横断出力"
+          }
+        }
+      }
+    },
+    "i18n_desktop_actionCommitLiteral": {
+      "comment": "Shortcut row: commit the romanization exactly as typed.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Output What You Are Typing"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "入力中の文字を出力"
+          }
+        }
+      }
+    },
+    "i18n_desktop_actionConfirmHighlighted": {
+      "comment": "Shortcut row: commit the highlighted candidate.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm Key"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "確定キー"
+          }
+        }
+      }
+    },
+    "i18n_desktop_actionNextCandidate": {
+      "comment": "Shortcut row: move the highlight to the next candidate.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Next Candidate"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "次の候補"
+          }
+        }
+      }
+    },
+    "i18n_desktop_actionPageBackward": {
+      "comment": "Shortcut row: show the previous page of candidates.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Previous Page"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "前のページ"
+          }
+        }
+      }
+    },
+    "i18n_desktop_actionPageForward": {
+      "comment": "Shortcut row: show the next page of candidates.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Next Page"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "次のページ"
+          }
+        }
+      }
+    },
+    "i18n_desktop_actionPreviousCandidate": {
+      "comment": "Shortcut row: move the highlight to the previous candidate.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Previous Candidate"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "前の候補"
+          }
+        }
+      }
+    },
+    "i18n_desktop_shortcutCommitAlternateScriptInSlot": {
+      "comment": "Read-only row after the composing commit keys on the 快速齒 pane: Shift on a candidate slot key commits that slot in the other script (what Space does for the highlighted cell) — macOS ⇧QWDFZXVY; / ⇧123456789, Windows Shift+QWDFZXVY; / Shift+123456789, following the tone scheme. Shortened from 揀一格臨時拍羅馬字/漢字 (USER 2026-09-10): the key column already shows the slot keys, so naming them again in the label was the same fact twice. Not recordable (USER 2026-09-10: 快速齒加一個快速齒提示,類似「修正...」那個快速齒一樣,使用者不能修改). Sibling of actionCommitAlternateScript.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cross-Mode Output"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "モード横断出力"
+          }
+        }
+      }
+    },
+    "i18n_desktop_shortcutCycleCandidateDisplayMode": {
+      "comment": "Shortcut-recorder row: the hotkey that cycles 候選詞顯示 through 漢羅對應 → 漢羅濫 → 羅馬字 (the picker order). Authored whole, like its siblings.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Switch Candidate Display"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "候補の表示を切り替え"
+          }
+        }
+      }
+    },
+    "i18n_desktop_shortcutRecording": {
+      "comment": "Shortcut recorder button while it is waiting for a key press.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Press a key…"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "キーを押してください…"
+          }
+        }
+      }
+    },
+    "i18n_desktop_shortcutRejectedNoKey": {
+      "comment": "Recorder error: the event carried no key that could be recorded.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No key to record"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "記録できるキーがありません"
+          }
+        }
+      }
+    },
+    "i18n_desktop_shortcutRejectedTaken": {
+      "comment": "Recorder error: the chord cannot be bound because something else already owns it — a romanization key, a key the input method reserves, a candidate-slot chord, a system shortcut, or the host app. One message covers every taken case; the recorder does not name the owner.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "That key is already taken"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "そのキーは使用済みです"
+          }
+        }
+      }
+    },
+    "i18n_desktop_shortcutSectionCandidateSelection": {
+      "comment": "快捷鍵 pane, first block's header: the keys that move through the candidate window.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Candidate Selection"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "候補選択"
+          }
+        }
+      }
+    },
+    "i18n_desktop_shortcutSectionOther": {
+      "comment": "快捷鍵 pane, third block's header: the switches and the windows a key raises.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Other"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "その他"
+          }
+        }
+      }
+    },
+    "i18n_desktop_shortcutSectionOutput": {
+      "comment": "快捷鍵 pane, second block's header: the keys that end a composition into the document, and the switch for which script is written. 輸出 rather than 拍字 (USER 2026-09-10) — the block is about what reaches the document, not about the typing itself.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Output"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "出力"
+          }
+        }
+      }
+    },
+    "i18n_desktop_shortcutShowSymbolPicker": {
+      "comment": "Shortcut-recorder row: the chord that opens the symbol picker (punctuation / brackets / special symbols) styled as a candidate window (USER 2026-09-09). 拍開 since 2026-09-10 (USER), pairing it with shortcutOpenSettings — the pane draws the two doorways side by side. Authored whole, like its siblings.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Symbol Menu"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "記号メニューを開く"
+          }
+        }
+      }
+    },
+    "i18n_desktop_shortcutToggleRomanization": {
+      "comment": "Shortcut-recorder row: the hotkey that switches between the two romanizations. Each row is authored whole rather than composed from the setting's own label, whose wording is a verb phrase in several languages.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Switch Tâi-lô or Pe̍h-ōe-jī"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "台羅／白話字を切り替える"
+          }
+        }
+      }
+    },
+    "i18n_desktop_shortcutToggleTranslateSwapped": {
+      "comment": "Shortcut-recorder row: the hotkey that flips which script is committed. 切換 rather than 輸出 (USER 2026-09-10) — it is a switch, drawn with the other switches in 其他.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Switch Hanji or Romanization Mode"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "漢字／ローマ字モードを切り替える"
+          }
+        }
+      }
+    },
+    "i18n_desktop_shortcutUnbound": {
+      "comment": "Shortcut recorder button when no key is assigned to the row.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "None"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未設定"
+          }
+        }
+      }
+    },
+    "i18n_desktop_shortcutsTab": {
+      "comment": "Sidebar label for the settings pane holding the shortcut rows.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shortcuts"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ショートカット"
+          }
+        }
+      }
+    },
     "i18n_dictionary_addEntry": {
       "comment": "Title of the add-custom-entry dialog.",
       "extractionState": "manual",

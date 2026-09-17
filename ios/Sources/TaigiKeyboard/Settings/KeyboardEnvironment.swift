@@ -38,6 +38,9 @@ protocol KeyboardEnvironment: AnyObject {
     var keyboardLayoutType: KeyboardLayoutType { get }
     /// Whether the key rows hide while an external keyboard is attached.
     var isHardwareKeyboardCompact: Bool { get }
+    /// The user's hardware key contract, read per key press (App Group
+    /// defaults are cached in-process, so this is a few string lookups).
+    var hardwareKeyBindings: HardwareKeyBindings { get }
 
     /// App Group `UserDefaults` used as the notification filter for
     /// `UserDefaults.didChangeNotification`. The controller observes changes
