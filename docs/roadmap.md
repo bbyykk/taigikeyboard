@@ -24,7 +24,7 @@ kautian subcollections (腔調 + 姓名附錄 toggles + 語音差異 詞級擴�
 
 ### iPad external keyboard — hardware-key composing in the iOS extension (USER-scoped 2026-09-18)
 
-**Status**: PR1 MERGED `1634eceb` (#77, 2026-09-18). PR2 = #78 open (branch `feat/ipad-hardware-shortcuts`). PR3 in progress (branch `feat/ipad-hardware-caret`, stacked on PR2). TPS hardware mapping = open USER decision (row below). Dogfood S47 / S48 pending (USER 2026-09-18 「最後再 dogfood」).
+**Status**: PR1 MERGED `1634eceb` (#77, 2026-09-18). PR2 = #78 open (branch `feat/ipad-hardware-shortcuts`). PR3 = #79 open (branch `feat/ipad-hardware-caret`, stacked on PR2). TPS hardware mapping = open USER decision (row below). Dogfood S47 / S48 pending (USER 2026-09-18 「最後再 dogfood」).
 USER 2026-09-18: 「for ios, design and implement iPad 外接鍵盤, 鍵盤佈局, 設定、快速齒、外觀等等選單參考 macOS 實作」.
 
 **Why**: the keyboard extension has no hardware-key path at all (`grep pressesBegan ios/` = 0 hits, 2026-09-18). With a Magic Keyboard attached a letter reaches the host through the `UIResponder.insertText` override (`KeyboardExtension/KeyboardViewController.swift:298`) and never composes. macOS already owns the whole key contract (`macos/.../Controller/ComposingKeyIntent.swift`, `ComposingAction.swift`, `ComposingKeyBindings.swift`, `Settings/ShortcutSettingsView.swift`); iPad mirrors it.
