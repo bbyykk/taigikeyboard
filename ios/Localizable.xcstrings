@@ -3439,6 +3439,42 @@
         }
       }
     },
+    "i18n_settings_hardwareKeyboardCompact": {
+      "comment": "Toggle label: hide the on-screen key rows while an external (hardware) keyboard is attached; only the candidate bar stays.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Collapse Keyboard With External Keyboard"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "外部キーボード接続時にキーボードを折りたたむ"
+          }
+        }
+      }
+    },
+    "i18n_settings_hardwareKeyboardCompactInfo": {
+      "comment": "Help text for the hardware-keyboard collapse toggle.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "With an external keyboard attached to iPad, only the candidate bar stays on screen; type on the external keyboard."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iPad に外部キーボードを接続すると、画面には候補バーだけが残り、入力は外部キーボードで行います。"
+          }
+        }
+      }
+    },
     "i18n_settings_inputMode": {
       "comment": "Settings row + sub-screen title for selecting the active input mode. On macOS it labels the picker that chooses between TL and POJ.",
       "extractionState": "manual",

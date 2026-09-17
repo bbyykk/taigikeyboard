@@ -71,14 +71,17 @@ public class ActionHandler: StandardKeyboardActionHandler {
     // MARK: - Action Dispatch
 
     /// - Returns: true if handled (skip KeyboardKit default)
-    private func handleTaigiSpecificAction(_ action: KeyboardAction) -> Bool {
+    private func handleTaigiSpecificAction(
+        _ action: KeyboardAction,
+        letterCase: RustEngineBridge.CaseTransformLetterCase? = nil,
+    ) -> Bool {
         switch action {
         case .settings:
             openMainAppSettings()
             return false
 
         case let .character(char):
-            return handleCharacterInput(char)
+            return handleCharacterInput(char, letterCase: letterCase)
 
         case .space:
             return handleSpaceAction()
@@ -133,23 +136,36 @@ public class ActionHandler: StandardKeyboardActionHandler {
             return
         }
 
+        if dispatchRelease(action) {
+            return
+        }
+        super.handle(gesture, on: action)
+    }
+
+    /// The release path shared by the on-screen keys and the hardware keys
+    /// (`handleHardwareKey`): arm consumed, action dispatched, autocomplete
+    /// run. Returns whether the action was ours.
+    ///
+    /// `letterCase` is the hardware key's own case; nil (touch) reads the
+    /// on-screen Shift state.
+    private func dispatchRelease(
+        _ action: KeyboardAction,
+        letterCase: RustEngineBridge.CaseTransformLetterCase? = nil,
+    ) -> Bool {
         var handled = false
         TraceContext.with(TraceId.next()) {
-            logger.debug("[INPUT] fn=handle gesture=release action=\(String(describing: action))")
+            logger.debug("[INPUT] fn=dispatchRelease action=\(String(describing: action)) hardware=\(letterCase != nil)")
             // Every release gets exactly one chance at the swap: the arm is
             // consumed here, before any dispatch — including the ones that
-            // fall through to KeyboardKit below, which write to the document
+            // fall through to KeyboardKit, which write to the document
             // without telling us. Only the auto-space paths put it back.
             beginInputEvent()
-            handled = handleTaigiSpecificAction(action)
+            handled = handleTaigiSpecificAction(action, letterCase: letterCase)
             if handled, !shouldSkipAutocomplete(for: action) {
                 keyboardController?.performAutocomplete()
             }
         }
-        if handled {
-            return
-        }
-        super.handle(gesture, on: action)
+        return handled
     }
 
     /// Whether `gesture` ends an active spacebar drag gesture — the long-press sequence
@@ -201,6 +217,17 @@ public class ActionHandler: StandardKeyboardActionHandler {
 
     override public func handle(_ action: KeyboardAction) {
         handle(.release, on: action)
+    }
+
+    /// The hardware-key entry: the release path minus the spacebar drag
+    /// guard, which only a touch can start. `letterCase` is the key's own
+    /// case, never the on-screen Shift state. An unhandled action is left to
+    /// the caller rather than to KeyboardKit's touch default.
+    func handleHardwareKey(
+        _ action: KeyboardAction,
+        letterCase: RustEngineBridge.CaseTransformLetterCase = .lowercased,
+    ) -> Bool {
+        dispatchRelease(action, letterCase: letterCase)
     }
 
     /// FIXME: Workaround for KeyboardKit 10 auto-capitalization override.
