@@ -46,7 +46,7 @@ Path-scoped rules load themselves; these do not:
 | Platform | Build | Test |
 |---|---|---|
 | engine | `cargo build --workspace` | `cargo test --workspace` |
-| iOS | Xcode → keyboard extension | `xcodebuild -project ios/TaigiKeyboard.xcodeproj -scheme TaigiKeyboardTests -destination 'platform=iOS Simulator,id=81ADB050-5242-460C-90DA-F3FAF3F6AAA5' test` (iPhone 17 / iOS 26.1) |
+| iOS | Xcode → keyboard extension | `xcodebuild -project ios/TaigiKeyboard.xcodeproj -scheme TaigiKeyboardTests -destination 'platform=iOS Simulator,id=F2E02B3E-520A-465D-8696-C7440AA321CA' test` (iPhone 17; re-list with `xcrun simctl list devices available` when the ID changes) |
 | Android | `android/gradlew -p android :app:assembleDebug` | `android/gradlew -p android :app:testDebugUnitTest` |
 | macOS | `make -C macos build` (`install` before dogfood) | `make -C macos test` |
 | Windows | `make windows-check` (host gate; TSF DLL builds only on the Windows box — `docs/architecture/windows-release.md`) | included |
