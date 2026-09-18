@@ -7,6 +7,11 @@ import SwiftUI
 /// the optional identity of the theme being edited (`nil` = creating a new one).
 /// Nothing is persisted until `save()`. New themes auto-apply on save.
 ///
+/// A draft always carries concrete colors: a new theme starts from
+/// `ThemeAppearance.userThemeSeed`, an edited theme was seeded on load
+/// (`UserThemeStore.load`). So a user theme never follows light / dark mode and
+/// every color row has a concrete value to show and to reset to.
+///
 /// Bindings into `appearance` always publish via copy-back
 /// (`var next = appearance; next.x = v; appearance = next`) so SwiftUI re-renders
 /// the live preview on every edit.
@@ -30,7 +35,7 @@ final class ThemeEditorViewModel: ObservableObject {
         } else {
             editingId = nil
             name = ""
-            appearance = .default
+            appearance = .userThemeSeed
             createdAt = Date()
         }
     }
@@ -69,15 +74,91 @@ final class ThemeEditorViewModel: ObservableObject {
         return true
     }
 
-    // MARK: - Publish-safe bindings into the draft
+    // MARK: - Background
 
-    /// Binding for a 6-role color; `nil` field shows `defaultColor` (adaptive).
-    func colorBinding(
-        _ keyPath: WritableKeyPath<KeyboardColorSettings, CodableColor?>,
-        default defaultColor: Color,
-    ) -> Binding<Color> {
+    /// The draft's background; the seed is the last-resort read so the editor never
+    /// shows "adaptive" (a seeded draft always has one).
+    private var background: ThemeBackground {
+        appearance.colors.background ?? UserThemeSeed.background
+    }
+
+    private func setBackground(_ background: ThemeBackground) {
+        var next = appearance
+        next.colors.background = background
+        appearance = next
+    }
+
+    var backgroundKind: ThemeBackground.Kind {
+        background.kind
+    }
+
+    /// Segmented 純色 / 漸層 choice. Switching keeps the current hue: solid → gradient
+    /// runs the solid color into a lighter tint of it; gradient → solid keeps the first stop.
+    var backgroundKindBinding: Binding<ThemeBackground.Kind> {
         Binding(
-            get: { self.appearance.colors[keyPath: keyPath]?.color ?? defaultColor },
+            get: { self.backgroundKind },
+            set: { kind in
+                switch (kind, self.background) {
+                case (.solid, .solid), (.gradient, .gradient):
+                    return
+                case let (.gradient, .solid(color)):
+                    self.setBackground(.gradient(.seeded(from: color)))
+                case let (.solid, .gradient(gradient)):
+                    self.setBackground(.solid(gradient.stops[0]))
+                }
+            },
+        )
+    }
+
+    /// The solid background color (row shown only while the kind is 純色).
+    var solidBackgroundBinding: Binding<Color> {
+        Binding(
+            get: { (self.background.solidColor ?? UserThemeSeed.solidColor).color },
+            set: { self.setBackground(.solid(CodableColor($0))) },
+        )
+    }
+
+    var isSolidBackgroundCustomized: Bool {
+        background != UserThemeSeed.background
+    }
+
+    func resetSolidBackground() {
+        setBackground(UserThemeSeed.background)
+    }
+
+    /// The current gradient (rows shown only while the kind is 漸層).
+    private var gradient: ThemeGradient {
+        background.gradient ?? .seeded(from: UserThemeSeed.solidColor)
+    }
+
+    /// Binding for one of the two gradient stops (`0` = start, `1` = end).
+    func gradientStopBinding(_ index: Int) -> Binding<Color> {
+        Binding(
+            get: { self.gradient.stops[index].color },
+            set: { newColor in
+                var next = self.gradient
+                next.stops[index] = CodableColor(newColor)
+                self.setBackground(.gradient(next))
+            },
+        )
+    }
+
+    var gradientAngleBinding: Binding<Double> {
+        Binding(
+            get: { self.gradient.angle },
+            set: { angle in
+                var next = self.gradient
+                next.angle = angle
+                self.setBackground(.gradient(next))
+            },
+        )
+    }
+
+    // MARK: - Role colors (seeded, never nil)
+
+    func colorBinding(_ keyPath: WritableKeyPath<KeyboardColorSettings, CodableColor?>) -> Binding<Color> {
+        Binding(
+            get: { (self.appearance.colors[keyPath: keyPath] ?? UserThemeSeed.color(keyPath)).color },
             set: { newColor in
                 var next = self.appearance
                 next.colors[keyPath: keyPath] = CodableColor(newColor)
@@ -87,20 +168,20 @@ final class ThemeEditorViewModel: ObservableObject {
     }
 
     func isColorCustomized(_ keyPath: WritableKeyPath<KeyboardColorSettings, CodableColor?>) -> Bool {
-        appearance.colors[keyPath: keyPath] != nil
+        appearance.colors[keyPath: keyPath] != UserThemeSeed.color(keyPath)
     }
 
     func resetColor(_ keyPath: WritableKeyPath<KeyboardColorSettings, CodableColor?>) {
         var next = appearance
-        next.colors[keyPath: keyPath] = nil
+        next.colors[keyPath: keyPath] = UserThemeSeed.color(keyPath)
         appearance = next
     }
 
-    /// Resets the whole draft appearance to factory defaults. Draft-only: the name
+    /// Resets the whole draft appearance to the user-theme seed. Draft-only: the name
     /// is kept, nothing is persisted, and the applied theme stays untouched until
     /// `save()`. `ThemeAppearance` is a value type, so this cannot leak to the live theme.
     func resetToDefaults() {
-        appearance = .default
+        appearance = .userThemeSeed
     }
 
     /// Binding for a scalar appearance field (sliders).

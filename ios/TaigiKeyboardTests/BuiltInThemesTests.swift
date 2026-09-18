@@ -107,7 +107,7 @@ final class BuiltInThemesTests: XCTestCase {
     // trace: framed/clean gradient themes keep the gradient → candidate tints still derive from it
     func testKeyStyleFamilies_framedGradientStillCarriesGradient() {
         for id in ["framedPink", "cleanPink"] {
-            XCTAssertTrue(BuiltInThemes.theme(id: id)!.colors(for: .light).hasBackgroundGradient, "\(id) must keep the gradient")
+            XCTAssertNotNil(BuiltInThemes.theme(id: id)!.colors(for: .light).backgroundGradient, "\(id) must keep the gradient")
         }
     }
 
@@ -115,8 +115,8 @@ final class BuiltInThemesTests: XCTestCase {
     func testKeyStyleFamilies_defaultVariantsAdaptiveWithTransparentKeys() {
         for id in ["framedDefault", "cleanDefault"] {
             let colors = BuiltInThemes.theme(id: id)!.colors(for: .light)
-            XCTAssertNil(colors.backgroundColor, "\(id) keeps adaptive background")
-            XCTAssertFalse(colors.hasBackgroundGradient, "\(id) is the adaptive 預設, no gradient")
+            XCTAssertNil(colors.background, "\(id) keeps adaptive background")
+            XCTAssertNil(colors.backgroundGradient, "\(id) is the adaptive 預設, no gradient")
             XCTAssertNil(colors.keyTextColor, "\(id) keeps adaptive text")
             XCTAssertEqual(colors.normalKeyFillColor?.alpha, 0, "\(id) keys are transparent")
         }
@@ -127,8 +127,8 @@ final class BuiltInThemesTests: XCTestCase {
     func testStandardGradientThemes_carryGradient() {
         for id in ["standardPink", "standardGold", "standardBlue", "standardGreen", "standardPurple"] {
             let theme = BuiltInThemes.theme(id: id)!
-            XCTAssertTrue(theme.colors(for: .light).hasBackgroundGradient, "\(id) light must carry a gradient")
-            XCTAssertTrue(theme.colors(for: .dark).hasBackgroundGradient, "\(id) dark must carry a gradient")
+            XCTAssertNotNil(theme.colors(for: .light).backgroundGradient, "\(id) light must carry a gradient")
+            XCTAssertNotNil(theme.colors(for: .dark).backgroundGradient, "\(id) dark must carry a gradient")
         }
     }
 
@@ -154,7 +154,7 @@ final class BuiltInThemesTests: XCTestCase {
             XCTAssertNotNil(theme.dark, "\(id) must define the dark variant")
             let colors = theme.colors(for: .dark)
             XCTAssertEqual(theme.colors(for: .light), colors, "\(id) light request falls back to the dark variant")
-            XCTAssertTrue(colors.hasBackgroundGradient, "\(id) must carry the Catppuccin gradient")
+            XCTAssertNotNil(colors.backgroundGradient, "\(id) must carry the Catppuccin gradient")
             XCTAssertEqual(colors.backgroundGradient?.stops.first, CodableColor(hex: 0x1E1E2E), "\(id) gradient top = Mocha Base")
             XCTAssertEqual(colors.backgroundGradient?.stops.last, CodableColor(hex: 0x181825), "\(id) gradient bottom = Mocha Mantle")
             XCTAssertEqual(colors.keyTextColor, CodableColor(hex: 0xCDD6F4), "\(id) key text = Mocha Text")
@@ -268,7 +268,7 @@ final class BuiltInThemesTests: XCTestCase {
 
     private func makeColors(hex: UInt32) -> KeyboardColorSettings {
         var colors = KeyboardColorSettings()
-        colors.backgroundColor = CodableColor(hex: hex)
+        colors.background = .solid(CodableColor(hex: hex))
         return colors
     }
 }

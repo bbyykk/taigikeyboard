@@ -107,9 +107,9 @@ final class SettingsKeyTests: XCTestCase {
 
         // Writing a non-default value round-trips through JSON.
         var custom = KeyboardColorSettings.default
-        custom.backgroundColor = CodableColor(.red)
+        custom.background = .solid(CodableColor(.red))
         defaults.set(custom, for: key)
-        XCTAssertEqual(defaults.value(for: key).backgroundColor, custom.backgroundColor)
+        XCTAssertEqual(defaults.value(for: key).background, custom.background)
 
         // Corrupted blob (random bytes) → default.
         defaults.set(Data([0xDE, 0xAD, 0xBE, 0xEF]), forKey: "codableKey")
@@ -240,7 +240,7 @@ final class SettingsKeyTests: XCTestCase {
 
         // Codable colour blob.
         var custom = KeyboardColorSettings.default
-        custom.backgroundColor = CodableColor(.red)
+        custom.background = .solid(CodableColor(.red))
         settings.colorSettings = custom
 
         settings.resetToDefaults()

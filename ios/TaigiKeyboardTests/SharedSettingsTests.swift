@@ -248,7 +248,7 @@ final class SharedSettingsTests: XCTestCase {
     // which is the entire "no migration needed" safety argument for the renderer switch.
     func test_resolvedTheme_defaultTheme_preservesCustomizedColorSettings() {
         var custom = KeyboardColorSettings()
-        custom.backgroundColor = CodableColor(.red)
+        custom.background = .solid(CodableColor(.red))
         settings.colorSettings = custom
 
         XCTAssertEqual(settings.selectedThemeId, ThemeId.default)
@@ -264,7 +264,7 @@ final class SharedSettingsTests: XCTestCase {
 
         XCTAssertEqual(settings.resolvedAppearance(for: .light).colors, expected.colors(for: .light))
         XCTAssertEqual(settings.resolvedAppearance(for: .dark).colors, expected.colors(for: .dark))
-        XCTAssertTrue(settings.resolvedAppearance(for: .light).colors.hasBackgroundGradient,
+        XCTAssertNotNil(settings.resolvedAppearance(for: .light).colors.backgroundGradient,
                       "standardBlue routes through the catalog with a gradient palette")
     }
 

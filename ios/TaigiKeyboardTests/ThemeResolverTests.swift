@@ -17,7 +17,7 @@ import XCTest
 final class ThemeResolverTests: XCTestCase {
     private func customized() -> KeyboardColorSettings {
         var cs = KeyboardColorSettings()
-        cs.backgroundColor = CodableColor(.red)
+        cs.background = .solid(CodableColor(.red))
         return cs
     }
 
@@ -123,7 +123,7 @@ final class ThemeResolverTests: XCTestCase {
         )
         XCTAssertEqual(resolved.colors, expected.colors(for: .light))
         XCTAssertNotEqual(resolved.colors, .default, "standardBlue defines a gradient palette")
-        XCTAssertTrue(resolved.colors.hasBackgroundGradient, "standardBlue paints a background gradient")
+        XCTAssertNotNil(resolved.colors.backgroundGradient, "standardBlue paints a background gradient")
         XCTAssertEqual(resolved.keyShadowIntensity, 0)
     }
 

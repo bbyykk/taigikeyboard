@@ -113,13 +113,9 @@ struct TaigiKeyboardView: View {
             colorSettings: colors,
             height: theme.height,
         )
-        // Distinct from `candidateStyle.isLiquidGlassEnabled`: that flag checks the
-        // *candidate bar* background (`candidateBackgroundColor`); this flag checks
-        // the *root keyboard* background (`backgroundColor`). Keep them independent.
-        // A gradient theme owns the whole background → never hand it to Liquid Glass.
-        let useLiquidGlassBg = keyboardContext.isLiquidGlassEnabled
-            && colors.backgroundColor == nil
-            && !colors.hasBackgroundGradient
+        // Liquid Glass only for an adaptive surface: any custom background (solid or
+        // gradient) owns the whole keyboard + candidate-bar surface and paints it itself.
+        let useLiquidGlassBg = keyboardContext.isLiquidGlassEnabled && colors.background == nil
         let isTPSLayout = p.settings.keyboardLayoutType == .tps
         let orMapsToER = p.settings.isTpsOrMappedToER
 
@@ -156,19 +152,15 @@ struct TaigiKeyboardView: View {
             ),
         )
         .background {
-            // Gradient themes paint a single top→bottom gradient spanning the
-            // candidate bar down to the keyboard bottom (candidate bar is made
-            // transparent in `candidateStyle`). Flat themes keep today's solid fill.
+            // The theme background paints ONE surface spanning the candidate bar down
+            // to the keyboard bottom (the bar is made transparent in `candidateStyle`
+            // for a gradient, and takes the same solid colour otherwise).
             if useLiquidGlassBg {
                 Color.white.opacity(0.001)
-            } else if colors.hasBackgroundGradient, let gradient = colors.backgroundGradient {
-                LinearGradient(
-                    colors: gradient.stops.map(\.color),
-                    startPoint: .top,
-                    endPoint: .bottom,
-                )
+            } else if let background = colors.background {
+                background.view
             } else {
-                colors.backgroundColor?.color ?? Color.keyboardBackground
+                Color.keyboardBackground
             }
         }
         // Publish the colorScheme used for theme resolution so child views still reading
@@ -447,13 +439,16 @@ struct TaigiKeyboardView: View {
     ) -> CandidateView.Style {
         var style = CandidateView.Style.adaptive(for: context)
         style.height = height
-        // Gradient themes: the candidate bar goes transparent so the root gradient
-        // shows through candidate→bottom as one continuous fill (takes precedence
-        // over any explicit candidate background). Flat themes keep their bar color.
-        if colorSettings.hasBackgroundGradient {
+        // The candidate bar is the keyboard surface: a gradient shows through (the bar
+        // goes transparent so the root paint runs candidate→bottom as one fill); a
+        // solid background colours the bar the same; adaptive keeps KeyboardKit's bar.
+        switch colorSettings.background {
+        case .gradient:
             style.backgroundColor = .clear
-        } else if let bg = colorSettings.candidateBackgroundColor?.color {
-            style.backgroundColor = bg
+        case let .solid(color):
+            style.backgroundColor = color.color
+        case nil:
+            break
         }
         return style
     }

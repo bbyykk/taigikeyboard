@@ -67,9 +67,39 @@
       "values": { "hanji": "暗眠山貓", "tailo": "Àm-bîn-suann-niau", "poj": "Àm-bîn-soaⁿ-niau", "en": "Catppuccin", "ja": "キャットプチン" }
     },
     "keyboardSection": {
-      "comment": "Theme editor section header: the keyboard-surface group (background color + key height).",
-      "scope": { "platforms": ["android", "ios"], "surfaces": ["host"] },
+      "comment": "Theme editor section header: the keyboard-surface group (background color + key height). Android-only until its editor re-order lands (PR B); iOS uses backgroundSection since 2026-09-19.",
+      "scope": { "platforms": ["android"], "surfaces": ["host"] },
       "values": { "hanji": "齒盤介面", "tailo": "Khí-puânn kài-bīn", "poj": "Khí-pôaⁿ kài-bīn", "en": "Keyboard Surface", "ja": "キーボード面" }
+    },
+    "backgroundSection": {
+      "comment": "Theme editor section header: the background group (type picker + its rows). One surface for the keyboard and the candidate bar.",
+      "scope": { "platforms": ["android", "ios"], "surfaces": ["host"] },
+      "values": { "hanji": "背景", "tailo": "Puē-kíng", "poj": "Pōe-kéng", "en": "Background", "ja": "背景" }
+    },
+    "backgroundTypeSolid": {
+      "comment": "Theme editor background type (segmented picker): one flat color.",
+      "scope": { "platforms": ["android", "ios"], "surfaces": ["host"] },
+      "values": { "hanji": "純色", "tailo": "Sûn-sik", "poj": "Sûn-sek", "en": "Solid", "ja": "単色" }
+    },
+    "backgroundTypeGradient": {
+      "comment": "Theme editor background type (segmented picker): a two-color linear gradient.",
+      "scope": { "platforms": ["android", "ios"], "surfaces": ["host"] },
+      "values": { "hanji": "漸層", "tailo": "Tsiām-tsân", "poj": "Chiām-chân", "en": "Gradient", "ja": "グラデーション" }
+    },
+    "gradientStartColor": {
+      "comment": "Theme editor color-row label: the gradient's first stop.",
+      "scope": { "platforms": ["android", "ios"], "surfaces": ["host"] },
+      "values": { "hanji": "起點色", "tailo": "Khí-tiám sik", "poj": "Khí-tiám sek", "en": "Start Color", "ja": "開始色" }
+    },
+    "gradientEndColor": {
+      "comment": "Theme editor color-row label: the gradient's last stop.",
+      "scope": { "platforms": ["android", "ios"], "surfaces": ["host"] },
+      "values": { "hanji": "終點色", "tailo": "Tsiong-tiám sik", "poj": "Chiong-tiám sek", "en": "End Color", "ja": "終了色" }
+    },
+    "gradientDirection": {
+      "comment": "Theme editor row label: the gradient direction (eight arrow presets, 45° apart).",
+      "scope": { "platforms": ["android", "ios"], "surfaces": ["host"] },
+      "values": { "hanji": "方向", "tailo": "Hong-hiòng", "poj": "Hong-hiòng", "en": "Direction", "ja": "方向" }
     },
     "colorKeySection": {
       "comment": "Theme editor section header: the key-surface group (key colors + sizing).",
@@ -107,8 +137,8 @@
       "values": { "hanji": "候選詞文字", "tailo": "Hāu-suán sû bûn-jī", "poj": "Hāu-soán sû bûn-jī", "en": "Candidate Text", "ja": "候補の文字" }
     },
     "colorCandidateBackground": {
-      "comment": "Theme editor color-row label: the candidate-bar background color.",
-      "scope": { "platforms": ["android", "ios"], "surfaces": ["host"] },
+      "comment": "Theme editor color-row label: the candidate-bar background color. Android-only until the candidate bar merges into the keyboard surface there (PR B); iOS dropped it 2026-09-19.",
+      "scope": { "platforms": ["android"], "surfaces": ["host"] },
       "values": { "hanji": "候選詞背景", "tailo": "Hāu-suán sû puē-kíng", "poj": "Hāu-soán sû pōe-kéng", "en": "Candidate Background", "ja": "候補の背景" }
     },
     "keyHeight": {
