@@ -1363,7 +1363,8 @@ pub(crate) fn build_partial_prefix_key(
 /// for [`lexicon::fetch_abbrev_candidates`], or `None` when the buffer
 /// cannot be an abbreviation — `behavioral-invariants.md` §46.
 ///
-/// An abbreviation is one glyph per syllable, so the buffer must be ≥ 2
+/// An abbreviation is one leading spelling unit per syllable (one glyph in
+/// TPS, one to three letters in TL / POJ), so the buffer must be ≥ 2
 /// glyphs of letter material only: TL / POJ ASCII letters (vowels included —
 /// a zero-initial syllable abbreviates to its first vowel, 紅嬰仔 `aea`),
 /// TPS initial / vowel glyphs (`is_tps_char`, no tone mark). A digit, tone

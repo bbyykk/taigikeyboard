@@ -50,7 +50,7 @@ fn fixture_rows() -> Vec<Row> {
             syll: 1,
             freq: 27_958,
         },
-        // trace: abbrev "ts" (tsá + sî).
+        // trace: abbrev "tss" (leading units ts + s — `ts` is one unit).
         Row {
             toneless_key: "tsasi",
             hanzi: "早時",
@@ -74,8 +74,8 @@ fn fixture_rows() -> Vec<Row> {
             syll: 2,
             freq: 244,
         },
-        // trace: TL abbrev "tp" (tsia̍h + pn̄g), NOT "ts"; POJ display
-        // `chia̍h-pn̄g` → POJ abbrev "cp".
+        // trace: TL abbrev "tsp" (leading units ts + p); POJ display
+        // `chia̍h-pn̄g` → POJ abbrev "chp".
         Row {
             toneless_key: "tsiahpng",
             hanzi: "食飯",
@@ -161,9 +161,13 @@ fn ss_surfaces_abbreviated_words_after_the_literal() {
 fn abbreviation_block_trails_partial_hits() {
     let _lock = engine_install_lock();
     install_fixture();
-    // `ts` is a valid onset: the single-syllable partial hit 這 keeps its
-    // place; the abbreviated 早時 trails it; 食飯 (`tp`) is not `ts`.
-    assert_eq!(hanji("ts", "tl"), vec!["這", "早時"]);
+    // `ts` is a valid onset and one leading unit: the single-syllable
+    // partial hit 這 keeps its place; 早時 abbreviates to `tss`, not `ts`,
+    // and 食飯 to `tsp`, so neither joins the `ts` strip.
+    assert_eq!(hanji("ts", "tl"), vec!["這"]);
+    // `tss` has no syllabic reading: the abbreviation block is all there is.
+    assert_eq!(hanji("tss", "tl"), vec!["早時"]);
+    assert_eq!(hanji("tsp", "tl"), vec!["食飯"]);
 }
 
 #[test]
@@ -234,16 +238,16 @@ fn syllabic_and_separated_buffers_get_no_abbreviation_hits() {
 fn poj_mode_matches_the_poj_abbreviation_and_renders_poj() {
     let _lock = engine_install_lock();
     install_fixture();
-    // POJ `chia̍h-pn̄g` abbreviates to `cp` (TL `tp` is not a POJ key).
-    let cands = fetch("cp", "poj");
+    // POJ `chia̍h-pn̄g` abbreviates to `chp` (TL `tsp` is not a POJ key).
+    let cands = fetch("chp", "poj");
     let tsiahpng = cands
         .iter()
         .find(|c| c.hanji.as_deref() == Some("食飯"))
-        .unwrap_or_else(|| panic!("食飯 via poj:cp; got {cands:?}"));
+        .unwrap_or_else(|| panic!("食飯 via poj-abbrev:chp; got {cands:?}"));
     assert_eq!(tsiahpng.roman, "chia̍h-pn̄g", "POJ presentation");
     assert_eq!(tsiahpng.canonical_tl, "tsia̍h-pn̄g", "identity stays TL");
-    assert!(!hanji("tp", "poj").iter().any(|h| h == "食飯"));
-    assert_eq!(hanji("tp", "tl"), vec!["食飯"], "TL family");
+    assert!(!hanji("tsp", "poj").iter().any(|h| h == "食飯"));
+    assert!(!hanji("chp", "tl").iter().any(|h| h == "食飯"));
     // `ss` is the same acronym in both scripts.
     assert!(hanji("ss", "poj").iter().any(|h| h == "鎖匙"));
 }

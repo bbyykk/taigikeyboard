@@ -31,7 +31,7 @@ class CustomDictionaryService(
     companion object {
         private const val TAG = "CustomDictionaryService"
         private const val DATABASE_NAME = "custom_dictionary.db"
-        private const val DATABASE_VERSION = 7
+        private const val DATABASE_VERSION = 8
 
         /**
          * v3.6.1 R3 cross-mode side-table DDL + indexes + query. `internal` so
@@ -524,6 +524,7 @@ class CustomDictionaryService(
             if (oldVersion < 5) migrateV4ToV5(db)
             if (oldVersion < 6) migrateV5ToV6(db)
             if (oldVersion < 7) migrateV6ToV7(db)
+            if (oldVersion < 8) migrateV7ToV8(db)
             logger.i(TAG, "[UPGRADE] Database upgraded from $oldVersion to $newVersion")
         }
 
@@ -584,6 +585,18 @@ class CustomDictionaryService(
          */
         private fun migrateV6ToV7(db: SQLiteDatabase) {
             regenerateNotone(db)
+            regenerateSearchKeys(db)
+        }
+
+        /**
+         * v7 → v8: re-derive after the abbreviation face changed from the
+         * first letter of each syllable to its leading spelling unit
+         * (`ph` / `th` / `kh` / `tsh` whole, `behavioral-invariants.md`
+         * §46) — the `abbrev` rows of the side table are what the keyboard
+         * matches, and a stored `pt…` row would no longer answer `phth…`.
+         * The legacy `abbrev` column keeps its first-letter face.
+         */
+        private fun migrateV7ToV8(db: SQLiteDatabase) {
             regenerateSearchKeys(db)
         }
 

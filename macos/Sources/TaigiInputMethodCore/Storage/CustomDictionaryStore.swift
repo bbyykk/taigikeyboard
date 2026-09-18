@@ -48,7 +48,10 @@ struct CustomDictionaryImportResult: Equatable, Sendable {
 final class CustomDictionaryStore: @unchecked Sendable {
     private static let tableName = "custom_dictionary"
     private static let searchKeyTableName = "custom_search_key"
-    private static let schemaVersion: Int32 = 3
+    /// v4 (2026-09-18): search-key abbreviation face = leading spelling unit
+    /// per syllable (`behavioral-invariants.md` §46) — `rederiveSearchKeysIfNeeded`
+    /// rebuilds every entry's keys once.
+    private static let schemaVersion: Int32 = 4
 
     /// CROSS-PLATFORM INVARIANT — mirrors
     /// ios/Sources/TaigiKeyboard/Lexicon/Database/CustomDictionaryCapacityPolicy.swift:18

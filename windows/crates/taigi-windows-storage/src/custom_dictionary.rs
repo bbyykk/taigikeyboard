@@ -13,7 +13,10 @@ use taigi_windows_core::engine::{CustomEntry, CustomSearchKey};
 
 const TABLE_NAME: &str = "custom_dictionary";
 const SEARCH_KEY_TABLE_NAME: &str = "custom_search_key";
-const SCHEMA_VERSION: i64 = 3;
+/// v4 (2026-09-18): search-key abbreviation face = leading spelling unit per
+/// syllable (`behavioral-invariants.md` §46) — `rederive_search_keys_if_needed`
+/// rebuilds every entry's keys once.
+const SCHEMA_VERSION: i64 = 4;
 /// One transaction per this many accepted rows, so a large import never
 /// holds the write lock for its whole run. CROSS-PLATFORM INVARIANT —
 /// mirrors iOS `CustomDictionaryRepository.swift:180`.
@@ -307,8 +310,8 @@ impl CustomDictionaryStore {
     }
 
     /// Rebuilds every entry's search keys when the stored database predates
-    /// the current derivation (v2 → v3: the POJ `o͘` / ⁿ fix), then records
-    /// the shape. An entry whose roman will not derive keeps its keys.
+    /// the current derivation (v2 → v3: the POJ `o͘` / ⁿ fix; v3 → v4: the
+    /// leading-unit abbreviation face), then records the shape. An entry whose roman will not derive keeps its keys.
     pub fn rederive_search_keys_if_needed(&self) -> Result<(), CustomDictionaryError> {
         let stored: Option<Vec<(String, String)>> = self
             .database

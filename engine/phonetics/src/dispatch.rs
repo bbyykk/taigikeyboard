@@ -85,8 +85,10 @@ pub fn handle(
         Method::DeriveNotone(payload) => PhonResult::StringResult(StringResult {
             output: derivation::derive_notone(&payload.roman),
         }),
+        // Legacy `abbrev` column (first letter per syllable) — the index /
+        // search-key face is `derive_abbrev` via `DeriveCustomSearchKeys`.
         Method::DeriveAbbrev(payload) => PhonResult::StringResult(StringResult {
-            output: derivation::derive_abbrev(&payload.roman),
+            output: derivation::derive_abbrev_first_letter(&payload.roman),
         }),
         Method::DeriveCustomSearchKeys(payload) => {
             PhonResult::CustomSearchKeysResult(CustomSearchKeysResult {
