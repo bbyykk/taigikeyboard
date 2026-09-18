@@ -225,6 +225,17 @@ struct SettingsTab: View {
                         .onChange(of: isHardwareKeyboardCompact) { _, newValue in
                             settings.isHardwareKeyboardCompact = newValue
                         }
+
+                        NavigationLink {
+                            HardwareShortcutSettingsView()
+                        } label: {
+                            Label {
+                                Text(lang.string(.desktopShortcutsTab))
+                            } icon: {
+                                Image(latinSystemName: SettingsIcons.hardwareShortcuts)
+                                    .foregroundColor(AppStyle.accentBlue)
+                            }
+                        }
                     }
                 } header: {
                     Text(lang.string(.settingsKeyboardSectionTitle))

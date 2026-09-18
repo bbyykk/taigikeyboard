@@ -49,6 +49,10 @@ class KeyboardViewController: KeyboardInputViewController, ComposingDelegate {
     /// the collapse when that setting changed.
     var lastIsHardwareKeyboardCompact: Bool?
 
+    /// The hardware key contract, resolved once per settings change
+    /// (`syncSettings()`) rather than on every press.
+    var hardwareKeyBindings = HardwareKeyBindings.default
+
     /// Previous 候選詞顯示 mode. The 文/A key's presence is baked into the
     /// layout; a host-app change re-renders through the keyboard context in
     /// `syncSettings()` (the in-keyboard picker already goes through it).

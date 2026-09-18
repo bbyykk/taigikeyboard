@@ -25,7 +25,8 @@
       "scope": {
         "platforms": [
           "macos",
-          "windows"
+          "windows",
+          "ios"
         ],
         "surfaces": [
           "host"
@@ -44,7 +45,8 @@
       "scope": {
         "platforms": [
           "macos",
-          "windows"
+          "windows",
+          "ios"
         ],
         "surfaces": [
           "host"
@@ -63,7 +65,8 @@
       "scope": {
         "platforms": [
           "macos",
-          "windows"
+          "windows",
+          "ios"
         ],
         "surfaces": [
           "host"
@@ -101,7 +104,8 @@
       "scope": {
         "platforms": [
           "macos",
-          "windows"
+          "windows",
+          "ios"
         ],
         "surfaces": [
           "host"
@@ -120,7 +124,8 @@
       "scope": {
         "platforms": [
           "macos",
-          "windows"
+          "windows",
+          "ios"
         ],
         "surfaces": [
           "host"
@@ -139,7 +144,8 @@
       "scope": {
         "platforms": [
           "macos",
-          "windows"
+          "windows",
+          "ios"
         ],
         "surfaces": [
           "host"
@@ -177,7 +183,8 @@
       "scope": {
         "platforms": [
           "macos",
-          "windows"
+          "windows",
+          "ios"
         ],
         "surfaces": [
           "host"
@@ -215,7 +222,8 @@
       "scope": {
         "platforms": [
           "macos",
-          "windows"
+          "windows",
+          "ios"
         ],
         "surfaces": [
           "host"
@@ -857,7 +865,8 @@
       "scope": {
         "platforms": [
           "macos",
-          "windows"
+          "windows",
+          "ios"
         ],
         "surfaces": [
           "host"
@@ -876,7 +885,8 @@
       "scope": {
         "platforms": [
           "macos",
-          "windows"
+          "windows",
+          "ios"
         ],
         "surfaces": [
           "host"
@@ -895,7 +905,8 @@
       "scope": {
         "platforms": [
           "macos",
-          "windows"
+          "windows",
+          "ios"
         ],
         "surfaces": [
           "host"
@@ -914,7 +925,8 @@
       "scope": {
         "platforms": [
           "macos",
-          "windows"
+          "windows",
+          "ios"
         ],
         "surfaces": [
           "host"
@@ -933,7 +945,8 @@
       "scope": {
         "platforms": [
           "macos",
-          "windows"
+          "windows",
+          "ios"
         ],
         "surfaces": [
           "host"
@@ -952,7 +965,8 @@
       "scope": {
         "platforms": [
           "macos",
-          "windows"
+          "windows",
+          "ios"
         ],
         "surfaces": [
           "host"
@@ -971,7 +985,8 @@
       "scope": {
         "platforms": [
           "macos",
-          "windows"
+          "windows",
+          "ios"
         ],
         "surfaces": [
           "host"
@@ -990,7 +1005,8 @@
       "scope": {
         "platforms": [
           "macos",
-          "windows"
+          "windows",
+          "ios"
         ],
         "surfaces": [
           "host"
@@ -1009,7 +1025,8 @@
       "scope": {
         "platforms": [
           "macos",
-          "windows"
+          "windows",
+          "ios"
         ],
         "surfaces": [
           "host"
@@ -1028,7 +1045,8 @@
       "scope": {
         "platforms": [
           "macos",
-          "windows"
+          "windows",
+          "ios"
         ],
         "surfaces": [
           "host"
@@ -1047,7 +1065,8 @@
       "scope": {
         "platforms": [
           "macos",
-          "windows"
+          "windows",
+          "ios"
         ],
         "surfaces": [
           "host"
@@ -1066,7 +1085,8 @@
       "scope": {
         "platforms": [
           "macos",
-          "windows"
+          "windows",
+          "ios"
         ],
         "surfaces": [
           "host"

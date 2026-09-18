@@ -219,6 +219,18 @@ public class ActionHandler: StandardKeyboardActionHandler {
         handle(.release, on: action)
     }
 
+    /// The 漢羅 key: commits `suggestion` in the script the output settings
+    /// do NOT lead with — romanization under a 漢字-led list, 漢字 under a
+    /// romanization-led one — leaving the settings alone. A cell with no
+    /// other script (the literal, an OOV name, 羅馬字 mode) commits as a tap
+    /// would.
+    func handleAlternateScript(_ suggestion: AutocompleteSuggestion) {
+        beginInputEvent()
+        TraceContext.with(TraceId.next()) {
+            handleSuggestionSelection(suggestion, alternateScript: true)
+        }
+    }
+
     /// The hardware-key entry: the release path minus the spacebar drag
     /// guard, which only a touch can start. `letterCase` is the key's own
     /// case, never the on-screen Shift state. An unhandled action is left to

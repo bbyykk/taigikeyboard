@@ -16,7 +16,7 @@ struct ResolvedCommit {
 extension ActionHandler {
     // MARK: - Suggestion Selection
 
-    func handleSuggestionSelection(_ suggestion: AutocompleteSuggestion) {
+    func handleSuggestionSelection(_ suggestion: AutocompleteSuggestion, alternateScript: Bool = false) {
         // Raw input candidate: commit literal keystrokes directly (no tone conversion)
         if suggestion.additionalInfo["isRawInput"] == "true" {
             composingManager.commitRawInput()
@@ -110,7 +110,11 @@ extension ActionHandler {
             //   unmarked, hanji + swapped  → false (pure 漢字)
             //   unmarked, otherwise        → true  (roman-led, or the bracket form)
             let wroteRomanization: Bool
-            if let cellScript = CandidateCellScript.marker(for: suggestion) {
+            if alternateScript, let alternate = alternateCommit(for: suggestion) {
+                // The 漢羅 key: the other script, bare, where the cell has one.
+                docText = alternate.text
+                wroteRomanization = alternate.wroteRomanization
+            } else if let cellScript = CandidateCellScript.marker(for: suggestion) {
                 let resolved = Self.markedCellCommit(
                     cellScript: cellScript,
                     cellText: suggestion.text,
@@ -125,7 +129,7 @@ extension ActionHandler {
                 // guard too, so this suggestion still carries the un-split
                 // dual-script shape this path expects.
                 let effectiveSwapped = isTPSLayout || settings.isTranslateSwapped
-                let (roman, hanzi) = parseRomanAndHanzi(
+                let (roman, hanzi) = Self.parseRomanAndHanzi(
                     from: suggestion,
                     isNextWord: false,
                     effectiveSwapped: effectiveSwapped,
@@ -190,20 +194,21 @@ extension ActionHandler {
             // shared sidechannels, so nothing is parsed back from the cell.
             let roman: String
             let hanzi: String?
-            let resolved: ResolvedCommit
+            let normal: ResolvedCommit
             if let cellScript = CandidateCellScript.marker(for: suggestion) {
                 roman = suggestion.additionalInfo["tl"] ?? ""
-                hanzi = suggestion.additionalInfo["hanzi"]
-                resolved = Self.markedCellCommit(
+                hanzi = suggestion.additionalInfo[CandidateCellScript.alternateHanjiKey]
+                normal = Self.markedCellCommit(
                     cellScript: cellScript,
                     cellText: suggestion.text,
                     roman: suggestion.additionalInfo[CandidateCellScript.bracketRomanKey],
                     isOutputBothScripts: settings.isOutputBothScripts,
                 )
             } else {
-                (roman, hanzi) = parseRomanAndHanzi(from: suggestion, isNextWord: isNextWordPrediction, effectiveSwapped: effectiveSwapped)
-                resolved = formatOutputText(roman: roman, hanzi: hanzi, isTPSLayout: isTPSLayout, effectiveSwapped: effectiveSwapped)
+                (roman, hanzi) = Self.parseRomanAndHanzi(from: suggestion, isNextWord: isNextWordPrediction, effectiveSwapped: effectiveSwapped)
+                normal = formatOutputText(roman: roman, hanzi: hanzi, isTPSLayout: isTPSLayout, effectiveSwapped: effectiveSwapped)
             }
+            let resolved = alternateScript ? (alternateCommit(for: suggestion) ?? normal) : normal
             let textToCommit = resolved.text
 
             commitSuggestionText(textToCommit, isNextWord: isNextWordPrediction, suggestion: suggestion)
@@ -241,6 +246,53 @@ extension ActionHandler {
     }
 
     // MARK: - Suggestion Helpers
+
+    /// What the 漢羅 key writes for `suggestion`: the script the output
+    /// settings do NOT lead with, bare — never the 括號標註 pair. Nil when
+    /// the cell has no other script (the literal, an OOV name, a 羅馬字-only
+    /// list), so the caller commits as a tap would.
+    // CROSS-PLATFORM INVARIANT — mirrors macos
+    // `CandidateDocumentText.resolvedAlternate` (`macos/Sources/TaigiInputMethodCore/Candidates/CandidateDocumentText.swift`).
+    private func alternateCommit(for suggestion: AutocompleteSuggestion) -> ResolvedCommit? {
+        // TPS composes Bopomofo and ignores the picker: the romanization is
+        // never on screen there, so there is no other script to aim at.
+        guard !isTPSLayout else { return nil }
+        return Self.alternateCommit(
+            for: suggestion,
+            isTranslateSwapped: settings.isTranslateSwapped,
+            showsHanji: settings.candidateDisplayMode.showsHanji,
+        )
+    }
+
+    /// The pure half of `alternateCommit`, with the settings injected so a
+    /// test pins it without a keyboard context.
+    static func alternateCommit(
+        for suggestion: AutocompleteSuggestion,
+        isTranslateSwapped: Bool,
+        showsHanji: Bool,
+    ) -> ResolvedCommit? {
+        guard suggestion.additionalInfo["isRawInput"] != "true", showsHanji else { return nil }
+        // A §42 split cell: the sibling script rides the sidechannels — the
+        // hanji cell carries its roman, the roman cell its presentable
+        // hanji (never the canonical identity, which a §34 literal adopts
+        // without having a 漢字 of its own).
+        if let cellScript = CandidateCellScript.marker(for: suggestion) {
+            let sibling = cellScript == CandidateCellScript.hanji
+                ? suggestion.additionalInfo[CandidateCellScript.bracketRomanKey]
+                : suggestion.additionalInfo[CandidateCellScript.alternateHanjiKey]
+            guard let sibling, !sibling.isEmpty else { return nil }
+            return ResolvedCommit(text: sibling, wroteRomanization: cellScript == CandidateCellScript.hanji)
+        }
+        let (roman, hanzi) = Self.parseRomanAndHanzi(
+            from: suggestion,
+            isNextWord: suggestion.additionalInfo["isNextWord"] == "true",
+            effectiveSwapped: isTranslateSwapped,
+        )
+        guard let hanzi, !hanzi.isEmpty else { return nil }
+        return isTranslateSwapped
+            ? ResolvedCommit(text: roman, wroteRomanization: true)
+            : ResolvedCommit(text: hanzi, wroteRomanization: false)
+    }
 
     /// §42 漢羅濫 marked-cell document text.
     ///
@@ -305,7 +357,7 @@ extension ActionHandler {
 
     /// Extract romanization and Hanji from suggestion based on display mode. The NextWord path
     /// restores the fields that were swapped earlier.
-    private func parseRomanAndHanzi(
+    private static func parseRomanAndHanzi(
         from suggestion: AutocompleteSuggestion,
         isNextWord: Bool,
         effectiveSwapped: Bool,
@@ -328,7 +380,7 @@ extension ActionHandler {
             let roman = effectiveSwapped
                 ? (suggestion.subtitle ?? "")
                 : suggestion.text
-            return (roman, suggestion.additionalInfo["hanzi"])
+            return (roman, suggestion.additionalInfo[CandidateCellScript.alternateHanjiKey])
         } else if effectiveSwapped {
             return (suggestion.subtitle ?? suggestion.text, suggestion.text)
         } else {
@@ -404,7 +456,7 @@ extension ActionHandler {
         if let cellScript = CandidateCellScript.marker(for: suggestion) {
             return cellScript != CandidateCellScript.hanji
         }
-        let (_, hanzi) = parseRomanAndHanzi(
+        let (_, hanzi) = Self.parseRomanAndHanzi(
             from: suggestion,
             isNextWord: false,
             effectiveSwapped: isTPSLayout || settings.isTranslateSwapped,
