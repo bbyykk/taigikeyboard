@@ -1,6 +1,6 @@
-//! The 一般 pane, four groups: input script + tone keys; output script +
-//! auto-space; the candidate window's two switches; display language + the
-//! update row. Then the reset card and the attribution footer. Port of
+//! The 一般 pane: input script, output script, tone keys, auto-space, the
+//! candidate window's two switches, display language; then the update row,
+//! the reset card and the attribution footer. Port of
 //! `GeneralSettingsView.swift`.
 
 use super::{choice_row, reset_row};
@@ -30,11 +30,10 @@ pub fn view(
     context: &mut ViewContext<SettingsWindow>,
 ) -> View {
     let document = window.document();
-    // Four groups in the order a keystroke travels (USER 2026-09-18 「排序
-    // 「一般」設定，讓邏輯合理一點」): what is typed, what reaches the
-    // document, the window in between, then the app itself. Gaps, no
-    // titles — like 外觀; the order carries the logic
-    // (`GeneralSettingsView.swift`).
+    // One run of cards, no sub-groups (USER 2026-09-18 「不要分組」): the two
+    // script pickers first and together (「輸出輸入可以排在一起」), then how
+    // the syllable is spelled, then what the commit does, then the window,
+    // then the app's language (`GeneralSettingsView.swift`).
     View::fragment((
         // A pop-up like the row under it, not a radio group (System
         // Settings' shape for a small mutually-exclusive choice). 輸入文字 /
@@ -49,21 +48,6 @@ pub fn view(
             |mode| Message::set_choice(mode, &keys::INPUT_MODE),
             context,
         ),
-        // Directly under the romanization it belongs to: which keys type a
-        // tone is a fact about how the syllable is spelled, not a shortcut
-        // (USER 2026-09-08), and the slot keys follow from it rather than
-        // being chosen on the shortcut pane (`GeneralSettingsView.swift`).
-        choice_row(
-            strings.resolve(StringKey::SettingsToneInputScheme),
-            ToneInputScheme::ALL,
-            document.choice(&keys::TONE_INPUT_SCHEME),
-            true,
-            |scheme: ToneInputScheme| strings.resolve(scheme.label_key()).to_owned(),
-            |scheme| Message::set_choice(scheme, &keys::TONE_INPUT_SCHEME),
-            context,
-        ),
-        // What reaches the document.
-        cards::section_gap(),
         // Which script a commit writes (USER 2026-09-18): the same stored
         // swap the backtick shortcut toggles, so the two never disagree.
         // Disabled exactly where the shortcut is inert — 候選詞顯示 = 羅馬字
@@ -85,14 +69,24 @@ pub fn view(
             },
             context,
         ),
+        // Which keys type a tone is a fact about how the syllable is
+        // spelled, not a shortcut (USER 2026-09-08), and the slot keys
+        // follow from it rather than being chosen on the shortcut pane.
+        choice_row(
+            strings.resolve(StringKey::SettingsToneInputScheme),
+            ToneInputScheme::ALL,
+            document.choice(&keys::TONE_INPUT_SCHEME),
+            true,
+            |scheme: ToneInputScheme| strings.resolve(scheme.label_key()).to_owned(),
+            |scheme| Message::set_choice(scheme, &keys::TONE_INPUT_SCHEME),
+            context,
+        ),
         cards::switch_row(
             strings.resolve(StringKey::SettingsAutoSpace),
             document.bool(&keys::IS_AUTO_SPACE_ENABLED),
             true,
             context.callback(|is_on| Message::SetSwitch(keys::IS_AUTO_SPACE_ENABLED, is_on)),
         ),
-        // The candidate window.
-        cards::section_gap(),
         // S33 (USER 2026-09-08): off means no window at all — the user types
         // romanization and Space / Enter write it as typed. Directly above
         // 顯示當咧拍的字, which describes the window's content and so reads
@@ -114,8 +108,6 @@ pub fn view(
                 Message::SetSwitch(keys::IS_LITERAL_ROMAN_CANDIDATE_ENABLED, is_on)
             }),
         ),
-        // The app itself: its language, then its version.
-        cards::section_gap(),
         choice_row(
             strings.resolve(StringKey::SettingsDisplayLanguage),
             &DisplayLanguage::PICKER,
@@ -125,6 +117,7 @@ pub fn view(
             |language| Message::SetChoice(language.map(SettingsWrite::display_language)),
             context,
         ),
+        cards::section_gap(),
         update_row(window, strings, context),
         // Not on the update row: it holds no setting of the user's to
         // restore.

@@ -77,10 +77,10 @@ struct GeneralSettingsView: View {
 
     private var settingsForm: some View {
         Form {
-            // Four groups in the order a keystroke travels (USER 2026-09-18
-            // 「排序「一般」設定，讓邏輯合理一點」): what is typed, what reaches
-            // the document, the window in between, then the app itself. No
-            // group titles, like the 外觀 pane — the order carries the logic.
+            // One group, no sub-groups (USER 2026-09-18 「不要分組」): the two
+            // script pickers first and together (「輸出輸入可以排在一起」),
+            // then how the syllable is spelled, then what the commit does,
+            // then the window, then the app's language.
             Section {
                 // A pop-up like the row under it, not a radio group: System
                 // Settings states a small mutually-exclusive choice with a
@@ -93,18 +93,6 @@ struct GeneralSettingsView: View {
                     Text(language.string(.settingsPojMode)).tag(InputMode.poj)
                 }
 
-                // Directly under the romanization it belongs to: which keys
-                // type a tone is a fact about how the syllable is spelled,
-                // not a shortcut (USER 2026-09-08), and the slot keys follow
-                // from it rather than being chosen on the shortcut pane.
-                Picker(language.string(.settingsToneInputScheme), selection: $toneInputScheme) {
-                    Text(language.string(.settingsToneSchemeStandard)).tag(ToneInputScheme.standard)
-                    Text(language.string(.settingsToneSchemeTelex)).tag(ToneInputScheme.telex)
-                }
-            }
-
-            // What reaches the document.
-            Section {
                 // Which script a commit writes (USER 2026-09-18): the same
                 // stored swap the `` ` `` shortcut toggles, so the two never
                 // disagree. Disabled exactly where the shortcut is inert —
@@ -118,11 +106,17 @@ struct GeneralSettingsView: View {
                 }
                 .disabled(!candidateDisplayMode.allowsSwapToggle)
 
-                Toggle(language.string(.settingsAutoSpace), isOn: $isAutoSpaceEnabled)
-            }
+                // Which keys type a tone is a fact about how the syllable is
+                // spelled, not a shortcut (USER 2026-09-08), and the slot
+                // keys follow from it rather than being chosen on the
+                // shortcut pane.
+                Picker(language.string(.settingsToneInputScheme), selection: $toneInputScheme) {
+                    Text(language.string(.settingsToneSchemeStandard)).tag(ToneInputScheme.standard)
+                    Text(language.string(.settingsToneSchemeTelex)).tag(ToneInputScheme.telex)
+                }
 
-            // The candidate window.
-            Section {
+                Toggle(language.string(.settingsAutoSpace), isOn: $isAutoSpaceEnabled)
+
                 // S33 (USER 2026-09-08): off means no window at all — the
                 // user types romanization and Space / Return write it as
                 // typed. Directly above 顯示當咧拍的字, which describes the
@@ -134,10 +128,7 @@ struct GeneralSettingsView: View {
                 // §34/S22. On means candidate slot 0 is the preedit literal,
                 // so Return writes the typed romanization.
                 Toggle(language.string(.settingsLiteralRomanCandidate), isOn: $isLiteralRomanCandidateEnabled)
-            }
 
-            // The app itself: its language, then its version.
-            Section {
                 Picker(language.string(.settingsDisplayLanguage), selection: displayLanguageSelection) {
                     ForEach(DisplayLanguage.selectableLanguages, id: \.self) { option in
                         // Endonyms for the authored languages, so a user can find their own language
@@ -145,15 +136,16 @@ struct GeneralSettingsView: View {
                         Text(language.selectionLabel(for: option)).tag(option)
                     }
                 }
+            }
 
-                // The update rows. No toggle and no explanatory text (USER
-                // 2026-08-23): the daily check is always on, and the button is the
-                // on-demand version of the same thing.
-                //
-                // These rows are the surface that keeps working when the
-                // notification did not: no network needed, nothing to miss, and
-                // still right after a banner was dismissed weeks ago.
-                //
+            // The update rows. No toggle and no explanatory text (USER
+            // 2026-08-23): the daily check is always on, and the button is the
+            // on-demand version of the same thing.
+            //
+            // This section is the surface that keeps working when the
+            // notification did not: no network needed, nothing to miss, and
+            // still right after a banner was dismissed weeks ago.
+            Section {
                 // One row, never two. A known update replaces the version-and-check
                 // row rather than sitting under it: while an update is waiting,
                 // checking again is the one thing that cannot tell the user
