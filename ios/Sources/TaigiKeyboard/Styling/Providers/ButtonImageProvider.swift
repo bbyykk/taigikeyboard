@@ -29,11 +29,15 @@ final class ButtonImageProvider {
         case let .custom(name):
             switch name {
             case "translate":
-                // Lit when the layouts type full-width marks — what the key
-                // flips in every mode it is shown in.
+                // Lit when the key has been taken OFF the shipped state — the
+                // layouts type half-width marks and a commit leads with the
+                // romanization (USER 2026-09-18, after hanji-first became the
+                // default: a key that lights up on a fresh install reads as a
+                // mode the user never chose). Outlined = hanji + full-width,
+                // what the key flips in every mode it is shown in.
                 let iconName = keyboardContext.isFullWidthPunctuation
-                    ? "character.square.fill" // Active: filled
-                    : "character.square" // Default: outlined
+                    ? "character.square" // Default: outlined
+                    : "character.square.fill" // Off the default: filled
                 return Image(latinSystemName: iconName)
             default:
                 return nil

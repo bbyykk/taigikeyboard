@@ -116,9 +116,10 @@ fun KeyboardPreviewPanel(
             caps = false,
             capsLock = false,
             isComposing = false,
-            isFullWidthPunctuation = false,
+            // The shipped state: hanji-first, full-width, 文/A unlit.
+            isFullWidthPunctuation = true,
             imeOptions = EditorInfo.IME_ACTION_NONE,
-            confirmKeyLabel = KeyboardAppearance.confirmKeyLabel(previewInputMode, false),
+            confirmKeyLabel = KeyboardAppearance.confirmKeyLabel(previewInputMode, true),
             colorSettings = colorSettings,
             typeface = typeface,
             keyFontSizeScale = keyFontSizeScale,

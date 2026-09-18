@@ -614,10 +614,13 @@ private fun resolveBackgroundColor(
     isFullWidthPunctuation: Boolean,
     customFill: Int?,
 ): Int {
-    // Translate key in full-width state always wins (legacy:
+    // Translate key taken OFF the shipped state — half-width marks, a commit
+    // leading with the romanization — always wins (legacy:
     // `setBackgroundTintColor(this, R.attr.key_bgColorActive)` fires after
-    // `applyAppearance` finishes, overriding any custom fill).
-    if (data.code == KeyCode.TRANSLATE && isFullWidthPunctuation) {
+    // `applyAppearance` finishes, overriding any custom fill). Lit for the
+    // non-default since hanji-first became the default (USER 2026-09-18): a
+    // key lit on a fresh install reads as a mode the user never chose.
+    if (data.code == KeyCode.TRANSLATE && !isFullWidthPunctuation) {
         return themeColors.keyBgActive
     }
     // Custom fill replaces both pressed and unpressed (legacy

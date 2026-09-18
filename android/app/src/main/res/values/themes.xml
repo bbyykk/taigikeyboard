@@ -16,7 +16,7 @@
 
         <item name="key_bgColor">#FFFFFF</item>
         <item name="key_bgColorPressed">#E0E0E0</item>
-        <item name="key_bgColorActive">#BDBDBD</item><!-- Translate button active/swapped state -->
+        <item name="key_bgColorActive">#BDBDBD</item><!-- Translate button off the shipped state (羅馬字 / half-width) -->
         <item name="key_function_bgColor">#FFFFFF</item>
         <item name="key_function_bgColorPressed">#E0E0E0</item>
         <item name="key_fgColor">?android:textColor</item>
