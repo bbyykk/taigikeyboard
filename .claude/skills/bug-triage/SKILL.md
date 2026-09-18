@@ -23,7 +23,8 @@ Label taxonomy is all-CJK type names, hierarchical `parent/child[/leaf]` (matche
 - Not reproducible: `label:"開發/問題回報/無法重現"` — the symptom could not be reproduced on the current build (no fix was made). USER rule 2026-08-20: NOT-repro is never 已修復.
 - Feature requests: `label:"開發/功能建議"`.
 - List query = `label:"開發/問題回報" -label:"開發/問題回報/已修復" -label:"開發/功能建議" -label:"開發/問題回報/無法重現"` (open bug queue = reported, not fixed, not a feature, not closed as unreproducible).
-- This label also auto-catches ECPay / 藍新 payment mail — the helper skips those (keyword filter) and reports the skipped count.
+- Gmail filter (2026-09-18): `to:info@taigikeyboard.tw` + `subject:("台語齒盤" OR "Taigi Keyboard" OR TaigiKeyboard)` → `開發/問題回報` + star. Before that the filter was `to:` only and swept ECPay / 藍新 payment mail into the label; the helper still keyword-skips such mail as a defensive guard and reports the skipped count. User mail with a hand-written subject lacking the product name (~3/yr) is NOT auto-labelled — label it by hand from the inbox.
+- Filter edits need scope `gmail.settings.basic` (separate consent; the triage token is `gmail.modify` only). Gmail filters are immutable: create new + delete old.
 
 ## Commands
 
