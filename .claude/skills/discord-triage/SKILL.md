@@ -29,7 +29,8 @@ themselves (token is theirs), then restart the session.
 2. **Skip already-handled messages**: collect `reply_to` of every message whose `author ==
    bot_username`; any message whose `id` is in that set is done. Second dedup source: message
    links (`https://discord.com/channels/<guild>/<channel>/<id>`) found in the first message of
-   every `list_posts(issues, include_archived=true)` post (`read_post` each).
+   every `list_posts(issues, include_archived=true)` post (`read_post` each). Third source:
+   message IDs in `skipped.json` (this dir) — rows the USER marked `skip` in an earlier `apply`.
 3. **Candidate = 疑似需求, loose** (USER 2026-09-18: 寬鬆, the USER reviews the list). Keep a
    message when it reports something broken or asks for a capability: bug / feature / "希望",
    "可以…嗎", "能不能", "壞掉", "沒反應", "打不出來", "建議", stack of screenshots + complaint.
@@ -66,7 +67,7 @@ Process rows top-down; on any Discord error stop, report the row, do not retry b
 | `create` | `create_post(issues, title=summary, content=<template A>, tags)` → `reply_post(general, <template B>, reply_to=<msg id>)` |
 | `fixed` | same as `create`, then `reply_post(post, <template C>)` → `remove_tags(post, ["done","drop"])` if present → `close_post(post)` |
 | `exists` | `reply_post(general, <template B with existing post link>, reply_to=<msg id>)`; if `fixed in` filled, also template C + retag + close on that post |
-| `skip` | nothing |
+| `skip` | append the message ID to `skipped.json` (this dir, `{"skipped": [<id>, …]}`); no Discord write |
 
 Post link = `https://discord.com/channels/<guild>/<post id>` (guild from the message link).
 
@@ -78,7 +79,7 @@ Post link = `https://discord.com/channels/<guild>/<post id>` (guild from the mes
   mobile `mobile v0.8`, matching `changelog/` file names.
 
 After the run: rewrite `triage.md` with a `result` column (post ID or error) and print the
-counts. Messages replied to in this run are skipped by the next `scan` automatically (step 2).
+counts. Messages replied to in this run and `skip` rows are skipped by the next `scan` automatically (step 2).
 
 ## Rules
 
