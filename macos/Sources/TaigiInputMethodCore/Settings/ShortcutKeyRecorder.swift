@@ -26,6 +26,11 @@ struct RecordedShortcutKey {
 /// it must defend — the typing keys of both tone schemes — is already in the
 /// shared gate (`ComposingKeyChord.make`).
 enum GlobalShortcutPolicy {
+    /// `@MainActor` because `isTakenBySystem` is (KeyboardShortcuts reads the
+    /// system hotkey table through `HotKeyCenter`, a main-actor type; Swift
+    /// 6.4 infers the isolation, Swift 6.2 did not). Every caller already runs
+    /// there: the recorder field is an `NSView`.
+    @MainActor
     static func rejection(for key: RecordedShortcutKey) -> ComposingKeyChord.Rejection? {
         // A global row stores a Carbon key CODE. A press that yields none has
         // nothing to store, so it cannot be recorded here even though the
@@ -102,7 +107,7 @@ struct ShortcutKeyRecorder: NSViewRepresentable {
     let language: DisplayLanguageStore
     /// The tier's own refusals, run after the shared gate passes. Nil accepts
     /// everything the gate does.
-    var additionalRejection: ((RecordedShortcutKey) -> ComposingKeyChord.Rejection?)?
+    var additionalRejection: (@MainActor (RecordedShortcutKey) -> ComposingKeyChord.Rejection?)?
     /// Called with the recorded key, or nil when the user clears the row.
     let onRecord: (RecordedShortcutKey?) -> Void
 
@@ -136,7 +141,7 @@ final class ShortcutKeyRecorderField: NSSearchField, NSSearchFieldDelegate {
     private static let minimumWidth: Double = 130
 
     var language: DisplayLanguageStore?
-    var additionalRejection: ((RecordedShortcutKey) -> ComposingKeyChord.Rejection?)?
+    var additionalRejection: (@MainActor (RecordedShortcutKey) -> ComposingKeyChord.Rejection?)?
     var onRecord: ((RecordedShortcutKey?) -> Void)?
 
     var chord: ComposingKeyChord? {
