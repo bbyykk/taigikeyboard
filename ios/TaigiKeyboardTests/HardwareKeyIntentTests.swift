@@ -123,6 +123,19 @@ final class HardwareKeyIntentTests: XCTestCase {
         XCTAssertEqual(HardwareKeyIntent.intent(for: colon, isComposing: true, isShowingCandidates: true), .selectCandidateSlot(8, flip: true))
     }
 
+    // MARK: - Caret
+
+    func testOptionArrows_stepTheCaret_whileComposing_andAreTheHostsOtherwise() {
+        let optionLeft = key("", code: .keyboardLeftArrow, modifiers: .alternate)
+        let optionRight = key("", code: .keyboardRightArrow, modifiers: .alternate)
+        XCTAssertEqual(HardwareKeyIntent.intent(for: optionLeft, isComposing: true, isShowingCandidates: true), .moveCaret(.left))
+        XCTAssertEqual(HardwareKeyIntent.intent(for: optionRight, isComposing: true), .moveCaret(.right))
+        XCTAssertEqual(HardwareKeyIntent.intent(for: optionLeft, isComposing: false), .passThrough)
+        // Exactly ⌥: ⌥⇧← is the host's selection, and ends the composition first.
+        let optionShiftLeft = key("", code: .keyboardLeftArrow, modifiers: [.alternate, .shift])
+        XCTAssertEqual(HardwareKeyIntent.intent(for: optionShiftLeft, isComposing: true, isShowingCandidates: true), .commitThenPassThrough)
+    }
+
     // MARK: - User bindings and shortcuts
 
     func testTheShortcuts_fireWhereverTheCompositionStands() {

@@ -708,16 +708,17 @@ public nonisolated struct Taigi_Engine_TelexKey: Sendable {
   public init() {}
 }
 
-/// Desktop only — step the caret inside the pending tail one Unicode scalar
-/// value left or right (`⌥←` / `⌥→` on macOS, `Ctrl+←` / `Ctrl+→` on Windows). The
+/// Step the caret inside the pending tail one Unicode scalar value left or
+/// right (`⌥←` / `⌥→` on macOS and on an iPad external keyboard, `Ctrl+←` /
+/// `Ctrl+→` on Windows). The
 /// buffer does not change, so the response carries `UpdatePreedit` (with the
 /// new `caret_utf16`) and NO `PerformAutocomplete`: candidates, highlight and
 /// page stay. At either edge of the pending tail — the caret never enters a
 /// nailed segment — the request is a no-op with no effects. Every mutator
 /// then edits at the caret: `Append` inserts there, `DeleteBackward` /
 /// `ReplaceLast` act on the character before it, `TelexKey` on the chunk
-/// before it. Mobile never sends this, so its caret stays at the end and
-/// every mutator behaves as before.
+/// before it. Android never sends this, so its caret stays at the end and
+/// every mutator behaves as before; iOS sends it only from a hardware key.
 public nonisolated struct Taigi_Engine_MoveCaret: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for

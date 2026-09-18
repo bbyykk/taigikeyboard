@@ -77,7 +77,7 @@ final class ComposingManagerTests: XCTestCase {
         XCTAssertEqual(manager.rawInput, "a")
         XCTAssertEqual(manager.selectedCandidateIndex, 0)
         XCTAssertEqual(spy.effects, [
-            .updatePreedit(manager.composingText),
+            preeditAtEnd(),
             .performAutocomplete,
         ])
     }
@@ -88,7 +88,7 @@ final class ComposingManagerTests: XCTestCase {
         XCTAssertTrue(manager.isComposing)
         XCTAssertEqual(manager.rawInput, "a")
         XCTAssertEqual(spy.effects, [
-            .updatePreedit(manager.composingText),
+            preeditAtEnd(),
             .performAutocomplete,
         ])
     }
@@ -102,7 +102,7 @@ final class ComposingManagerTests: XCTestCase {
         XCTAssertEqual(manager.rawInput, "ab")
         XCTAssertEqual(manager.selectedCandidateIndex, 0)
         XCTAssertEqual(spy.effects, [
-            .updatePreedit(manager.composingText),
+            preeditAtEnd(),
             .performAutocomplete,
         ])
     }
@@ -121,7 +121,7 @@ final class ComposingManagerTests: XCTestCase {
         // is preserved across replaceLast. At wrapper level we only verify
         // the effect list matches what the engine emitted.
         XCTAssertEqual(spy.effects, [
-            .updatePreedit(manager.composingText),
+            preeditAtEnd(),
             .performAutocomplete,
         ])
     }
@@ -155,7 +155,7 @@ final class ComposingManagerTests: XCTestCase {
         XCTAssertTrue(manager.isComposing)
         XCTAssertEqual(manager.rawInput, "a")
         XCTAssertEqual(spy.effects, [
-            .updatePreedit(manager.composingText),
+            preeditAtEnd(),
             .performAutocomplete,
         ])
     }
@@ -404,4 +404,10 @@ final class ComposingManagerTests: XCTestCase {
         XCTAssertFalse(manager.isComposing)
         XCTAssertTrue(spy.effects.isEmpty)
     }
+    /// The preedit effect every non-caret path emits: the composition with
+    /// the caret at its end.
+    private func preeditAtEnd() -> RustEngineBridge.ComposingTransition.Effect {
+        .updatePreedit(manager.composingText, caretUTF16: manager.composingText.utf16.count)
+    }
+
 }

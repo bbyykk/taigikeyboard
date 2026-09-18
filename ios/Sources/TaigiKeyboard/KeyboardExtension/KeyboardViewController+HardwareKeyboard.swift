@@ -114,6 +114,9 @@ extension KeyboardViewController {
             ) else { return true }
             commit(suggestions()[index], handler: handler, alternateScript: flip)
             return true
+        case let .moveCaret(direction):
+            manager.moveCaret(direction)
+            return true
         case let .shortcut(action):
             performHardwareShortcut(action, handler: handler)
             return true

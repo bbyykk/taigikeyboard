@@ -181,15 +181,21 @@ enum HardwareKeyChordDisplay {
     ]
 
     static func text(for chord: HardwareKeyChord) -> String {
-        var glyphs = ""
-        if chord.modifiers.contains(.control) { glyphs += "⌃" }
-        if chord.modifiers.contains(.alternate) { glyphs += "⌥" }
-        if chord.modifiers.contains(.shift) { glyphs += "⇧" }
-        if chord.modifiers.contains(.command) { glyphs += "⌘" }
         // A chord with modifiers keeps the uppercase keycap legend; a bare
         // key shows the character it types.
         let keycap = keyNames[chord.key]
             ?? (chord.modifiers.isEmpty ? chord.key : chord.key.uppercased())
-        return glyphs + keycap
+        return glyphs(for: chord.modifiers) + keycap
+    }
+
+    /// The modifier glyphs alone — also what the pane's read-only rows are
+    /// drawn with, so a fixed chord prints the way a recorded one does.
+    static func glyphs(for modifiers: UIKeyModifierFlags) -> String {
+        var glyphs = ""
+        if modifiers.contains(.control) { glyphs += "⌃" }
+        if modifiers.contains(.alternate) { glyphs += "⌥" }
+        if modifiers.contains(.shift) { glyphs += "⇧" }
+        if modifiers.contains(.command) { glyphs += "⌘" }
+        return glyphs
     }
 }

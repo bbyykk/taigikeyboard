@@ -18,7 +18,10 @@ public extension RustEngineBridge {
     /// Consumed by `ComposingManager` and its delegate.
     struct ComposingTransition: Equatable {
         public enum Effect: Equatable {
-            case updatePreedit(String)
+            /// The whole marked region and where the caret sits in it, as a
+            /// UTF-16 offset (`Preedit.caret_utf16`): the end unless a
+            /// `MoveCaret` stepped it (`ComposingManager.moveCaret`).
+            case updatePreedit(String, caretUTF16: Int)
             case clearPreeditWithoutCommit
             case commitTextReplacingPreedit(String)
             case deleteBackwardFromDocument
@@ -397,6 +400,39 @@ public extension RustEngineBridge {
         )
     }
 
+    /// Steps the caret one character inside the pending tail (`composing.proto`
+    /// `MoveCaret`): an `UpdatePreedit` with the new caret, no fetch. The
+    /// continuous spacing config, so a move never changes the text on screen.
+    // CROSS-PLATFORM INVARIANT — mirrors macos `composingMoveCaret`
+    // (`macos/Sources/TaigiInputMethodCore/Engine/RustEngineBridge+Composing.swift:107-123`).
+    static func composingMoveCaret(
+        _ direction: CaretDirection,
+        mode: InputMode,
+        toggles: ToneToggles,
+        effectiveSwapped: Bool,
+        outputBothScripts: Bool,
+        candidateDisplayMode: CandidateDisplayMode,
+        generation: UInt64,
+    ) -> ComposingTransition {
+        var payload = Taigi_Engine_MoveCaret()
+        payload.direction = switch direction {
+        case .left: .left
+        case .right: .right
+        }
+        return composingDispatch(
+            method: .moveCaret(payload),
+            op: "composingMoveCaret",
+            generation: generation,
+            config: continuousAppConfig(
+                mode: mode,
+                toggles: toggles,
+                effectiveSwapped: effectiveSwapped,
+                outputBothScripts: outputBothScripts,
+                candidateDisplayMode: candidateDisplayMode,
+            ),
+        )
+    }
+
     static func composingSetSelectedCandidateIndex(
         _ index: Int,
         generation: UInt64,
@@ -740,7 +776,7 @@ public extension RustEngineBridge {
         let effects: [ComposingTransition.Effect] = proto.effect.compactMap { eff -> ComposingTransition.Effect? in
             guard let kind = eff.kind else { return nil }
             switch kind {
-            case let .updatePreedit(m): return .updatePreedit(m.display)
+            case let .updatePreedit(m): return .updatePreedit(m.display, caretUTF16: Int(m.caretUtf16))
             case .clearPreeditWithoutCommit_p: return .clearPreeditWithoutCommit
             case let .commitTextReplacingPreedit(m): return .commitTextReplacingPreedit(m.text)
             case .deleteBackwardFromDocument: return .deleteBackwardFromDocument
