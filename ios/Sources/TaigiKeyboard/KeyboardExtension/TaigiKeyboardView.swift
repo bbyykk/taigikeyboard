@@ -357,7 +357,7 @@ struct TaigiKeyboardView: View {
                             panels.isSymbolExpanded = true
                         }
                     },
-                    onDismissKeyboard: { [unowned services] in
+                    onDismissKeyboard: {
                         panels.closeAll()
                         services.actionHandler.handle(.dismissKeyboard)
                     },
