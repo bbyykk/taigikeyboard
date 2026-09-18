@@ -11,14 +11,16 @@ Key 格式（前綴式）：
 - tl:<tl_notone>：TL 去調 fused（如 tl:hoose，連 hyphen 也已脫掉）
 - poj:<poj_num>：POJ 數字聲調（如 poj:ho2se3）
 - poj:<poj_notone>：POJ 去調 fused（如 poj:hoose）
-- tl:<tl_abbrev>：TL 縮寫（如 tl:hs）
-- poj:<poj_abbrev>：POJ 縮寫（如 poj:hs）
 - tps:<tps_num>：TPS Bopomofo + 聲調符號（如 tps:ㄏㆦ˫ㄙㆤ˪）
 - tps:<tps_notone>：TPS 去調 fused（如 tps:ㄏㆦㄙㆤ）
-- tps:<tps_abbrev>：TPS 縮寫（如 tps:ㄏㄙ）
 - tps:<tps_num_var>     C-3a er↔or 方言 always-on：TL `er`/`or` 兩種注音字形（ㄜ vs ㄛ）
 - tps:<tps_notone_var>  同上,僅當源 `tps_*` 含 ㄜ 時 emit;A always-on,取代 runtime
-- tps:<tps_abbrev_var>  `tps_or_mapped_to_er` toggle (per PR C-3a)。
+- tl-abbrev:<tl_abbrev>：TL 縮寫（如 tl-abbrev:hs）— own family since §46 so a
+  `tl:` prefix scan never meets an acronym key (engine reader:
+  `lexicon::fetch_abbrev_candidates`; Tab3 `lexicon::search` unions both)
+- poj-abbrev:<poj_abbrev>：POJ 縮寫（如 poj-abbrev:hs）
+- tps-abbrev:<tps_abbrev>：TPS 縮寫（如 tps-abbrev:ㄏㄙ）
+- tps-abbrev:<tps_abbrev_var>  `tps_or_mapped_to_er` toggle (per PR C-3a)。
 - tl:/poj: 鼻化 oo 別名：`onn` → `oonn` 逐音節展開後的 num + notone 鍵
   （如 tl:hoonn3 / tl:hoonn），同 rowid。POJ `o͘ⁿ`（到引擎是 ASCII `oonn`）
   是台日大辭典系的寫法,字典欄位一律正規 `onn`,故只在此多發一把輸入用鍵。
@@ -105,6 +107,11 @@ def _tl_num_syllable_count(tl_num: str) -> int:
     return tl_num.count("-") + 1
 
 
+# Abbreviation keys get their own family per romanization (`tl-abbrev:`,
+# `poj-abbrev:`, `tps-abbrev:`) so a phonetic-family prefix scan never
+# meets an acronym key. Mirrors `lexicon::key_normalizer::ABBREV_FAMILY_SUFFIX`.
+ABBREV_FAMILY_SUFFIX = "-abbrev"
+
 _NUM_SYLLABLE_RE = re.compile(r"[a-z]+[0-9]?")
 _NASAL_OO_CANONICAL = "onn"
 _NASAL_OO_ALIAS = "oonn"
@@ -160,6 +167,48 @@ def _nasal_oo_alias_keys(num_value: str) -> tuple[str, ...]:
     return (alias_num, alias_notone) if alias_notone else (alias_num,)
 
 
+def romanization_keys(record) -> list[str]:
+    """Every romanization key body (family prefix included) one record is
+    indexed under, in emission order. Pure — the unit under test for the
+    family layout (`tests/test_fst_abbrev_family.py`).
+    """
+    keys: list[str] = []
+    # Romanization-key filter (mirrors original trie.db JOIN: tl_num
+    # non-empty + syllables <= 4). All three TL variants share the
+    # tl_num gate; same for POJ; TPS gated by the same TL syllable
+    # count (TPS forms are derived from the same TL source row).
+    if record.tl_num and _tl_num_syllable_count(record.tl_num) <= MAX_SYLLABLES_TL_NUM:
+        for val in (record.tl_num, record.tl_notone):
+            if val:
+                keys.append(f"tl:{val}")
+        for val in _nasal_oo_alias_keys(record.tl_num):
+            keys.append(f"tl:{val}")
+        if record.tl_abbrev:
+            keys.append(f"tl{ABBREV_FAMILY_SUFFIX}:{record.tl_abbrev}")
+        # C-3a er↔or dual-emit: same rowid keyed by both ㄜ-form
+        # (bridge default) and ㄛ-form (toggle-OFF variant) so a
+        # TPS user typing either glyph hits the same dictionary
+        # row. Empty `*_var` columns short-circuit.
+        for val in (
+            record.tps_num, record.tps_notone,
+            record.tps_num_var, record.tps_notone_var,
+        ):
+            if val:
+                keys.append(f"tps:{val}")
+        for val in (record.tps_abbrev, record.tps_abbrev_var):
+            if val:
+                keys.append(f"tps{ABBREV_FAMILY_SUFFIX}:{val}")
+    if record.poj_num and _tl_num_syllable_count(record.poj_num) <= MAX_SYLLABLES_TL_NUM:
+        for val in (record.poj_num, record.poj_notone):
+            if val:
+                keys.append(f"poj:{val}")
+        for val in _nasal_oo_alias_keys(record.poj_num):
+            keys.append(f"poj:{val}")
+        if record.poj_abbrev:
+            keys.append(f"poj{ABBREV_FAMILY_SUFFIX}:{record.poj_abbrev}")
+    return keys
+
+
 def collect_pairs(logger) -> list[tuple[str, int]]:
     """Yield (key, rowid) pairs from dictionary records."""
     if not CSV_FILE.exists():
@@ -178,33 +227,8 @@ def collect_pairs(logger) -> list[tuple[str, int]]:
             pairs.append(pair)
 
     for record in records:
-        rowid = record.rowid
-        # Romanization-key filter (mirrors original trie.db JOIN: tl_num
-        # non-empty + syllables <= 4). All three TL variants share the
-        # tl_num gate; same for POJ; TPS gated by the same TL syllable
-        # count (TPS forms are derived from the same TL source row).
-        if record.tl_num and _tl_num_syllable_count(record.tl_num) <= MAX_SYLLABLES_TL_NUM:
-            for val in (record.tl_num, record.tl_notone, record.tl_abbrev):
-                if val:
-                    add(f"tl:{val}", rowid)
-            for val in _nasal_oo_alias_keys(record.tl_num):
-                add(f"tl:{val}", rowid)
-            # C-3a er↔or dual-emit: same rowid keyed by both ㄜ-form
-            # (bridge default) and ㄛ-form (toggle-OFF variant) so a
-            # TPS user typing either glyph hits the same dictionary
-            # row. Empty `*_var` columns short-circuit.
-            for val in (
-                record.tps_num, record.tps_notone, record.tps_abbrev,
-                record.tps_num_var, record.tps_notone_var, record.tps_abbrev_var,
-            ):
-                if val:
-                    add(f"tps:{val}", rowid)
-        if record.poj_num and _tl_num_syllable_count(record.poj_num) <= MAX_SYLLABLES_TL_NUM:
-            for val in (record.poj_num, record.poj_notone, record.poj_abbrev):
-                if val:
-                    add(f"poj:{val}", rowid)
-            for val in _nasal_oo_alias_keys(record.poj_num):
-                add(f"poj:{val}", rowid)
+        for key in romanization_keys(record):
+            add(key, record.rowid)
 
     romanization_count = len(pairs)
     logger.info(f"Romanization pairs: {romanization_count}")

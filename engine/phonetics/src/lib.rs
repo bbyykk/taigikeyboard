@@ -38,15 +38,15 @@ pub use normalization::{
 };
 pub use poj::to_poj;
 pub use syllable::{
-    canonicalize_poj_syllable, canonicalize_syllable, is_roman_acronym_key, is_valid_syllable,
-    nasal_oo_alias_spelling, normalize_to_poj, normalize_to_tl, poj_num_syllable_ends_from_tl,
-    strip_tone_mark, tl_num_syllable_ends_from_tl, NASAL_OO_ALIAS_SPELLING,
-    NORMALIZE_TO_POJ_GLYPH_RULES, NORMALIZE_TO_POJ_RULES, NORMALIZE_TO_TL_RULES, TL_ENCODING_RULES,
+    canonicalize_poj_syllable, canonicalize_syllable, is_valid_syllable, nasal_oo_alias_spelling,
+    normalize_to_poj, normalize_to_tl, poj_num_syllable_ends_from_tl, strip_tone_mark,
+    tl_num_syllable_ends_from_tl, NASAL_OO_ALIAS_SPELLING, NORMALIZE_TO_POJ_GLYPH_RULES,
+    NORMALIZE_TO_POJ_RULES, NORMALIZE_TO_TL_RULES, TL_ENCODING_RULES,
 };
 pub use tl::to_tl;
 pub use tps::{
     canonicalize_tps_syllable, from_zhuyin as tps_to_tl, is_tps_char, is_tps_initial,
-    is_tps_initial_only, is_tps_tone_mark, is_tps_vowel_material, normalize_tps_tone8_scalar,
+    is_tps_tone_mark, is_tps_vowel_material, normalize_tps_tone8_scalar,
     to_zhuyin as tl_numeric_token_to_tps, tps_abbrev_from_tl, tps_notone_from_tl,
     tps_notone_or_variant, tps_notone_prefix_boundary_tone, tps_notone_syllable_ends_from_tl,
     tps_num_from_tl, tps_num_syllable_ends_from_tl,

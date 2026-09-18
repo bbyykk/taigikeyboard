@@ -4,10 +4,14 @@
 //! prefix logic and Android `LexiconService::buildSearchKey` (the latter
 //! drops in this slice per audit D-1 — see plan §10.2).
 //!
-//! Four prefix families:
-//! - `tl:` — TL romanization (numeric tone or no-tone or abbrev)
+//! Prefix families:
+//! - `tl:` — TL romanization (numeric tone or no-tone)
 //! - `poj:` — POJ romanization (parallel to TL)
 //! - `tps:` — TPS Bopomofo (parallel to TL/POJ; C-1 onward)
+//! - `tl-abbrev:` / `poj-abbrev:` / `tps-abbrev:` — the per-syllable
+//!   abbreviation (acronym) face of each family, kept out of the phonetic
+//!   range so a prefix scan over `tl:` never meets an acronym key
+//!   ([`abbrev_family_key`])
 //! - `hanzi:` — hanji prefix
 //!
 //! TL/POJ paths run through `phonetics::normalize_input` so input ↔
@@ -32,6 +36,21 @@ pub fn build(input: &str, input_type: KeyType, mode: KeyMode) -> String {
             KeyMode::Tps => format!("tps:{}", normalize_tps_key_body(input)),
         },
     }
+}
+
+/// Suffix that turns a phonetic family prefix into its abbreviation family
+/// (`tl:` → `tl-abbrev:`). Mirrors `dictionary/build/create_fst.py`.
+pub const ABBREV_FAMILY_SUFFIX: &str = "-abbrev";
+
+/// The abbreviation-family twin of a phonetic-family key: `tl:ss` →
+/// `tl-abbrev:ss`, `tps:ㄙㄒ` → `tps-abbrev:ㄙㄒ`. `None` for a key with no
+/// `<family>:` prefix or one that is already an abbreviation key.
+pub fn abbrev_family_key(key: &str) -> Option<String> {
+    let (family, body) = key.split_once(':')?;
+    if family.ends_with(ABBREV_FAMILY_SUFFIX) {
+        return None;
+    }
+    Some(format!("{family}{ABBREV_FAMILY_SUFFIX}:{body}"))
 }
 
 /// Normalize raw TPS input into the body of a `tps:` FST key.

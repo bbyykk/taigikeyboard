@@ -105,12 +105,29 @@ pub fn search(
     // `(exactRowIds + prefixRowIds).distinct()` semantics. IndexSet
     // dedup preserves insertion order — D-12 parity correction toward
     // Android pinned by INVARIANT_LEX_LOOKUP_ROWIDS_ORDER.
+    //
+    // Acronym matching (typing `gi` finds 外夷 `guā-î`) is intentional
+    // here: the abbreviation keys live in their own `*-abbrev:` family
+    // since §46, so both families are unioned — main exact, abbrev exact,
+    // main prefix, abbrev prefix. Only the insertion order of frequency
+    // ties changed against the pre-§46 single-range byte order.
+    let abbrev_key = key_normalizer::abbrev_family_key(&key);
     let mut rowids: IndexSet<u32> = IndexSet::new();
     for id in prefix_index.lookup_exact(&key) {
         rowids.insert(id);
     }
+    if let Some(abbrev_key) = &abbrev_key {
+        for id in prefix_index.lookup_exact(abbrev_key) {
+            rowids.insert(id);
+        }
+    }
     for id in prefix_index.lookup_prefix(&key) {
         rowids.insert(id);
+    }
+    if let Some(abbrev_key) = &abbrev_key {
+        for id in prefix_index.lookup_prefix(abbrev_key) {
+            rowids.insert(id);
+        }
     }
 
     Ok(collect_filtered_sorted(
