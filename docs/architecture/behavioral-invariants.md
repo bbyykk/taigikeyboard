@@ -288,6 +288,7 @@ Bit positions mirror `dictionary/build/create_dictionary_bin.py`. `stti` is in t
 - Leading-uppercase input (`"G"`) with `isAutoCap = false` still applies case per `inputMode` rules.
 - Uppercase TPS syllables do not exist; `inputMode == .tps` → no-op.
 - `.english` mode passes through without romanization-specific adjustments.
+- **Candidate casing only raises letters** (`phonetics::case_transform::raise_case`, behind the continuous `recase_roman` / `recase_tl_as_poj_display` passes and the mobile `transform_suggestion`): CapsLock → all upper, shifted first key → first letter upper, plain lowercase → the roman **as stored**. A custom entry keeps its own capitals: `klsi` / `Klsi` → `Keng-lâm Su-īⁿ`, `KLSI` → `KENG-LÂM SU-Īⁿ` (user report 2026-09-19). Only the keystroke path `transform_input_case` lowercases.
 
 **Test labels**:
 - `INVARIANT_case_transformer_is_deterministic`

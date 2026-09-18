@@ -124,6 +124,27 @@ pub fn transform_input_case(text: &str, letter_case: LetterCase, mode: InputMode
     }
 }
 
+/// Case a fetched candidate roman the way the raw keystrokes ask,
+/// **only ever raising** letters: `CapsLocked` → full upper, `Uppercased`
+/// → first letter upper, `Lowercased` → untouched.
+///
+/// Candidate-side counterpart of [`transform_input_case`], which acts on
+/// the keystroke itself and does lowercase. `dict.bin` romans are
+/// canonical lowercase, so on those the two agree; a custom dictionary
+/// entry carries the user's own capitals (`Keng-lâm Su-īⁿ` for `klsi`),
+/// and lowering it to the keystroke's case threw those away (user report
+/// 2026-09-19). Every candidate-casing path ends here; only keystrokes
+/// go through [`transform_input_case`]. Under `CapsLocked` the POJ nasal
+/// `ⁿ` stays as-is (no uppercase hook in POJ) — [`transform_suggestion`]
+/// re-cases it afterwards via [`adjust_nasal_marker_case`].
+pub fn raise_case(text: &str, letter_case: LetterCase, mode: InputMode) -> String {
+    match letter_case {
+        LetterCase::CapsLocked => full_uppercase_tone_string(text, mode),
+        LetterCase::Uppercased => uppercase_first_letter_in_text(text, mode),
+        LetterCase::Lowercased => text.to_string(),
+    }
+}
+
 /// Gate on `auto_cap_enabled` + `input` first char's case. If both true and
 /// `text` starts with a letter, uppercase the first letter via tone tables;
 /// otherwise return `text` as-is. Matches `CaseTransformer.capitalizeCandidate`.
@@ -160,8 +181,10 @@ pub fn capitalize_candidate(
 /// - `CapsLocked`: full upper
 /// - else with non-empty `composing_text`: split typed-portion (matchCase
 ///   to composing) + remaining-portion (`Uppercased` → first upper /
-///   `Lowercased` → lower)
+///   `Lowercased` → untouched)
 /// - empty composing: original returned as-is
+///
+/// Raise-only, see [`raise_case`].
 ///
 /// Output is post-processed via `adjust_nasal_marker_case` so the engine
 /// returns the final-form string ready for display. Suggestion skip rules
@@ -184,7 +207,7 @@ fn transform_suggestion_inner(
     mode: InputMode,
 ) -> String {
     if matches!(letter_case, LetterCase::CapsLocked) {
-        return to_uppercase_per_char(original_text, mode);
+        return raise_case(original_text, letter_case, mode);
     }
 
     let typed_letter_count = count_letters(composing_text);
@@ -200,15 +223,7 @@ fn transform_suggestion_inner(
     let (typed_portion, remaining_portion) =
         split_by_letter_count(original_text, typed_letter_count);
     let preserved_typed = match_case(&typed_portion, composing_text, mode);
-    let transformed_remaining = match letter_case {
-        // SuggestionCaseTransformer.capitalizeFirstLetter — finds first
-        // LETTER (not first char), uppercases it, lowercases subsequent
-        // letters; non-letters pass through. Distinct from
-        // `capitalize_first_letter` below which uppercases the literal
-        // first char (used by transform_input_case .uppercased path).
-        LetterCase::Uppercased => capitalize_first_letter_in_text(&remaining_portion, mode),
-        _ => to_lowercase_per_char(&remaining_portion, mode),
-    };
+    let transformed_remaining = raise_case(&remaining_portion, letter_case, mode);
     preserved_typed + &transformed_remaining
 }
 
@@ -274,23 +289,16 @@ fn capitalize_first_letter(text: &str, mode: InputMode) -> String {
 }
 
 /// Find the first LETTER in `text` and uppercase it (via
-/// `uppercase_tone_char`); lowercase subsequent letters; non-letters pass
-/// through. Matches `SuggestionCaseTransformer.capitalizeFirstLetter`
-/// (per-suggestion remainder transform). DISTINCT from
-/// `capitalize_first_letter` above — this skips leading non-letters
-/// (e.g. "-gí" → "-Gí" not "-gí").
-fn capitalize_first_letter_in_text(text: &str, mode: InputMode) -> String {
+/// `uppercase_tone_char`); every other char passes through as stored.
+/// DISTINCT from `capitalize_first_letter` above — this skips leading
+/// non-letters (e.g. "-gí" → "-Gí" not "-gí") and never lowers the rest.
+fn uppercase_first_letter_in_text(text: &str, mode: InputMode) -> String {
     let mut result = String::with_capacity(text.len());
     let mut is_first_letter = true;
     for ch in text.chars() {
-        if ch.is_alphabetic() {
-            let ch_str = ch.to_string();
-            if is_first_letter {
-                result.push_str(&uppercase_tone_char(&ch_str, mode));
-                is_first_letter = false;
-            } else {
-                result.push_str(&lowercase_tone_char(&ch_str, mode));
-            }
+        if ch.is_alphabetic() && is_first_letter {
+            result.push_str(&uppercase_tone_char(&ch.to_string(), mode));
+            is_first_letter = false;
         } else {
             result.push(ch);
         }
@@ -321,39 +329,25 @@ fn split_by_letter_count(text: &str, letter_count: usize) -> (String, String) {
     (first.to_string(), second.to_string())
 }
 
-/// Per-letter case matching. For each letter in `target`, look at the
-/// corresponding letter in `source` and apply that case. Non-letters in
-/// `target` pass through unchanged. Mirrors
-/// `SuggestionCaseTransformer.matchCase`.
+/// Per-letter case matching: the Nth letter of `target` is raised when
+/// the Nth letter of `source` is uppercase, otherwise kept as stored
+/// (raise-only, see [`raise_case`]). Non-letters pass through unchanged.
 fn match_case(target: &str, source: &str, mode: InputMode) -> String {
-    let mut source_letters: Vec<char> = source.chars().filter(|c| c.is_alphabetic()).collect();
-    source_letters.reverse(); // pop_back == take next from front efficiently
-
+    let mut source_letters = source.chars().filter(|c| c.is_alphabetic());
     let mut result = String::with_capacity(target.len());
     for ch in target.chars() {
-        if ch.is_alphabetic() {
-            if let Some(src) = source_letters.pop() {
-                let ch_str = ch.to_string();
-                let mapped = if src.is_uppercase() {
-                    uppercase_tone_char(&ch_str, mode)
-                } else {
-                    lowercase_tone_char(&ch_str, mode)
-                };
-                result.push_str(&mapped);
-            } else {
-                result.push(ch);
-            }
-        } else {
+        if !ch.is_alphabetic() {
             result.push(ch);
+            continue;
+        }
+        match source_letters.next() {
+            Some(src) if src.is_uppercase() => {
+                result.push_str(&uppercase_tone_char(&ch.to_string(), mode));
+            }
+            _ => result.push(ch),
         }
     }
     result
-}
-
-fn to_uppercase_per_char(text: &str, mode: InputMode) -> String {
-    text.chars()
-        .map(|ch| uppercase_tone_char(&ch.to_string(), mode))
-        .collect()
 }
 
 fn to_lowercase_per_char(text: &str, mode: InputMode) -> String {
@@ -544,6 +538,71 @@ mod tests {
         assert_eq!(
             transform_suggestion("góa", "G", LetterCase::Uppercased, InputMode::Poj),
             "GÓa"
+        );
+    }
+
+    // -----------------------------------------------------------------
+    // Stored capitals survive (user report 2026-09-19: custom entry
+    // `Keng-lâm Su-īⁿ` under abbreviation `klsi`)
+    // -----------------------------------------------------------------
+
+    const CUSTOM: &str = "Keng-lâm Su-īⁿ";
+
+    #[test]
+    fn raise_case_lowercased_keeps_stored_capitals() {
+        assert_eq!(
+            raise_case(CUSTOM, LetterCase::Lowercased, InputMode::Poj),
+            CUSTOM
+        );
+        assert_eq!(
+            raise_case("tâi-gí", LetterCase::Lowercased, InputMode::Poj),
+            "tâi-gí"
+        );
+    }
+
+    #[test]
+    fn raise_case_uppercased_raises_first_letter_only() {
+        assert_eq!(
+            raise_case(CUSTOM, LetterCase::Uppercased, InputMode::Poj),
+            CUSTOM
+        );
+        assert_eq!(
+            raise_case("tâi-gí", LetterCase::Uppercased, InputMode::Poj),
+            "Tâi-gí"
+        );
+        // First LETTER, not first char.
+        assert_eq!(
+            raise_case("-gí", LetterCase::Uppercased, InputMode::Poj),
+            "-Gí"
+        );
+    }
+
+    #[test]
+    fn raise_case_caps_locked_uppercases_all() {
+        assert_eq!(
+            raise_case(CUSTOM, LetterCase::CapsLocked, InputMode::Poj),
+            "KENG-LÂM SU-Īⁿ"
+        );
+    }
+
+    #[test]
+    fn transform_suggestion_abbreviation_keeps_stored_capitals() {
+        // `klsi` (4 letters) aligns positionally with `Keng`; lowercase
+        // keystrokes must not lower `K` nor the untyped `Su`.
+        assert_eq!(
+            transform_suggestion(CUSTOM, "klsi", LetterCase::Lowercased, InputMode::Poj),
+            CUSTOM
+        );
+        // Shift on the first key, keyboard already back to lowercase.
+        assert_eq!(
+            transform_suggestion(CUSTOM, "Klsi", LetterCase::Lowercased, InputMode::Poj),
+            CUSTOM
+        );
+        // Shift still held: the remainder's first letter is raised, the
+        // stored `Su` stays.
+        assert_eq!(
+            transform_suggestion(CUSTOM, "Klsi", LetterCase::Uppercased, InputMode::Poj),
+            "Keng-Lâm Su-īⁿ"
         );
     }
 
