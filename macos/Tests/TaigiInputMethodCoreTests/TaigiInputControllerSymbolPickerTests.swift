@@ -52,7 +52,78 @@ final class TaigiInputControllerSymbolPickerTests: XCTestCase {
         XCTAssertEqual(content.slotKeySet, .bareKeys, "the picker is picked with the bar's own keys")
         XCTAssertFalse(content.leadCellIsUnkeyed)
         XCTAssertEqual(session.picker.calls.last, .show(content, caretRect: Self.caretRect))
-        XCTAssertEqual(session.client.writes, [], "opening writes nothing")
+        XCTAssertEqual(session.client.writes, [Self.placeholderUp], "opening marks the placeholder and nothing else")
+    }
+
+    /// The list stands on a placeholder marked region — one underlined
+    /// space — not on a bare insertion point: a host that is not a Cocoa
+    /// text view (Chromium, every Electron app) hands the real key to the
+    /// page whenever nothing is marked, so the arrows moved the page's caret
+    /// and Return submitted (USER 2026-09-18). Marked first, so the caret
+    /// walk reads the placeholder's own rectangle.
+    func testTheChord_marksAPlaceholder_beforeAnchoring() throws {
+        let session = try makeSession()
+
+        try session.pressPickerChord()
+
+        XCTAssertEqual(session.client.writes, [Self.placeholderUp])
+        XCTAssertEqual(session.client.caretRectQueries, [0], "the placeholder's own index")
+    }
+
+    /// What the user had is what they keep: the placeholder sits in the
+    /// document only while the list is up, a pick replaces it, and Escape
+    /// takes it out again — nothing else in the line moves.
+    func testThePlaceholder_isInTheDocumentOnlyWhileTheListIsUp() throws {
+        let session = try makeSession()
+        session.client.documentTextForReads = "ab"
+        session.client.selectedRangeToReturn = NSRange(location: 2, length: 0)
+
+        try session.pressPickerChord()
+        XCTAssertEqual(session.client.documentTextForReads, "ab ")
+        try session.type("\u{1B}")
+        XCTAssertEqual(session.client.documentTextForReads, "ab")
+        XCTAssertEqual(session.client.selectedRangeToReturn, NSRange(location: 2, length: 0))
+
+        try session.pressPickerChord()
+        try session.type("q")
+
+        XCTAssertEqual(session.client.documentTextForReads, "ab，")
+    }
+
+    /// Over a selection nothing is marked: marked text replaces a selection
+    /// the way typing does, and clearing it on Escape would not bring the
+    /// selected text back. The list still opens, and a pick replaces the
+    /// selection as a typed character would.
+    func testOverASelection_nothingIsMarked_andThePickReplacesIt() throws {
+        let session = try makeSession()
+        session.client.documentTextForReads = "abc"
+        session.client.selectedRangeToReturn = NSRange(location: 0, length: 3)
+
+        try session.pressPickerChord()
+        XCTAssertTrue(session.picker.isShowing)
+        XCTAssertEqual(session.client.writes, [], "no placeholder over a selection")
+        try session.type("\u{1B}")
+        XCTAssertEqual(session.client.documentTextForReads, "abc", "Escape keeps the selection's text")
+        XCTAssertEqual(session.client.writes, [], "nothing to clear either")
+
+        try session.pressPickerChord()
+        try session.type("q")
+
+        XCTAssertEqual(session.client.documentTextForReads, "，")
+    }
+
+    /// The placeholder is the picker's alone: down with the list, and
+    /// cleared exactly once, so a host never sees an empty marked region it
+    /// did not have (McBopomofo #346).
+    func testClosing_clearsThePlaceholder_once() throws {
+        let session = try makeSession()
+        try session.pressPickerChord()
+
+        try session.pressPickerChord()
+        session.controller.hidePalettes()
+        session.controller.deactivateServer(session.client)
+
+        XCTAssertEqual(session.client.writes, [Self.placeholderUp, Self.placeholderDown])
     }
 
     func testTheChordAgain_closesIt() throws {
@@ -109,6 +180,7 @@ final class TaigiInputControllerSymbolPickerTests: XCTestCase {
         XCTAssertTrue(handled)
         XCTAssertFalse(session.picker.isShowing)
         XCTAssertFalse(session.controller.isSymbolPickerOpen)
+        XCTAssertEqual(session.client.writes, [Self.placeholderUp, Self.placeholderDown], "no placeholder left behind")
     }
 
     /// A list the window refused to put up — a caret on no display — leaves
@@ -123,7 +195,10 @@ final class TaigiInputControllerSymbolPickerTests: XCTestCase {
 
         XCTAssertFalse(session.controller.isSymbolPickerOpen)
         XCTAssertTrue(try session.type("q"), "q starts a composition, as it does with no picker")
-        XCTAssertEqual(session.client.writes, [.setMarkedText("q", selectionLocation: 1)])
+        XCTAssertEqual(
+            session.client.writes,
+            [Self.placeholderUp, Self.placeholderDown, .setMarkedText("q", selectionLocation: 1)],
+        )
     }
 
     /// The picker is not the candidate window: switching that one off does
@@ -162,7 +237,7 @@ final class TaigiInputControllerSymbolPickerTests: XCTestCase {
         try session.walkPicker(cells: pair)
         try session.type("\r")
 
-        XCTAssertEqual(session.client.writes, [.insertText("「」")])
+        XCTAssertEqual(session.client.writes, [Self.placeholderUp, Self.placeholderDown, .insertText("「」")])
     }
 
     func testReturn_writesTheHighlightedSymbol() throws {
@@ -185,7 +260,7 @@ final class TaigiInputControllerSymbolPickerTests: XCTestCase {
         try session.press(.rightArrow)
 
         XCTAssertEqual(session.picker.selectedIndex, 2)
-        XCTAssertEqual(session.client.writes, [])
+        XCTAssertEqual(session.client.writes, [Self.placeholderUp], "the placeholder stays; walking rewrites nothing")
     }
 
     /// Escape closes and is swallowed: the host must not see the Escape
@@ -199,7 +274,7 @@ final class TaigiInputControllerSymbolPickerTests: XCTestCase {
 
         XCTAssertFalse(session.controller.isSymbolPickerOpen)
         XCTAssertFalse(session.picker.isShowing)
-        XCTAssertEqual(session.client.writes, [])
+        XCTAssertEqual(session.client.writes, [Self.placeholderUp, Self.placeholderDown])
     }
 
     /// A letter is not the picker's: the list comes down and the letter goes
@@ -212,7 +287,11 @@ final class TaigiInputControllerSymbolPickerTests: XCTestCase {
 
         XCTAssertTrue(handled)
         XCTAssertFalse(session.picker.isShowing)
-        XCTAssertEqual(session.client.writes, [.setMarkedText("t", selectionLocation: 1)])
+        XCTAssertEqual(
+            session.client.writes,
+            [Self.placeholderUp, Self.placeholderDown, .setMarkedText("t", selectionLocation: 1)],
+            "the placeholder goes before the letter marks its own composition",
+        )
     }
 
     /// A pick is what the user chose, not what the full-width map would
@@ -296,7 +375,7 @@ final class TaigiInputControllerSymbolPickerTests: XCTestCase {
         session.client.selectedRangeToReturn = NSRange(location: 0, length: 0)
 
         try session.pressPickerChord()
-        XCTAssertEqual(session.client.documentTextForReads, "\(Self.composition) ")
+        XCTAssertEqual(session.client.documentTextForReads, "\(Self.composition)  ", "auto space, then the placeholder")
 
         try session.press(.rightArrow)
         try session.press(.leftArrow)
@@ -374,10 +453,13 @@ final class TaigiInputControllerSymbolPickerTests: XCTestCase {
         leaving.controller.deactivateServer(leaving.client)
 
         XCTAssertTrue(picker.isShowing, "a session that did not raise the picker took it down")
+        XCTAssertEqual(arriving.client.writes, [Self.placeholderUp], "the placeholder is the arriving session's")
+        XCTAssertEqual(leaving.client.writes, [], "a session with no placeholder clears none")
 
         arriving.controller.deactivateServer(arriving.client)
 
         XCTAssertFalse(picker.isShowing, "the picker goes with the focus of the session that raised it")
+        XCTAssertEqual(arriving.client.writes, [Self.placeholderUp, Self.placeholderDown])
     }
 
     // MARK: - Harness
@@ -439,6 +521,10 @@ final class TaigiInputControllerSymbolPickerTests: XCTestCase {
     }
 
     private static let composition = "taigi"
+    /// The picker's placeholder going in (one underlined space, caret after
+    /// it) and coming out.
+    private static let placeholderUp = RecordingTextInputClient.Write.setMarkedText(" ", selectionLocation: 1)
+    private static let placeholderDown = RecordingTextInputClient.Write.setMarkedText("", selectionLocation: 0)
     private static let compositionCaretIndex = composition.utf16.count - 1
     private static let caretRect = CGRect(x: 120, y: 400, width: 1, height: 18)
 }
