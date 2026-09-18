@@ -862,18 +862,14 @@ impl TextService_Impl {
             ShortcutAction::ShowSymbolPicker => {}
             ShortcutAction::OpenLastSettingsPane => settings_launcher::open_settings(),
             ShortcutAction::ToggleRomanization => {
-                let Some(store) = runtime.settings_store() else {
-                    log::warn!("shortcut.no_settings_store");
-                    return;
-                };
-                if let Err(error) = store.update(|document| {
+                if !runtime.update_settings("toggle_romanization", |document| {
                     let next = match document.choice(&keys::INPUT_MODE) {
                         InputMode::Tl => InputMode::Poj,
                         _ => InputMode::Tl,
                     };
                     document.set_choice(&keys::INPUT_MODE, next);
                 }) {
-                    log::error!("shortcut.toggle_romanization_failed error={error}");
+                    return;
                 }
                 // The candidates on screen were fetched under the old
                 // romanization; they go with the mode that produced them —
@@ -895,10 +891,6 @@ impl TextService_Impl {
                 self.flash_mode_label(runtime, &settings, label);
             }
             ShortcutAction::ToggleTranslateSwapped => {
-                let Some(store) = runtime.settings_store() else {
-                    log::warn!("shortcut.no_settings_store");
-                    return;
-                };
                 // Inert under roman-only (`allows_swap_toggle`): no write, no
                 // flash. Under combined the chord flips only the punctuation
                 // width (`is_full_width_punctuation`). Read off the same
@@ -911,11 +903,11 @@ impl TextService_Impl {
                 if !display_mode.allows_swap_toggle() {
                     return;
                 }
-                if let Err(error) = store.update(|document| {
+                if !runtime.update_settings("toggle_translate_swapped", |document| {
                     let swapped = document.bool(&keys::IS_TRANSLATE_SWAPPED);
                     document.set_bool(&keys::IS_TRANSLATE_SWAPPED, !swapped);
                 }) {
-                    log::error!("shortcut.toggle_translate_swapped_failed error={error}");
+                    return;
                 }
                 // The list STAYS: the swap changes how a candidate displays,
                 // never which exist — re-presented in place, selection kept
@@ -923,15 +915,11 @@ impl TextService_Impl {
                 self.represent_open_list(identity, runtime, false);
             }
             ShortcutAction::CycleCandidateDisplayMode => {
-                let Some(store) = runtime.settings_store() else {
-                    log::warn!("shortcut.no_settings_store");
-                    return;
-                };
-                if let Err(error) = store.update(|document| {
+                if !runtime.update_settings("cycle_candidate_display_mode", |document| {
                     let next = document.choice(&keys::CANDIDATE_DISPLAY_MODE).next();
                     document.set_choice(&keys::CANDIDATE_DISPLAY_MODE, next);
                 }) {
-                    log::error!("shortcut.cycle_candidate_display_mode_failed error={error}");
+                    return;
                 }
                 // The mode changes which candidates exist (invariants §44),
                 // not only how they draw — so the open list is re-fetched
@@ -1029,7 +1017,7 @@ impl TextService_Impl {
     /// back, and the flag left in the state is simply never read again
     /// until the next show overwrites it.
     fn live_symbol_picker(&self, token: ContextToken) -> Option<Rc<RefCell<CandidatePresenter>>> {
-        if !self.state.borrow().is_symbol_picker_open {
+        if self.state.borrow().symbol_picker_cells.is_empty() {
             return None;
         }
         let picker = self.symbol_picker()?;
@@ -1123,8 +1111,15 @@ impl TextService_Impl {
         let (Some(picker), Some(table)) = (self.symbol_picker(), SymbolTable::bundled()) else {
             return;
         };
-        let cells = table
-            .symbols()
+        // The recents lead (`RecentSymbols`), read once: this is the list
+        // the pick will index.
+        let ordered = Runtime::shared()
+            .settings
+            .current()
+            .recent_symbols()
+            .ordered(table.symbols());
+        let cells = ordered
+            .iter()
             .map(|symbol| CandidateCellContent::new(symbol, None))
             .collect();
         let (client_id, focus_generation) = {
@@ -1165,14 +1160,15 @@ impl TextService_Impl {
         };
         if !shown {
             picker.borrow_mut().hide(token);
-            self.state.borrow_mut().is_symbol_picker_open = false;
+            self.state.borrow_mut().symbol_picker_cells.clear();
             return;
         }
-        self.state.borrow_mut().is_symbol_picker_open = true;
+        self.state.borrow_mut().symbol_picker_cells = ordered;
         self.record_focused_caret(caret);
     }
 
-    /// Writes the symbol at `index` and closes the picker. `None` — a slot
+    /// Writes the symbol at `index`, closes the picker and moves the symbol
+    /// to the front of the recents, for the next opening. `None` — a slot
     /// with no cell — does nothing, and keeps the picker up.
     fn pick_symbol_cell(
         &self,
@@ -1181,9 +1177,8 @@ impl TextService_Impl {
         identity: usize,
         index: Option<usize>,
     ) {
-        let Some(symbol) = index
-            .and_then(|index| SymbolTable::bundled()?.symbols().nth(index))
-            .map(str::to_owned)
+        let Some(symbol) =
+            index.and_then(|index| self.state.borrow().symbol_picker_cells.get(index).cloned())
         else {
             return;
         };
@@ -1200,9 +1195,14 @@ impl TextService_Impl {
             token,
             identity,
             &KeyEventSnapshot::default(),
-            &KeyWork::InsertSymbol(symbol),
+            &KeyWork::InsertSymbol(symbol.clone()),
             &settings,
         );
+        // Recorded AFTER the write, so the symbol does not wait on the disk;
+        // a store that cannot be written still got its symbol.
+        runtime.update_settings("record_recent_symbol", |document| {
+            document.note_recent_symbol(&symbol);
+        });
     }
 
     /// Re-presents the open list for `identity` under the settings in force

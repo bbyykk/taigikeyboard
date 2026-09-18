@@ -35,6 +35,15 @@ final class SymbolTableTests: XCTestCase {
         }
     }
 
+    /// Both ellipses, side by side: the midline `⋯` (USER 2026-09-19) right
+    /// after the baseline `…`, so the two are on the same page.
+    func testTheMidlineEllipsis_followsTheBaselineOne() throws {
+        let punctuation = try XCTUnwrap(TestFixtures.shippedSymbolTable().category(.punctuation)).symbols
+        let baseline = try XCTUnwrap(punctuation.firstIndex(of: "…"))
+
+        XCTAssertEqual(punctuation[baseline + 1], "⋯")
+    }
+
     /// The full-width marks the composition maps a typed key onto are all
     /// reachable from the picker too, so a user in romanization mode — where
     /// the map is off — has a way to write them.

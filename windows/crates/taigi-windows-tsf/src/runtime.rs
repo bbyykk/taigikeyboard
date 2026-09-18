@@ -102,8 +102,21 @@ impl Runtime {
         }
     }
 
-    pub fn settings_store(&self) -> Option<&SettingsFileStore> {
-        self.settings_store.as_ref()
+    /// One write to `settings.json` from the key path — under the file's
+    /// lock, on the document as it is now, so a write from the settings
+    /// window is not lost. `what` names the write in the log. Answers
+    /// whether there was a store to write to (an AppContainer host has
+    /// none); a write that failed is logged and still answers true, since
+    /// what the chord does next does not depend on the disk.
+    pub fn update_settings(&self, what: &str, mutate: impl FnOnce(&mut SettingsDocument)) -> bool {
+        let Some(store) = &self.settings_store else {
+            log::warn!("settings.no_store what={what}");
+            return false;
+        };
+        if let Err(error) = store.update(mutate) {
+            log::error!("settings.update_failed what={what} error={error}");
+        }
+        true
     }
 
     /// The coordinator only if a key has already built it — for callbacks

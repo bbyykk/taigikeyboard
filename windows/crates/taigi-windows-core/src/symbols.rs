@@ -134,6 +134,71 @@ impl SymbolTable {
     }
 }
 
+/// The last few picks, most recent first — the front of the picker's list,
+/// so a symbol used a moment ago is on the first page under the first slot
+/// keys (USER 2026-09-19: 「符號選單能夠依照最近輸入排序」). One page, not
+/// the whole table: past `CAPACITY` a symbol falls back to its file place,
+/// so the brackets stay together and the rest of the list keeps its order.
+/// Port of macOS `RecentSymbols.swift`.
+///
+/// Pure: what is stored and what is shown are two functions of the same
+/// list. The document keeps the strings themselves
+/// (`SettingsDocument::recent_symbols`), so a table that drops a symbol
+/// simply stops showing it (`ordered` never writes back).
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct RecentSymbols {
+    symbols: Vec<String>,
+}
+
+impl RecentSymbols {
+    /// One slot-key page.
+    pub const CAPACITY: usize = crate::candidates::HorizontalPageLayout::PAGE_SIZE;
+
+    /// Normalizes what came from the document — a hand-edited list may
+    /// repeat a symbol or run past a page — so every value holds the
+    /// invariant: most recent first, no repeats, at most `CAPACITY`.
+    pub fn new(stored: impl IntoIterator<Item = String>) -> Self {
+        let mut symbols: Vec<String> = Vec::new();
+        for symbol in stored {
+            if !symbol.is_empty() && !symbols.contains(&symbol) {
+                symbols.push(symbol);
+            }
+            if symbols.len() == Self::CAPACITY {
+                break;
+            }
+        }
+        Self { symbols }
+    }
+
+    pub fn symbols(&self) -> &[String] {
+        &self.symbols
+    }
+
+    /// The list with `symbol` moved to the front.
+    pub fn noting(&self, symbol: &str) -> Self {
+        Self::new(std::iter::once(symbol.to_owned()).chain(self.symbols.iter().cloned()))
+    }
+
+    /// `table` reordered: the recents it still has, most recent first, then
+    /// the rest in table order.
+    pub fn ordered<'a>(&self, table: impl Iterator<Item = &'a str>) -> Vec<String> {
+        let table: Vec<&str> = table.collect();
+        let mut ordered: Vec<String> = self
+            .symbols
+            .iter()
+            .filter(|symbol| table.contains(&symbol.as_str()))
+            .cloned()
+            .collect();
+        ordered.extend(
+            table
+                .iter()
+                .filter(|symbol| !self.symbols.iter().any(|recent| recent == *symbol))
+                .map(|symbol| (*symbol).to_owned()),
+        );
+        ordered
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -155,6 +220,17 @@ mod tests {
                 SymbolCategoryId::SpecialSymbols
             ]
         );
+    }
+
+    #[test]
+    fn the_midline_ellipsis_follows_the_baseline_one() {
+        // trace: SymbolTableTests.swift `testTheMidlineEllipsis_followsTheBaselineOne`.
+        let punctuation = &bundled()
+            .category(SymbolCategoryId::Punctuation)
+            .unwrap()
+            .symbols;
+        let baseline = punctuation.iter().position(|s| s == "…").unwrap();
+        assert_eq!(punctuation[baseline + 1], "⋯");
     }
 
     #[test]
@@ -237,5 +313,58 @@ mod tests {
             SymbolTable::parse(r#"{"categories":[{"id":"emoji","symbols":["😀"]}]}"#),
             Err(SymbolTableError::Json(_))
         ));
+    }
+
+    fn recents(symbols: &[&str]) -> RecentSymbols {
+        RecentSymbols::new(symbols.iter().map(|s| (*s).to_owned()))
+    }
+
+    const TABLE: [&str; 5] = ["，", "。", "！", "「」", "★"];
+
+    #[test]
+    fn a_pick_leads_and_the_rest_keeps_file_order() {
+        // trace: RecentSymbolsTests.swift — noting("「」") → ["「」"]; ordered
+        // → ["「」"] + table minus it; the latest pick leads a re-pick.
+        assert_eq!(recents(&[]).ordered(TABLE.into_iter()), TABLE);
+        let one = recents(&[]).noting("「」");
+        assert_eq!(one.symbols(), ["「」"]);
+        assert_eq!(
+            one.ordered(TABLE.into_iter()),
+            ["「」", "，", "。", "！", "★"]
+        );
+        let again = recents(&[]).noting("。").noting("★").noting("。");
+        assert_eq!(again.symbols(), ["。", "★"]);
+        assert_eq!(
+            again.ordered(TABLE.into_iter()),
+            ["。", "★", "，", "！", "「」"]
+        );
+    }
+
+    #[test]
+    fn the_tenth_pick_drops_the_oldest_and_a_stored_list_is_normalized() {
+        let mut ten = recents(&[]);
+        for symbol in ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"] {
+            ten = ten.noting(symbol);
+        }
+        assert_eq!(
+            ten.symbols(),
+            ["10", "9", "8", "7", "6", "5", "4", "3", "2"],
+            "one slot-key page"
+        );
+        let stored = recents(&["★", "", "★", "。", "1", "2", "3", "4", "5", "6", "7", "8"]);
+        assert_eq!(
+            stored.symbols(),
+            ["★", "。", "1", "2", "3", "4", "5", "6", "7"]
+        );
+    }
+
+    #[test]
+    fn a_recent_the_table_no_longer_has_is_hidden_not_forgotten() {
+        let stale = recents(&["☃", "★"]);
+        assert_eq!(
+            stale.ordered(TABLE.into_iter()),
+            ["★", "，", "。", "！", "「」"]
+        );
+        assert_eq!(stale.symbols(), ["☃", "★"], "ordering never writes back");
     }
 }

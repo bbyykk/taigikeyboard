@@ -143,6 +143,13 @@ pub const UPDATE_LAST_NOTIFIED_VERSION: SettingsKey<&'static str> =
 pub const UPDATE_PENDING_MANIFEST: SettingsKey<&'static str> =
     SettingsKey::new("updatePendingManifest", "");
 
+/// The symbol picker's last picks, most recent first (`symbols::RecentSymbols`;
+/// mirrors `SettingsStore.swift` `recentSymbols`). Bookkeeping the picker
+/// writes on every pick, like the update keys above: not a choice, so no
+/// reset touches it.
+pub const RECENT_SYMBOLS: SettingsKey<&'static [&'static str]> =
+    SettingsKey::new("recentSymbols", &[]);
+
 /// The settings-window pane the sidebar reopens on.
 pub const SELECTED_SETTINGS_PANE: SettingsKey<SettingsPane> =
     SettingsKey::new("selectedSettingsPane", SettingsPane::General);

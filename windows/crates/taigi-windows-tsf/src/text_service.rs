@@ -117,11 +117,16 @@ pub(crate) struct ServiceState {
     /// key contract, and a picker sharing them would hand the arrows and the
     /// slot keys to whichever list showed last (macOS `CandidatePanel.symbolPicker`).
     pub(crate) symbol_picker: Option<Rc<RefCell<CandidatePresenter>>>,
-    /// Whether the picker was opened — the one piece of picker state
-    /// outside the window. WHO it is up for is the window's own owner, and
-    /// the selection is the window's too; the flag is only ever read while
-    /// the window says it is up for the asking context (`live_symbol_picker`).
-    pub(crate) is_symbol_picker_open: bool,
+    /// The list the picker was last shown, cell by cell; empty once a
+    /// dismiss this service ran has cleared it (a posted focus hide leaves
+    /// it behind, unread) — the one piece of picker state outside the
+    /// window. WHO it is up for is the window's own owner, and the selection
+    /// is the window's too; the list is only ever read while the window says
+    /// it is up for the asking context (`live_symbol_picker`). Held rather than
+    /// re-derived at pick time, so the index the window answers is read
+    /// against the list it was shown, whatever the recents say by then
+    /// (macOS `symbolPickerCells`).
+    pub(crate) symbol_picker_cells: Vec<String>,
     pub(crate) mode_flash: Option<Rc<RefCell<ModeFlash>>>,
     /// The Telex key table the `showTelexGuide` chord toggles; owned by the
     /// context that raised it, like the candidate window.
@@ -318,7 +323,7 @@ impl TextService_Impl {
             state.held_toggle_chord = None;
             // The windows are destroyed below; a hide still owed is moot.
             state.is_ui_hide_pending = false;
-            state.is_symbol_picker_open = false;
+            state.symbol_picker_cells.clear();
             (
                 state.presenter.take(),
                 state.symbol_picker.take(),
@@ -481,7 +486,7 @@ impl TextService_Impl {
     /// Takes the symbol picker down whoever raised it — the settings
     /// doorways, the handover and the pending-hide drain.
     pub(crate) fn hide_symbol_picker_now(&self) {
-        self.state.borrow_mut().is_symbol_picker_open = false;
+        self.state.borrow_mut().symbol_picker_cells.clear();
         if let Some(picker) = self.symbol_picker() {
             picker.borrow_mut().hide_for_handover();
         }
@@ -495,7 +500,7 @@ impl TextService_Impl {
         if !picker.borrow().is_showing(token) {
             return;
         }
-        self.state.borrow_mut().is_symbol_picker_open = false;
+        self.state.borrow_mut().symbol_picker_cells.clear();
         picker.borrow_mut().hide(token);
     }
 
