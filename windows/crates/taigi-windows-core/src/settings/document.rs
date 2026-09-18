@@ -21,6 +21,7 @@ use super::engine_settings::{
     CandidateDisplayMode, DictionarySourceToggles, EngineSettings, KautianSubcollections,
 };
 use super::keys;
+use crate::symbols::RecentSymbols;
 
 /// The name of one setting, paired with the value used when the user has
 /// never touched it.
@@ -130,6 +131,45 @@ impl SettingsDocument {
     /// Stores an arbitrary string under `name` (composing chords).
     pub fn set_raw_string(&mut self, name: &str, value: &str) {
         self.set_raw(name, Value::String(value.to_owned()));
+    }
+
+    /// A list of strings, in stored order. A value that is not an array of
+    /// strings — one non-string item spoils it, as `UserDefaults
+    /// .stringArray(forKey:)` reads it on macOS — reads as the default.
+    pub fn string_list(&self, key: &SettingsKey<&'static [&'static str]>) -> Vec<String> {
+        self.values
+            .get(key.name)
+            .and_then(Value::as_array)
+            .and_then(|items| {
+                items
+                    .iter()
+                    .map(|item| item.as_str().map(str::to_owned))
+                    .collect()
+            })
+            .unwrap_or_else(|| key.default.iter().map(|s| (*s).to_owned()).collect())
+    }
+
+    pub fn set_string_list(
+        &mut self,
+        key: &SettingsKey<&'static [&'static str]>,
+        values: &[String],
+    ) {
+        self.set_raw(key.name, Value::from(values));
+    }
+
+    /// The symbol picker's recent picks (`SettingsStore.swift` `recentSymbols`).
+    pub fn recent_symbols(&self) -> RecentSymbols {
+        RecentSymbols::new(self.string_list(&keys::RECENT_SYMBOLS))
+    }
+
+    /// Moves `symbol` to the front of the recent picks. Re-picking the front
+    /// symbol writes nothing, so it moves no revision.
+    pub fn note_recent_symbol(&mut self, symbol: &str) {
+        let before = self.recent_symbols();
+        let after = before.noting(symbol);
+        if after != before {
+            self.set_string_list(&keys::RECENT_SYMBOLS, after.symbols());
+        }
     }
 
     fn set_raw(&mut self, name: &str, value: Value) {
@@ -267,6 +307,29 @@ impl SettingsDocument {
 mod tests {
     use super::*;
     use crate::settings::{AppearanceMode, CandidateLayout, InputMode};
+
+    #[test]
+    fn recent_symbols_round_trip_and_an_unchanged_list_moves_no_revision() {
+        let mut document = SettingsDocument::default();
+        assert!(document.recent_symbols().symbols().is_empty());
+        document.note_recent_symbol("。");
+        assert_eq!(document.revision, 1);
+        assert_eq!(document.recent_symbols().symbols(), ["。"]);
+        let reloaded = SettingsDocument::from_json(&document.to_json()).unwrap();
+        assert_eq!(reloaded.recent_symbols().symbols(), ["。"]);
+        document.note_recent_symbol("。");
+        assert_eq!(
+            document.revision, 1,
+            "re-picking the front symbol writes nothing"
+        );
+        document.set_raw_string(keys::RECENT_SYMBOLS.name, "not a list");
+        assert!(document.recent_symbols().symbols().is_empty());
+        document.set_raw(keys::RECENT_SYMBOLS.name, serde_json::json!(["。", 1]));
+        assert!(
+            document.recent_symbols().symbols().is_empty(),
+            "one non-string item spoils the list, as on macOS"
+        );
+    }
 
     #[test]
     fn empty_document_reads_every_default() {

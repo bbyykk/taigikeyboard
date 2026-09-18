@@ -462,6 +462,55 @@ final class TaigiInputControllerSymbolPickerTests: XCTestCase {
         XCTAssertEqual(arriving.client.writes, [Self.placeholderUp, Self.placeholderDown])
     }
 
+    // MARK: - Recents
+
+    /// A pick leads the next list (USER 2026-09-19 「依照最近輸入排序」), from
+    /// the store — a new controller over the same defaults sees it too —
+    /// and the rest of the table keeps its order behind it.
+    func testAPick_leadsTheNextOpening_andOutlivesTheController() throws {
+        let table = try TestFixtures.shippedSymbolTable().symbols
+        let first = try makeSession()
+        try first.pressPickerChord()
+        try first.type("w")
+        XCTAssertEqual(first.client.insertedTexts, ["。"])
+
+        let second = try makeSession()
+        try second.pressPickerChord()
+        let cells = try XCTUnwrap(second.picker.shownContent).cells.map(\.text)
+        XCTAssertEqual(cells, ["。"] + table.filter { $0 != "。" })
+
+        try second.type("q")
+        XCTAssertEqual(second.client.insertedTexts, ["。"], "the first slot key now picks the recent")
+        XCTAssertEqual(SettingsStore(userDefaults: userDefaults).recentSymbols.symbols, ["。"])
+    }
+
+    /// Closing, walking and an empty slot record nothing; only a write does.
+    func testOnlyAPick_isRecorded() throws {
+        let session = try makeSession()
+        try session.pressPickerChord()
+        try session.press(.rightArrow)
+        try session.type("\u{1B}")
+
+        XCTAssertEqual(SettingsStore(userDefaults: userDefaults).recentSymbols.symbols, [])
+    }
+
+    /// The pick reads the list the window was shown, not the store as it is
+    /// by then — another writer moving the recents under an open picker
+    /// must not move what a slot key means.
+    func testAPick_indexesTheListThatWasShown() throws {
+        let session = try makeSession()
+        try session.pressPickerChord()
+        SettingsStore(userDefaults: userDefaults).noteRecentSymbol("★")
+
+        try session.type("q")
+
+        XCTAssertEqual(session.client.insertedTexts, ["，"])
+        XCTAssertEqual(
+            SettingsStore(userDefaults: userDefaults).recentSymbols.symbols, ["，", "★"],
+            "the pick is recorded on top of the other write",
+        )
+    }
+
     // MARK: - Harness
 
     private struct Session: CandidateBarSession {

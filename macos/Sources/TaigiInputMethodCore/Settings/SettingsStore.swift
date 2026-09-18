@@ -226,6 +226,14 @@ final class SettingsStore: EngineSettingsProvider, @unchecked Sendable {
             defaultValue: false,
         )
 
+        /// The symbol picker's last picks, most recent first (`RecentSymbols`).
+        /// Bookkeeping the picker writes on every pick, like the update keys
+        /// above: not a choice, so no reset touches it.
+        static let recentSymbols = SettingsKey(
+            name: "recentSymbols",
+            defaultValue: [String](),
+        )
+
         /// The settings-window pane the sidebar reopens on. UI-only like
         /// `displayLanguage` — the engine never reads it — but registered here
         /// so every defaults key this app writes is named in one place.
@@ -515,6 +523,20 @@ final class SettingsStore: EngineSettingsProvider, @unchecked Sendable {
         bool(Keys.isCandidateWindowEnabled)
     }
 
+    /// The symbol picker's recent picks.
+    var recentSymbols: RecentSymbols {
+        RecentSymbols(stringArray(Keys.recentSymbols))
+    }
+
+    /// Moves `symbol` to the front of the recent picks. Re-picking the front
+    /// symbol writes nothing.
+    func noteRecentSymbol(_ symbol: String) {
+        let before = recentSymbols
+        let after = before.noting(symbol)
+        guard after != before else { return }
+        userDefaults.set(after.symbols, forKey: Keys.recentSymbols.name)
+    }
+
     /// Records `chord` on `action`, or clears the row when it is nil.
     func setComposingChord(_ chord: ComposingKeyChord?, for action: ComposingAction) {
         userDefaults.set(
@@ -746,6 +768,10 @@ final class SettingsStore: EngineSettingsProvider, @unchecked Sendable {
 
     private func string(_ key: SettingsKey<String>) -> String {
         userDefaults.string(forKey: key.name) ?? key.defaultValue
+    }
+
+    private func stringArray(_ key: SettingsKey<[String]>) -> [String] {
+        userDefaults.stringArray(forKey: key.name) ?? key.defaultValue
     }
 }
 

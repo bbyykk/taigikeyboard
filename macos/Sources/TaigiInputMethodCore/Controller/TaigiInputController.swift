@@ -69,11 +69,18 @@ public final class TaigiInputController: IMKInputController {
         set { injectedSymbolPickerPresenter = newValue }
     }
 
-    /// Whether the symbol picker is up for this session — the one piece of
-    /// picker state the controller keeps: the list is the table's, and the
-    /// selection is the window's (`CandidatePresenter`), as for the bar.
+    /// The list the open picker shows, cell by cell, and empty while no
+    /// picker is up — the one piece of picker state the controller keeps:
+    /// the selection is the window's (`CandidatePresenter`), as for the
+    /// bar. Held rather than re-derived at pick time, so the index the
+    /// window answers is read against the list it was shown, whatever the
+    /// recents say by then.
     @MainActor
-    private(set) var isSymbolPickerOpen = false
+    private var symbolPickerCells: [String] = []
+
+    /// Whether the symbol picker is up for this session.
+    @MainActor
+    var isSymbolPickerOpen: Bool { !symbolPickerCells.isEmpty }
 
     /// Whether the open picker put its placeholder into the client
     /// (`presentSymbolPicker`) — it does not over a selection — so
@@ -260,7 +267,7 @@ public final class TaigiInputController: IMKInputController {
             // The picker goes the same way, for the same reason: a list left
             // up by the outgoing session would be picked from by this one.
             controller.symbolPickerPresenter.hideForHandover()
-            controller.isSymbolPickerOpen = false
+            controller.symbolPickerCells = []
             // Dropped, not cleared: activation makes no client call, and the
             // deactivation IMK sends first already cleared it (`endSession`).
             controller.isSymbolPickerPlaceholderMarked = false
@@ -1125,7 +1132,11 @@ public final class TaigiInputController: IMKInputController {
         executing executor: ComposingEffectExecutor,
         bindings: ComposingKeyBindings,
     ) {
-        isSymbolPickerOpen = true
+        // No table, no picker — and nothing marked for one.
+        guard let table = symbolTable else { return }
+        // The recents lead (`RecentSymbols`), read once: this is the list
+        // the pick will index.
+        symbolPickerCells = settings.recentSymbols.ordered(table.symbols)
         let selection = client.selectedRange()
         var markedTextLength = 0
         if selection.location == NSNotFound || selection.length == 0 {
@@ -1133,15 +1144,13 @@ public final class TaigiInputController: IMKInputController {
             markedTextLength = Self.symbolPickerPlaceholder.utf16.count
             executor.execute(.updatePreedit(Self.symbolPickerPlaceholder, caretUTF16: markedTextLength))
         }
-        guard let table = symbolTable,
-              let caretRect = caretRect(in: client, markedTextLength: markedTextLength)
-        else {
+        guard let caretRect = caretRect(in: client, markedTextLength: markedTextLength) else {
             dismissSymbolPicker()
             return
         }
         symbolPickerPresenter.show(
             CandidateWindowContent(
-                cells: table.symbols.map { CandidateCellContent(text: $0, annotation: nil) },
+                cells: symbolPickerCells.map { CandidateCellContent(text: $0, annotation: nil) },
                 slotKeySet: bindings.slotKeySet,
                 leadCellIsUnkeyed: false,
             ),
@@ -1190,13 +1199,16 @@ public final class TaigiInputController: IMKInputController {
         return true
     }
 
-    /// Writes the symbol at `index` and closes the picker. Nil — a slot with
+    /// Writes the symbol at `index`, closes the picker and moves the symbol
+    /// to the front of the recents, for the next opening. Nil — a slot with
     /// no cell — does nothing, and keeps the picker up.
     @MainActor
     private func pickSymbolCell(at index: Int?, manager: ComposingManager, client: IMKTextInput) {
-        guard let index, let symbols = symbolTable?.symbols, symbols.indices.contains(index) else { return }
+        guard let index, symbolPickerCells.indices.contains(index) else { return }
+        let symbol = symbolPickerCells[index]
         dismissSymbolPicker()
-        insertSymbol(symbols[index], manager: manager, client: client)
+        insertSymbol(symbol, manager: manager, client: client)
+        settings.noteRecentSymbol(symbol)
     }
 
     /// Writes `symbol` at the caret as one string — so a bracket pair lands
@@ -1233,7 +1245,7 @@ public final class TaigiInputController: IMKInputController {
     /// client callback that re-enters here finds nothing left to clear.
     @MainActor
     private func dismissSymbolPicker() {
-        isSymbolPickerOpen = false
+        symbolPickerCells = []
         symbolPickerPresenter.hide(ownedBy: sessionToken)
         guard isSymbolPickerPlaceholderMarked else { return }
         isSymbolPickerPlaceholderMarked = false
