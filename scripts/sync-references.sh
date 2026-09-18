@@ -44,6 +44,7 @@ REPOS=(
   "moe_taigi_apk|git@github.com:taigikeyboard/moe_taigi_apk.git|"
   "aiongtaigi-sushi|git@github.com:taigikeyboard/aiongtaigi-sushi.git|"
   "khiin-rs|git@github.com:taigikeyboard/khiin-rs.git|"
+  "KeyKey|git@github.com:taigikeyboard/KeyKey.git|"
   "mozc|git@github.com:taigikeyboard/mozc.git|shallow"
   # Fork carries no tags; the pin fetches them from upstream KeyboardKit.
   "keyboardkit9.9.0|git@github.com:taigikeyboard/KeyboardKit.git|pin:9.9.0:git@github.com:KeyboardKit/KeyboardKit.git"
