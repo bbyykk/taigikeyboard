@@ -175,13 +175,25 @@ fn raw_segment_letter_case(raw_seg: &str) -> phonetics::case_transform::LetterCa
 }
 
 /// Apply [`raw_segment_letter_case`] of `raw_seg` to `roman` via the
-/// tone-letter-aware `phonetics::case_transform::transform_input_case`
-/// (handles POJ/TL diacritic letters; the raw span is used only to
-/// derive the case intent, never sliced against the roman, so a
-/// toneless-ASCII raw vs tone-diacritic roman length mismatch is a
-/// non-issue — Codex pre-impl 2026-05-18).
+/// tone-letter-aware, raise-only `phonetics::case_transform::raise_case`.
+/// The raw span only derives the case intent, never sliced against the
+/// roman, so a toneless-ASCII raw vs tone-diacritic roman length mismatch
+/// is a non-issue (Codex pre-impl 2026-05-18).
 fn recase_roman(roman: &str, raw_seg: &str, mode: phonetics::InputMode) -> String {
-    phonetics::case_transform::transform_input_case(roman, raw_segment_letter_case(raw_seg), mode)
+    phonetics::case_transform::raise_case(roman, raw_segment_letter_case(raw_seg), mode)
+}
+
+/// [`recase_roman`] over a whole batch that shares one raw segment. The
+/// case intent is derived once; a lowercase segment leaves every roman
+/// untouched, so the common path allocates nothing.
+fn recase_all(candidates: &mut [RawCandidate], raw_seg: &str, mode: phonetics::InputMode) {
+    let case = raw_segment_letter_case(raw_seg);
+    if case == phonetics::case_transform::LetterCase::Lowercased {
+        return;
+    }
+    for candidate in candidates {
+        candidate.roman = phonetics::case_transform::raise_case(&candidate.roman, case, mode);
+    }
 }
 
 /// v3.5.9 C-4 (renamed from `render_roman_for_mode`) — POJ display rewrite
@@ -196,22 +208,21 @@ fn recase_roman(roman: &str, raw_seg: &str, mode: phonetics::InputMode) -> Strin
 ///
 /// The TL→POJ rewriter only title-cases (it checks `first.is_uppercase()`
 /// then stops), so a CapsLocked candidate (`HOO`) would otherwise collapse
-/// to title case (`Ho͘`); `transform_input_case` with the detected
-/// `LetterCase` and `InputMode::Poj` restores it (`HO͘`) — the same helper
-/// `recase_roman` already trusts for POJ diacritics (Codex pre-impl
-/// 2026-05-19 BLOCK). Case detection reads the (already-recased) roman's
-/// own alpha chars via [`raw_segment_letter_case`]: span-local candidates
-/// carry one uniform case so this is exact. A multi-segment walker path
-/// with heterogeneous casing collapses to one bucket derived from the
-/// whole string — first alpha lowercase ⇒ all-lowercase; first upper but
-/// not all remaining uppercase ⇒ leading-cap only; uniformly upper ⇒
-/// all-caps — a bounded POJ-only edge far outside normal use, not the
-/// reported `oo`/`nn` defect. Presentation only — never feed `display_text`
-/// (the canonical commit / `user_frequency.db` key) here.
+/// to title case (`Ho͘`); the raise-only `raise_case` with the detected
+/// `LetterCase` and `InputMode::Poj` restores it (`HO͘`) — the same
+/// helper `recase_roman` already trusts for POJ diacritics (Codex
+/// pre-impl 2026-05-19 BLOCK). Case detection reads the (already-recased)
+/// roman's own alpha chars via [`raw_segment_letter_case`]; the rewriter
+/// title-cases per hyphen sub-token and never invents a capital, so the
+/// restore is exact for mixed casing too. Presentation only — never feed
+/// `display_text` (the canonical commit / `user_frequency.db` key) here.
 fn recase_tl_as_poj_display(roman: &str) -> String {
-    let case = raw_segment_letter_case(roman);
+    use phonetics::case_transform::LetterCase;
     let poj = phonetics::api::tl_display_to_poj_display(roman);
-    phonetics::case_transform::transform_input_case(&poj, case, phonetics::InputMode::Poj)
+    match raw_segment_letter_case(roman) {
+        LetterCase::Lowercased => poj,
+        case => phonetics::case_transform::raise_case(&poj, case, phonetics::InputMode::Poj),
+    }
 }
 
 /// v3.5.8 — collapse continuous candidates that became identical only
@@ -430,11 +441,8 @@ fn fetch_via_lexicon_partial_inner_impl(
     // of a partial-prefix hit flips between branches as the user crosses the
     // first syllable boundary (e.g. typing `T` → keys.is_empty() arm,
     // unrecased; then `Ta` → else-arm + Step 4b, recased).
-    if raw_len as usize <= raw.len() {
-        let seg = &raw[..raw_len as usize];
-        for cand in &mut out {
-            cand.roman = recase_roman(&cand.roman, seg, mode);
-        }
+    if let Some(seg) = raw.get(..raw_len as usize) {
+        recase_all(&mut out, seg, mode);
     }
     out
 }
@@ -1346,9 +1354,7 @@ pub(crate) fn assemble_candidates(
         if let Some(ctx) = lex_ctx.as_ref() {
             if let Some(key) = crate::shadow::abbrev_query_key(raw, mode) {
                 let mut abbrev = lexicon::fetch_abbrev_candidates(&key, raw_len, ctx);
-                for cand in &mut abbrev {
-                    cand.roman = recase_roman(&cand.roman, raw, mode);
-                }
+                recase_all(&mut abbrev, raw, mode);
                 retain_absent_from(&candidates, &mut abbrev);
                 abbrev.truncate(PARTIAL_PREFIX_OUTPUT_CAP);
                 candidates.extend(abbrev);
@@ -1517,8 +1523,8 @@ mod tests {
         // Sentence-start capital (the `Hittui → Hit` segment class).
         assert_eq!(recase_tl_as_poj_display("Goo"), "Go\u{0358}");
         // CapsLock — the Codex pre-impl BLOCK: `tl_display_to_poj_display`
-        // only title-cases, so without the `transform_input_case`
-        // restore an all-caps candidate would collapse to `Go͘`. Pin
+        // only title-cases, so without the `raise_case` restore an
+        // all-caps candidate would collapse to `Go͘`. Pin
         // the all-caps form survives.
         assert_eq!(recase_tl_as_poj_display("OO"), "O\u{0358}");
         // `nn` under CapsLock: the base letters go all-caps while the
@@ -1715,5 +1721,19 @@ mod tests {
         // non-issue — raw only derives the case intent).
         assert_eq!(recase_roman("tâi", "Tai", tl), "Tâi");
         assert_eq!(recase_roman("tâi", "tai", tl), "tâi");
+    }
+
+    #[test]
+    fn recase_roman_keeps_custom_entry_capitals() {
+        // User report 2026-09-19: custom entry `Keng-lâm Su-īⁿ` typed as
+        // `klsi` came out `keng-lâm su-īⁿ`, and `Klsi` as `Keng-lâm su-īⁿ`.
+        // Raw case only raises; the stored capitals stay.
+        let poj = phonetics::InputMode::Poj;
+        assert_eq!(
+            recase_roman("Keng-lâm Su-īⁿ", "Klsi", poj),
+            "Keng-lâm Su-īⁿ"
+        );
+        // POJ display round-trip must not lower the stored `Su` either.
+        assert_eq!(recase_tl_as_poj_display("Keng-lâm Su-īⁿ"), "Keng-lâm Su-īⁿ");
     }
 }
