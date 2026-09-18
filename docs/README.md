@@ -68,12 +68,13 @@
 | `ui/emoji.md` | Emoji keyboard (ISEmojiView iOS / Compose Android, taigi-emojis data) | Active |
 | `ui/callouts.md` | Long-press callouts + tone-variation menus (engine map + platform popups) | Active |
 
-### `references/` — External IME Research (6)
+### `references/` — External IME Research (7)
 
 | File | Description | Status |
 |------|-------------|--------|
 | `references/mainstream-ime-comparison.md` | IME comparison index (TL;DR matrix + per-repo cards) — entry point for best-practice cites | Reference |
 | `references/azookey-reference.md` | azooKey research (SwiftUI, Flick, CustardKit) | Reference |
+| `references/chiakey-reference.md` | ChiaKey research (lexicon release contract, Runtime/Engine facade, learning store, IME↔helper coordination, updater, release workflow) | Reference |
 | `references/khiin-reference.md` | khiin-rs research (DPSegment, Bigram, Trie) | Reference |
 | `references/moe-taigi-reference.md` | MOE Taigi IME analysis (Segmentation, Nail) | Reference |
 | `references/rime-reference.md` | librime research (Pipeline, DAG, SpellingAlgebra) | Reference |

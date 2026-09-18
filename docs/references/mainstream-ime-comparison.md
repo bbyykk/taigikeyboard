@@ -9,6 +9,7 @@
 > - [`khiin-reference.md`](./khiin-reference.md) — khiin-rs DP segmentation + bigram + dual-trie
 > - [`rime-reference.md`](./rime-reference.md) — librime Pipeline / Spelling Algebra / user-dict decay
 > - [`moe-taigi-reference.md`](./moe-taigi-reference.md) — MOE Taigi InputLine / Nail / segmentation
+> - [`chiakey-reference.md`](./chiakey-reference.md) — ChiaKey lexicon release contract / learning store / IME↔helper coordination / updater trust chain
 
 ---
 
@@ -53,6 +54,7 @@
 | 23 | `vChewing-macOS/` | Swift 6 (SPM multi-package) | macOS (IMK) | Full IME (Mandarin) | **Homa** — DAG dynamic programming assembler (documented in `algorithm.md`) | LangModelAssembly convergence + VanguardLexicon | User phrase editor (`vChewing_PhraseEditorUI`) | **Tekkon** phonabet composer (ㄅㄆㄇ, multi-layout) | MIT-NTL | Actively-maintained macOS IMK IME with a **Chinese-language `algorithm.md`** covering FSM + DAG assembler + LM convergence. Sibling reading to #11 McBopomofo. `a4cccea6` (2026-08-16) |
 | 24 | `vChewing-LibVanguard/` | Swift 6.2 (SPM) | Cross (iOS/macOS/Catalyst/visionOS) | Engine only (no UI) | **Homa** sentence assembler | **CandidateKit** | **LexiconKit** + TrieKit | **Tekkon** (vendored copy) | **LGPL-3.0-or-later** | vChewing's engine being **decoupled from macOS frameworks** into a cross-platform Swift package — the same "platform-agnostic engine core" move our Rust engine made. Early stage. `68b63f2` (2026-05-23) |
 | 25 | `Tekkon/` | Swift | Cross (SPM) | Phonabet composer | n/a | n/a | n/a | 🔑 **Incremental keystroke → syllable state machine** (ㄅㄆㄇ + multiple keyboard layouts + pinyin trie) | LGPL-3.0-or-later + custom Section-7 exception | Upstream of the Tekkon vendored in #23/#24. **The closest structural analogue to our TPS composing** — same "is this key the previous syllable's coda or the next syllable's onset" ambiguity we hit in #392/#394/#553. `13c4e7a` (2026-08-09) |
+| 26 | `ChiaKey/` | Obj-C++ / C++ | macOS (IMK) | Full IME (Mandarin, Yahoo! KeyKey revival) | Manjusri bigram `Graph::walk` over SQLite | unigram + bigram log-prob + learned overrides | 🔑 Capped `LearningStore` (fewest-selections-then-LRU eviction, corpus-measured capacities) + context-keyed → generalized overrides | Bopomofo (`Formosa`) | BSD-style (Yahoo! 2012 + Chiaki.C 2026) | Engine is legacy; the value is **around** it: versioned lexicon release contract (manifest + cross-origin `SHA256SUMS` + atomic symlink + runtime-settled prune/rollback), `Runtime`/`Engine` host-neutral facade with commit ack, XPC-free IME↔helper coordination, updater team-pin + `spctl` chain, beta/stable release workflow. **Deep-dive**: `chiakey-reference.md`. `89aebc8c` (2026-09-18) |
 
 ---
 
@@ -81,6 +83,7 @@ If you are working on… → read these in order.
 1. **`librime` LevelDB user_dict** — canonical key-value (`{code}\t{phrase}` → `c=N d=D t=T`).
 2. **`McBopomofo` UserPhrasesLM + ExcludedPhrases** — separate user-add vs system-exclude pipelines.
 3. **`moe_taigi_apk` UserVoc vs LearnedVoc** — explicit separation between manual additions and auto-learning, with maturity thresholds (`RIPE_*_APPROVALS`).
+4. **`ChiaKey/ChiaKey-Source/Frameworks/Manjusri/Headers/LanguageModel.h`** (#26) — bounded learning store: eviction = fewest selections, then least recent (bucketed, O(1)); capacities measured against a 417k-token corpus; context-keyed override becomes global only after 3 contexts; learned-bigram weight stated as a constant with the rejected tuning recorded beside it. See `chiakey-reference.md` §3.
 
 ### Syllabifier (POJ / TL / Bopomofo / TPS)
 
@@ -104,6 +107,15 @@ If you are working on… → read these in order.
 3. **External: fcitx5-android** — the dispatcher/daemon pattern Trime is adapted from; clone on demand if the abstraction itself needs scrutiny.
 4. **`rakukan/` out-of-process host** — `crates/rakukan-engine-host/` + `rakukan-engine-rpc/` (Named-Pipe + postcard) + `rakukan-engine-abi/` (DLL loader). Desktop answer to engine isolation: the heavy Rust/LLM/GPU engine runs in a **separate process** behind a thin RPC. Read when engine crashes / GPU memory ever push us toward sandboxing the engine off the keyboard surface (#18).
 5. **`PIME/` multi-backend host** — `backends.json` + `PIMETextService/` + `PIMELauncher/`. One TSF shell ↔ N engines (python/node/go) over JSON IPC; runs McBopomofoWeb as a node backend. The "one shell, many engines, stable IPC boundary" concept (#19). Transport (process fork + IPC) does **not** transfer to a sandboxed mobile keyboard — only the shell/engine separation does.
+6. **`ChiaKey/ChiaKey-Source/Frameworks/ChiaKeyCore/`** (#26) — in-process desktop facade: one `Runtime` per process holding a recursive mutex, one `Engine` per text field, snapshot state + `acknowledgeCommit()` handshake + `contextPicks` aligned with candidates, C ABI. Shaped for TSF / Fcitx after evaluating both. See `chiakey-reference.md` §2.
+
+### Dictionary distribution / desktop release & update
+
+1. **`ChiaKey/Docs/LexiconContract.md` + `Scripts/install-lexicon-release.sh`** (#26) — dictionary as a separately released, verified artifact: manifest + cross-origin `SHA256SUMS`, versioned dir + atomic symlink, two-line `pending-verification` marker settled by the runtime (prune on success / rollback on load failure), bundled fallback, 3-day release-age delay, user-data overlay never touched. See `chiakey-reference.md` §1.
+2. **`ChiaKey/ChiaKey-Source/Utilities/Updater/OSX/ChiaKeyUpdateService.m`** (#26) — in-app update trust chain: CDN appcast first / GitHub API fallback (per-IP rate limit), SHA-256 → Developer ID → **team pinned to installed build** → `spctl` notarized assess → `flock` install lock. Compare `docs/architecture/macos-release.md` ("No auto-update"). See `chiakey-reference.md` §6.
+3. **`ChiaKey/.github/workflows/release.yml`** (#26) — `workflow_dispatch` `beta / patch / minor / major / stable` + `dry_run`, tag-derived version, secrets gate before tagging, numeric `CFBundleVersion` + separate release-tag plist key for betas. Compare `docs/architecture/desktop-release.md`. See `chiakey-reference.md` §7.
+4. **`ChiaKey/ChiaKey-Source/Loaders/OSX-IMK/ChiaKeyUserPhraseCoordination.h`** (#26) — IME ↔ helper-app protocol without XPC: lock file (30-min staleness, PID list, `flock` sidecar) + dirty file + distributed notification + 5 s poll; IME publishes a status plist. See `chiakey-reference.md` §5.
+5. **`lexical-models/`** (#15) — Keyman's folder convention for pluggable predictive models; the "registry" half of the same problem.
 
 ### Custom keyboard layout / UI
 
@@ -456,6 +468,23 @@ If you are working on… → read these in order.
   - `Tests/` — the composer's own edge cases, worth reading as a spec
 - ⚠ **License — read-only**: LGPL-3.0-or-later. `CUSTOM_LGPLv3_EXCEPTION.md` grants a Section-7 additional permission covering **Apple code-signing only** (no paid Developer ID needed to sign the resulting dylib) — it does **not** relax the LGPL's other terms, and in particular does not bless static linking into our app. **Algorithm reference only; do not copy code.** Phonetic tables are Mandarin and do not transfer (Core Principle #3).
 
+### 26. ChiaKey (千秋輸入法) — `references/ChiaKey/`
+
+- **What**: macOS-only Bopomofo IME reviving Yahoo! KeyKey / OpenVanilla; Obj-C++ InputMethodKit host over a C++ engine (`OVIMMandarin` + `Manjusri` SQLite bigram LM), ~60k LOC, plus Preferences app, Phrase Editor, Updater, `.cin` generic tables (Cangjie / Simplex / user tables). Dictionary lives in a separate repo (`chiakich/ChiaKey-Lexicon`) and is distributed as a verified GitHub Release asset. `89aebc8c` (2026-09-18), actively maintained.
+- **Why we care**: not the engine (Mandarin, Bopomofo, Yahoo-era walker — McBopomofo / vChewing / khiin-rs cover that better). The **operational layer around the engine** is the most complete open example we have of desktop-IME concerns we own on macOS / Windows: versioned lexicon release contract with runtime-settled prune / rollback, host-neutral `Runtime` / `Engine` facade with commit acknowledgement, bounded learning store with a stated eviction policy, XPC-free IME ↔ helper coordination, updater team-pin + notarization checks, `beta / stable` release workflow, gold-set eval harness that separates label noise from ranking error.
+- **Where to look**:
+  - `Docs/LexiconContract.md` + `Scripts/install-lexicon-release.sh` — lexicon contract + installer (rollback / prune / cross-origin checksum)
+  - `ChiaKey-Source/Frameworks/ChiaKeyCore/Headers/ChiaKeyCore/ChiaKeyCore.h` — `Runtime` / `Engine` / `EngineState` facade
+  - `ChiaKey-Source/Frameworks/Manjusri/Headers/LanguageModel.h` — `LearningStore`, capacities, `LearnedBigramScore`
+  - `ChiaKey-Source/Loaders/OSX-IMK/ChiaKeyUserPhraseCoordination.h` + `ChiaKeyServiceCoordination.h` — lock / dirty / notification protocol
+  - `ChiaKey-Source/Utilities/Updater/OSX/ChiaKeyUpdateService.m` — updater trust chain
+  - `.github/workflows/release.yml`, `Docs/ReleasePackaging.md` — release flow
+  - `Frameworks/Manjusri/Tools/WalkerGoldSet.cpp` — `--dominance` strict / loose gold sets, `replay` selections-per-pass
+- **Inspiration takeaways**: (1) dictionary-as-release-artifact checklist if a desktop dictionary channel is ever opened; (2) `acknowledgeCommit()` + `contextPicks` API ideas; (3) context-keyed → generalized override + "pick equals lexicon default clears the override"; (4) lock + dirty + notify + poll for any future desktop custom-dictionary editor; (5) provenance-xattr clean payload + `Legal/` notices folder in the `.pkg`; (6) two desktop input gestures we lack — in-buffer word capture (`Shift+←` mark / `Ctrl+1…9`, `OVIMSmartMandarin.cpp` ~213/~370) and `Tab` forced phrase break with toggle-off (`Graph::toggleForcedBreakAt`). Full table with our counterparts in the deep-dive §9.
+- **Deliberately not adopted**: Obj-C++ IMK host + OpenVanilla module loader, SQLite-resident LM at keystroke time, Bopomofo reading buffer, separate dictionary repo / OTA lexicon, in-app auto-update (each USER-gated or superseded by our Rust engine; reasons in the deep-dive).
+- **License**: BSD-style (Yahoo! Inc. 2012 + Chiaki.C 2026) with a no-endorsement clause on the Yahoo! name and contributor names. Read and cite freely; vendoring would need the notice carried.
+- **Deep-dive**: [`chiakey-reference.md`](./chiakey-reference.md)
+
 ### Cloned but out-of-engine-scope (not IME engines)
 
 Four repos under `references/` are **not IME engines** and are intentionally absent from the matrix/cards above. Listed here so a future session does not re-explore them looking for engine patterns:
@@ -530,5 +559,7 @@ For Phase II+ (cross-platform alignment), read:
 - **2026-06-14** — Indexed 2 previously-uncatalogued Taigi IMEs as cards/rows #21–22: **PhahTaigi_iOS** (`bd91e46`, GPL-3.0, iOS Taigi keyboard, Realm dict, stale 2022 checkout — the iOS Taigi prior art behind the §34/S22 "PhahTaigi parity" cite) + **rime-phah-taibun** (`d569c0e`, MIT, second RIME Taigi schema, ~220K-entry corpus merge, sibling of #10). Softened #10 `rime-moetaigi` "only mainstream RIME Taigi schema" → cross-ref #22. Topic-index "Taigi-specific UX / data" additions for both. Added a third "Cloned but out-of-engine-scope" bullet for `Taigi-Input-method-dictionary-supplement/` (`ada348a`, MOE-IME CSV supplement = dev-supplement source behind PR #368/#369; dictionary data, not an engine). Index-only (no deep-dives). All 25 repos under `references/` now catalogued.
 
 - **2026-08-20** — Indexed 3 vChewing-family repos as cards/rows #23–25: **vChewing-macOS** (`a4cccea6`, MIT-NTL, macOS IMK Mandarin IME, ships a Chinese-language `algorithm.md`), **vChewing-LibVanguard** (`68b63f2`, LGPL-3.0, vChewing's engine being extracted into a UI-free cross-platform Swift package — same engine/platform-seam move as our Rust engine), **Tekkon** (`13c4e7a`, LGPL-3.0 + Section-7 code-signing exception, standalone phonabet syllable composer, ~2,700 LOC; cloned at USER request 2026-08-20). Topic-index additions: segmentation (vChewing `algorithm.md` Homa DAG) + syllabifier (🔑 `Tekkon_SyllableComposer.swift` as the closest structural analogue to our TPS composing — same coda-vs-onset ambiguity as §32/§33/S23). Index-only (no deep-dives). ⚠ Both LGPL repos are flagged **read-only** in their cards: algorithm reference only, no vendoring.
+
+- **2026-09-19** — Cloned and indexed **ChiaKey** (`89aebc8c`, BSD-style, macOS Obj-C++ IMK revival of Yahoo! KeyKey / OpenVanilla) as card/row #26 at USER request. Deep-dive `chiakey-reference.md` written on the same day (engine judged legacy; value = lexicon release contract, `Runtime`/`Engine` facade, bounded learning store, XPC-free coordination, updater trust chain, release workflow, gold-set harness). New topic section "Dictionary distribution / desktop release & update"; entries added under "User adaptation" and "Native-engine embedding". Roster line added to `scripts/sync-references.sh` (upstream, no org fork).
 
 When adding a new repo under `references/`, append a card here and a row in the TL;DR matrix; if the repo is deep enough to warrant its own deep-dive (>500 LOC of read-through), create `docs/references/<repo>-reference.md` and link both ways.

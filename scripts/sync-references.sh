@@ -57,6 +57,7 @@ REPOS=(
   "Tekkon|git@github.com:vChewing/Tekkon.git|"
   "azooKey_emoji_dictionary_storage|git@github.com:azooKey/azooKey_emoji_dictionary_storage.git|"
   "KeyKey41-Eten-Tribute|git@github.com:whyren0324/KeyKey41-Eten-Tribute.git|"
+  "ChiaKey|git@github.com:chiakich/ChiaKey.git|"
   # The offline authority for KeyboardKit (.claude/rules/doc-lookup.md): a
   # published DocC archive, but a real git repo — clone it like any other.
   "KeyboardKit-Documentation|git@github.com:KeyboardKit/KeyboardKit-Documentation.git|"
