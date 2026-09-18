@@ -7,7 +7,7 @@
       "values": { "hanji": "恢復", "tailo": "Hue-ho̍k", "poj": "Hoe-ho̍k", "en": "Reset", "ja": "リセット" }
     },
     "inputMode": {
-      "comment": "Settings row + sub-screen title for selecting the active input mode. On macOS it labels the picker that chooses between TL and POJ.",
+      "comment": "Settings row + sub-screen title for selecting the active input mode (mobile). The desktop 一般 pane labels its TL / POJ picker inputScript instead.",
       "scope": { "platforms": ["android", "ios", "macos", "windows"], "surfaces": ["host"] },
       "values": { "hanji": "輸入模式", "tailo": "Su-ji̍p bôo-sik", "poj": "Su-ji̍p bô͘-sek", "en": "Input Mode", "ja": "入力モード" }
     },
@@ -75,6 +75,16 @@
       "comment": "Toggle label: annotate committed text with the other script in brackets.",
       "scope": { "platforms": ["android", "ios"], "surfaces": ["host", "extension"] },
       "values": { "hanji": "括號標註", "tailo": "Kuat-hō phiau-tsù", "poj": "Koat-hō phiau-chù", "en": "Annotate in Brackets", "ja": "括弧で併記" }
+    },
+    "inputScript": {
+      "comment": "Desktop 一般 pane: label of the TL / POJ picker (USER 2026-09-18 「輸入/輸出文字」), paired with outputScript below. Mobile keeps inputMode (輸入模式) — its picker also holds TPS.",
+      "scope": { "platforms": ["macos", "windows"], "surfaces": ["host"] },
+      "values": { "hanji": "輸入文字", "tailo": "Su-ji̍p bûn-jī", "poj": "Su-ji̍p bûn-jī", "en": "Input Script", "ja": "入力文字" }
+    },
+    "outputScript": {
+      "comment": "Desktop 一般 pane: label of the 漢字 / 羅馬字 picker — which script a commit writes, the same stored swap the backtick shortcut flips. Paired with inputScript above.",
+      "scope": { "platforms": ["macos", "windows"], "surfaces": ["host"] },
+      "values": { "hanji": "輸出文字", "tailo": "Su-tshut bûn-jī", "poj": "Su-chhut bûn-jī", "en": "Output Script", "ja": "出力文字" }
     },
     "outputScriptHanji": {
       "comment": "Picker value (default): commit writes the Hanji; the romanization is the subtitle.",

@@ -77,23 +77,20 @@ struct GeneralSettingsView: View {
 
     private var settingsForm: some View {
         Form {
+            // One group, no sub-groups (USER 2026-09-18 「不要分組」): the two
+            // script pickers first and together (「輸出輸入可以排在一起」),
+            // then how the syllable is spelled, then what the commit does,
+            // then the window, then the app's language.
             Section {
                 // A pop-up like the row under it, not a radio group: System
                 // Settings states a small mutually-exclusive choice with a
                 // pop-up, and two shapes for two adjacent N-of-1 rows read as
-                // a difference that means something.
-                Picker(language.string(.settingsInputMode), selection: $inputMode) {
+                // a difference that means something. 輸入文字 / 輸出文字 name
+                // the pair (USER 2026-09-18); mobile keeps 輸入模式, whose
+                // picker also holds TPS.
+                Picker(language.string(.settingsInputScript), selection: $inputMode) {
                     Text(language.string(.settingsTlMode)).tag(InputMode.tl)
                     Text(language.string(.settingsPojMode)).tag(InputMode.poj)
-                }
-
-                // Directly under the romanization it belongs to: which keys
-                // type a tone is a fact about how the syllable is spelled,
-                // not a shortcut (USER 2026-09-08), and the slot keys follow
-                // from it rather than being chosen on the shortcut pane.
-                Picker(language.string(.settingsToneInputScheme), selection: $toneInputScheme) {
-                    Text(language.string(.settingsToneSchemeStandard)).tag(ToneInputScheme.standard)
-                    Text(language.string(.settingsToneSchemeTelex)).tag(ToneInputScheme.telex)
                 }
 
                 // Which script a commit writes (USER 2026-09-18): the same
@@ -103,18 +100,19 @@ struct GeneralSettingsView: View {
                 // (`allowsSwapToggle`); under 漢羅濫 both scripts are on
                 // screen and this only picks the punctuation width, as the
                 // shortcut does there.
-                Picker(language.string(.desktopShortcutSectionOutput), selection: $isTranslateSwapped) {
+                Picker(language.string(.settingsOutputScript), selection: $isTranslateSwapped) {
                     Text(language.string(.settingsOutputScriptHanji)).tag(true)
                     Text(language.string(.settingsOutputScriptRoman)).tag(false)
                 }
                 .disabled(!candidateDisplayMode.allowsSwapToggle)
 
-                Picker(language.string(.settingsDisplayLanguage), selection: displayLanguageSelection) {
-                    ForEach(DisplayLanguage.selectableLanguages, id: \.self) { option in
-                        // Endonyms for the authored languages, so a user can find their own language
-                        // whatever the UI currently reads in; `.system` is the one translated row.
-                        Text(language.selectionLabel(for: option)).tag(option)
-                    }
+                // Which keys type a tone is a fact about how the syllable is
+                // spelled, not a shortcut (USER 2026-09-08), and the slot
+                // keys follow from it rather than being chosen on the
+                // shortcut pane.
+                Picker(language.string(.settingsToneInputScheme), selection: $toneInputScheme) {
+                    Text(language.string(.settingsToneSchemeStandard)).tag(ToneInputScheme.standard)
+                    Text(language.string(.settingsToneSchemeTelex)).tag(ToneInputScheme.telex)
                 }
 
                 Toggle(language.string(.settingsAutoSpace), isOn: $isAutoSpaceEnabled)
@@ -127,10 +125,17 @@ struct GeneralSettingsView: View {
                 // greyed-out state to explain).
                 Toggle(language.string(.settingsCandidateWindow), isOn: $isCandidateWindowEnabled)
 
-                // §34/S22, under 自動空白 where the USER placed it
-                // (2026-09-03). On means candidate slot 0 is the preedit
-                // literal, so Return writes the typed romanization.
+                // §34/S22. On means candidate slot 0 is the preedit literal,
+                // so Return writes the typed romanization.
                 Toggle(language.string(.settingsLiteralRomanCandidate), isOn: $isLiteralRomanCandidateEnabled)
+
+                Picker(language.string(.settingsDisplayLanguage), selection: displayLanguageSelection) {
+                    ForEach(DisplayLanguage.selectableLanguages, id: \.self) { option in
+                        // Endonyms for the authored languages, so a user can find their own language
+                        // whatever the UI currently reads in; `.system` is the one translated row.
+                        Text(language.selectionLabel(for: option)).tag(option)
+                    }
+                }
             }
 
             // The update rows. No toggle and no explanatory text (USER

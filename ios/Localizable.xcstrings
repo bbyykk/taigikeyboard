@@ -3440,7 +3440,7 @@
       }
     },
     "i18n_settings_inputMode": {
-      "comment": "Settings row + sub-screen title for selecting the active input mode. On macOS it labels the picker that chooses between TL and POJ.",
+      "comment": "Settings row + sub-screen title for selecting the active input mode (mobile). The desktop 一般 pane labels its TL / POJ picker inputScript instead.",
       "extractionState": "manual",
       "localizations": {
         "en": {
