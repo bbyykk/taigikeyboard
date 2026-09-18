@@ -37,10 +37,14 @@ final class HardwareKeyboardState {
         symbolPickerToggles += 1
     }
 
-    // `nonisolated(unsafe)`: read once more from `deinit`, which is nonisolated;
-    // both are set in `init` and never written again.
-    nonisolated(unsafe) private let notificationCenter: NotificationCenter
-    nonisolated(unsafe) private var observers: [NSObjectProtocol] = []
+    // Both are read once more from `deinit`, which is nonisolated. The
+    // center is a `let` of a `Sendable` type, so that read needs no
+    // annotation; the observer tokens are set in `init` and never written
+    // again, and `@ObservationIgnored` keeps them a plain stored property
+    // (they are not view state) so `nonisolated(unsafe)` applies to the
+    // storage rather than to a synthesized accessor.
+    private let notificationCenter: NotificationCenter
+    @ObservationIgnored nonisolated(unsafe) private var observers: [NSObjectProtocol] = []
 
     init(notificationCenter: NotificationCenter = .default) {
         self.notificationCenter = notificationCenter
