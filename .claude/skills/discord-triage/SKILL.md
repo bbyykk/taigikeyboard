@@ -62,7 +62,8 @@ themselves (token is theirs), then restart the session.
    `apply` can write it to `state.json`.
 
    **Open-post audit (every scan, USER 2026-09-18)**: for every non-archived #issues post from
-   `list_posts(issues)` (`read_post` for the body), decide whether it is already fixed:
+   `list_posts(issues)` **not tagged `done`** (skip those without `read_post`; USER
+   2026-09-18), `read_post` for the body and decide whether it is already fixed:
    - grep `changelog/*.md` for the symptom → hit = released: `fixed in` = that file's version.
    - no changelog hit → `git log --oneline main --grep=<keyword>` + project memory
      (`MEMORY.md` active rounds): a MERGED PR that resolves the symptom = fixed, unreleased.
@@ -79,9 +80,9 @@ themselves (token is theirs), then restart the session.
    ```
    | # | action | post | title | fixed in | evidence (changelog file / PR #) | note |
    ```
-   Include in the same list inconsistent posts: open (non-archived) but tagged `done`, archived
-   but missing `done`, or tagged `drop` — with a proposed action (`close`, `retag`, or reply +
-   close) — same review rule applies.
+   Include in the same list inconsistent posts: open (non-archived) but tagged `done` (propose
+   `close`, no re-audit), or tagged `drop` — same review rule applies. Archived posts are never
+   scanned.
 
 7. Stop. Report the counts (scanned / skipped as handled / candidates) and the file path.
    USER edits the file (change `action`, fill `fixed in`, delete rows), then runs `apply`.
