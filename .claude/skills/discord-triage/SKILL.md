@@ -57,13 +57,30 @@ themselves (token is theirs), then restart the session.
    Record the newest scanned message ID at the top of `triage.md` (`last_seen: <id>`) so
    `apply` can write it to `state.json`.
 
-   Also list, below the table, existing #issues posts that carry `done` or `drop` tags or are
-   archived-but-tagged-`done`, with a proposed action (reply fixed version + close, or just retag)
-   — same review rule applies.
+   **Open-post audit (every scan, USER 2026-09-18)**: for every non-archived #issues post from
+   `list_posts(issues)` (`read_post` for the body), decide whether it is already fixed:
+   - grep `changelog/*.md` for the symptom → hit = released: `fixed in` = that file's version.
+   - no changelog hit → `git log --oneline main --grep=<keyword>` + project memory
+     (`MEMORY.md` active rounds): a MERGED PR that resolves the symptom = fixed, unreleased.
+     `fixed in` = the train's in-tree (unreleased) version: newest `chore(release): bump
+     <train> version to X.Y.Z` commit on `main`; none after the latest `mobile-*` /
+     `desktop-*` tag → tag +1 patch. Mark `(next, proposed)` in `note`. Engine fixes touch
+     both trains — name both versions. Verify the fix is NOT inside the latest tag first
+     (`git merge-base --is-ancestor <merge sha> <tag>`), else it is released and belongs to
+     that changelog.
+     The USER confirms or overwrites the version; release scope stays the USER's call.
+   - neither → not fixed, no row.
+   Emit one `close` row per fixed post below the candidate table:
+
+   ```
+   | # | action | post | title | fixed in | evidence (changelog file / PR #) | note |
+   ```
+   Include in the same list posts that carry `done` or `drop` tags or are archived-but-tagged-`done`,
+   with a proposed action (reply fixed version + close, or just retag) — same review rule applies.
 
 7. Stop. Report the counts (scanned / skipped as handled / candidates) and the file path.
    USER edits the file (change `action`, fill `fixed in`, delete rows), then runs `apply`.
-   Zero candidates and nothing in the `done`/`drop` list → no `apply` will follow: write
+   Zero candidates and no `close` / `done` / `drop` rows → no `apply` will follow: write
    `state.json` now (local file, still no Discord write) and say so.
 
 ## `apply <triage.md>` — execute approved rows (writes)
@@ -75,6 +92,7 @@ Process rows top-down; on any Discord error stop, report the row, do not retry b
 | `create` | `create_post(issues, title=summary, content=<template A>, tags)` → `reply_post(general, <template B>, reply_to=<msg id>)` |
 | `fixed` | same as `create`, then `reply_post(post, <template C>)` → `remove_tags(post, ["done","drop"])` if present → `close_post(post)` |
 | `exists` | `reply_post(general, <template B with existing post link>, reply_to=<msg id>)`; if `fixed in` filled, also template C + retag + close on that post |
+| `close` | existing post: `reply_post(post, <template C>)` → `remove_tags(post, ["done","drop"])` if present → `close_post(post)` |
 | `skip` | nothing |
 
 Post link = `https://discord.com/channels/<guild>/<post id>` (guild from the message link).
@@ -93,5 +111,7 @@ starts after it, so replied, skipped and discussion messages are never re-read.
 ## Rules
 
 - `done` / `drop` are never applied; remove them when touching a post's tags.
-- `fixed in` must come from `changelog/` or the USER — never inferred from code state.
-- A "fixed" that the USER did not confirm stays `create`. Release scope is the USER's call.
+- `fixed in` comes from `changelog/` (released) or a MERGED PR on `main` (unreleased → next
+   train version, proposed) — never from an open PR or an unmerged branch.
+- A "fixed" / `close` row the USER did not confirm is never applied; `apply` only runs rows the
+   USER left in the file. Release scope is the USER's call.
