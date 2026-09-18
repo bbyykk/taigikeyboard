@@ -77,12 +77,18 @@ struct GeneralSettingsView: View {
 
     private var settingsForm: some View {
         Form {
+            // Four groups in the order a keystroke travels (USER 2026-09-18
+            // 「排序「一般」設定，讓邏輯合理一點」): what is typed, what reaches
+            // the document, the window in between, then the app itself. No
+            // group titles, like the 外觀 pane — the order carries the logic.
             Section {
                 // A pop-up like the row under it, not a radio group: System
                 // Settings states a small mutually-exclusive choice with a
                 // pop-up, and two shapes for two adjacent N-of-1 rows read as
-                // a difference that means something.
-                Picker(language.string(.settingsInputMode), selection: $inputMode) {
+                // a difference that means something. 輸入文字 / 輸出文字 name
+                // the pair (USER 2026-09-18); mobile keeps 輸入模式, whose
+                // picker also holds TPS.
+                Picker(language.string(.settingsInputScript), selection: $inputMode) {
                     Text(language.string(.settingsTlMode)).tag(InputMode.tl)
                     Text(language.string(.settingsPojMode)).tag(InputMode.poj)
                 }
@@ -95,7 +101,10 @@ struct GeneralSettingsView: View {
                     Text(language.string(.settingsToneSchemeStandard)).tag(ToneInputScheme.standard)
                     Text(language.string(.settingsToneSchemeTelex)).tag(ToneInputScheme.telex)
                 }
+            }
 
+            // What reaches the document.
+            Section {
                 // Which script a commit writes (USER 2026-09-18): the same
                 // stored swap the `` ` `` shortcut toggles, so the two never
                 // disagree. Disabled exactly where the shortcut is inert —
@@ -103,22 +112,17 @@ struct GeneralSettingsView: View {
                 // (`allowsSwapToggle`); under 漢羅濫 both scripts are on
                 // screen and this only picks the punctuation width, as the
                 // shortcut does there.
-                Picker(language.string(.desktopShortcutSectionOutput), selection: $isTranslateSwapped) {
+                Picker(language.string(.settingsOutputScript), selection: $isTranslateSwapped) {
                     Text(language.string(.settingsOutputScriptHanji)).tag(true)
                     Text(language.string(.settingsOutputScriptRoman)).tag(false)
                 }
                 .disabled(!candidateDisplayMode.allowsSwapToggle)
 
-                Picker(language.string(.settingsDisplayLanguage), selection: displayLanguageSelection) {
-                    ForEach(DisplayLanguage.selectableLanguages, id: \.self) { option in
-                        // Endonyms for the authored languages, so a user can find their own language
-                        // whatever the UI currently reads in; `.system` is the one translated row.
-                        Text(language.selectionLabel(for: option)).tag(option)
-                    }
-                }
-
                 Toggle(language.string(.settingsAutoSpace), isOn: $isAutoSpaceEnabled)
+            }
 
+            // The candidate window.
+            Section {
                 // S33 (USER 2026-09-08): off means no window at all — the
                 // user types romanization and Space / Return write it as
                 // typed. Directly above 顯示當咧拍的字, which describes the
@@ -127,20 +131,29 @@ struct GeneralSettingsView: View {
                 // greyed-out state to explain).
                 Toggle(language.string(.settingsCandidateWindow), isOn: $isCandidateWindowEnabled)
 
-                // §34/S22, under 自動空白 where the USER placed it
-                // (2026-09-03). On means candidate slot 0 is the preedit
-                // literal, so Return writes the typed romanization.
+                // §34/S22. On means candidate slot 0 is the preedit literal,
+                // so Return writes the typed romanization.
                 Toggle(language.string(.settingsLiteralRomanCandidate), isOn: $isLiteralRomanCandidateEnabled)
             }
 
-            // The update rows. No toggle and no explanatory text (USER
-            // 2026-08-23): the daily check is always on, and the button is the
-            // on-demand version of the same thing.
-            //
-            // This section is the surface that keeps working when the
-            // notification did not: no network needed, nothing to miss, and
-            // still right after a banner was dismissed weeks ago.
+            // The app itself: its language, then its version.
             Section {
+                Picker(language.string(.settingsDisplayLanguage), selection: displayLanguageSelection) {
+                    ForEach(DisplayLanguage.selectableLanguages, id: \.self) { option in
+                        // Endonyms for the authored languages, so a user can find their own language
+                        // whatever the UI currently reads in; `.system` is the one translated row.
+                        Text(language.selectionLabel(for: option)).tag(option)
+                    }
+                }
+
+                // The update rows. No toggle and no explanatory text (USER
+                // 2026-08-23): the daily check is always on, and the button is the
+                // on-demand version of the same thing.
+                //
+                // These rows are the surface that keeps working when the
+                // notification did not: no network needed, nothing to miss, and
+                // still right after a banner was dismissed weeks ago.
+                //
                 // One row, never two. A known update replaces the version-and-check
                 // row rather than sitting under it: while an update is waiting,
                 // checking again is the one thing that cannot tell the user

@@ -1,6 +1,7 @@
-//! The 一般 pane: romanization system, tone keys, output script, display
-//! language, auto-space, the typed-text candidate, the update row, the reset
-//! card, and the attribution footer. Port of `GeneralSettingsView.swift`.
+//! The 一般 pane, four groups: input script + tone keys; output script +
+//! auto-space; the candidate window's two switches; display language + the
+//! update row. Then the reset card and the attribution footer. Port of
+//! `GeneralSettingsView.swift`.
 
 use super::{choice_row, reset_row};
 use crate::presentation::{display_language_label, SPONSOR_URL};
@@ -29,11 +30,18 @@ pub fn view(
     context: &mut ViewContext<SettingsWindow>,
 ) -> View {
     let document = window.document();
+    // Four groups in the order a keystroke travels (USER 2026-09-18 「排序
+    // 「一般」設定，讓邏輯合理一點」): what is typed, what reaches the
+    // document, the window in between, then the app itself. Gaps, no
+    // titles — like 外觀; the order carries the logic
+    // (`GeneralSettingsView.swift`).
     View::fragment((
         // A pop-up like the row under it, not a radio group (System
-        // Settings' shape for a small mutually-exclusive choice).
+        // Settings' shape for a small mutually-exclusive choice). 輸入文字 /
+        // 輸出文字 name the pair (USER 2026-09-18); mobile keeps 輸入模式,
+        // whose picker also holds TPS.
         choice_row(
-            strings.resolve(StringKey::SettingsInputMode),
+            strings.resolve(StringKey::SettingsInputScript),
             InputMode::ALL,
             document.choice(&keys::INPUT_MODE),
             true,
@@ -54,6 +62,8 @@ pub fn view(
             |scheme| Message::set_choice(scheme, &keys::TONE_INPUT_SCHEME),
             context,
         ),
+        // What reaches the document.
+        cards::section_gap(),
         // Which script a commit writes (USER 2026-09-18): the same stored
         // swap the backtick shortcut toggles, so the two never disagree.
         // Disabled exactly where the shortcut is inert — 候選詞顯示 = 羅馬字
@@ -62,7 +72,7 @@ pub fn view(
         // width, as the shortcut does there. A cleared pop-up writes nothing,
         // the rule `Message::set_choice` states for every other picker.
         choice_row(
-            strings.resolve(StringKey::DesktopShortcutSectionOutput),
+            strings.resolve(StringKey::SettingsOutputScript),
             OUTPUT_SCRIPTS,
             document.bool(&keys::IS_TRANSLATE_SWAPPED),
             document
@@ -75,21 +85,14 @@ pub fn view(
             },
             context,
         ),
-        choice_row(
-            strings.resolve(StringKey::SettingsDisplayLanguage),
-            &DisplayLanguage::PICKER,
-            DisplayLanguage::from_tag(&document.string(&keys::DISPLAY_LANGUAGE)),
-            true,
-            |language: DisplayLanguage| display_language_label(language, strings),
-            |language| Message::SetChoice(language.map(SettingsWrite::display_language)),
-            context,
-        ),
         cards::switch_row(
             strings.resolve(StringKey::SettingsAutoSpace),
             document.bool(&keys::IS_AUTO_SPACE_ENABLED),
             true,
             context.callback(|is_on| Message::SetSwitch(keys::IS_AUTO_SPACE_ENABLED, is_on)),
         ),
+        // The candidate window.
+        cards::section_gap(),
         // S33 (USER 2026-09-08): off means no window at all — the user types
         // romanization and Space / Enter write it as typed. Directly above
         // 顯示當咧拍的字, which describes the window's content and so reads
@@ -101,9 +104,8 @@ pub fn view(
             true,
             context.callback(|is_on| Message::SetSwitch(keys::IS_CANDIDATE_WINDOW_ENABLED, is_on)),
         ),
-        // §34/S22, under 自動空白 where the USER placed it (2026-09-03). On
-        // means candidate slot 0 is the preedit literal, so Enter writes the
-        // typed romanization.
+        // §34/S22. On means candidate slot 0 is the preedit literal, so
+        // Enter writes the typed romanization.
         cards::switch_row(
             strings.resolve(StringKey::SettingsLiteralRomanCandidate),
             document.bool(&keys::IS_LITERAL_ROMAN_CANDIDATE_ENABLED),
@@ -112,7 +114,17 @@ pub fn view(
                 Message::SetSwitch(keys::IS_LITERAL_ROMAN_CANDIDATE_ENABLED, is_on)
             }),
         ),
+        // The app itself: its language, then its version.
         cards::section_gap(),
+        choice_row(
+            strings.resolve(StringKey::SettingsDisplayLanguage),
+            &DisplayLanguage::PICKER,
+            DisplayLanguage::from_tag(&document.string(&keys::DISPLAY_LANGUAGE)),
+            true,
+            |language: DisplayLanguage| display_language_label(language, strings),
+            |language| Message::SetChoice(language.map(SettingsWrite::display_language)),
+            context,
+        ),
         update_row(window, strings, context),
         // Not on the update row: it holds no setting of the user's to
         // restore.
