@@ -523,24 +523,6 @@
         }
       }
     },
-    "i18n_desktop_shortcutMoveComposingCaret": {
-      "comment": "Read-only row under the composing keys on the 快速齒 pane: the fixed chord that moves the caret inside the romanization being typed (macOS ⌥←/⌥→, Windows Ctrl+←/→). Not recordable (USER 2026-09-09: 這個功能可以顯示在快速齒,但我不打算讓使用者更改). Authored whole, like its siblings.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Fix What You Are Typing"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "入力中の文字を修正"
-          }
-        }
-      }
-    },
     "i18n_desktop_shortcutRecording": {
       "comment": "Shortcut recorder button while it is waiting for a key press.",
       "extractionState": "manual",

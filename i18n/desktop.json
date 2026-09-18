@@ -203,8 +203,7 @@
       "scope": {
         "platforms": [
           "macos",
-          "windows",
-          "ios"
+          "windows"
         ],
         "surfaces": [
           "host"

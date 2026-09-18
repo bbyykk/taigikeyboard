@@ -26,13 +26,6 @@ struct HardwareShortcutSettingsView: View {
                 ForEach(HardwareComposingAction.groups[0], id: \.self) { action in
                     recorderRow(.composing(action))
                 }
-                // Shown, not recordable: the caret inside the composition
-                // rides the host's own word-jump chord, and the classifier
-                // reads it before any binding (`HardwareKeyIntent`).
-                LabeledContent(lang.string(.desktopShortcutMoveComposingCaret)) {
-                    Text(Self.caretChordsLabel)
-                        .foregroundStyle(.secondary)
-                }
             } header: {
                 Text(lang.string(.desktopShortcutSectionCandidateSelection))
             }
@@ -81,13 +74,6 @@ struct HardwareShortcutSettingsView: View {
 
     /// `⇧q ⇧w … ⇧;` — the row the slot keys make under Shift.
     static let shiftedSlotKeysLabel = HardwareKeyIntent.slotKeyRow.map { "⇧" + $0 }.joined(separator: " ")
-
-    /// `⌥← ⌥→` — drawn from the classifier's own modifier, so the row
-    /// cannot drift from the key it reads.
-    static let caretChordsLabel: String = {
-        let glyphs = HardwareKeyChordDisplay.glyphs(for: HardwareKeyIntent.caretChordModifiers)
-        return "\(glyphs)← \(glyphs)→"
-    }()
 
     private func recorderRow(_ row: ShortcutRow) -> some View {
         Button {

@@ -11,8 +11,8 @@ extension KeyboardViewController {
     func execute(_ effect: RustEngineBridge.ComposingTransition.Effect) {
         logger.debug({
             let kind = switch effect {
-            case let .updatePreedit(text, caretUTF16):
-                "updatePreedit len=\(text.count) caret=\(caretUTF16)"
+            case let .updatePreedit(text):
+                "updatePreedit len=\(text.count)"
             case .clearPreeditWithoutCommit:
                 "clearPreeditWithoutCommit"
             case let .commitTextReplacingPreedit(text):
@@ -35,8 +35,8 @@ extension KeyboardViewController {
             return "[COMMIT] fn=execute effect=\(kind)"
         }())
         switch effect {
-        case let .updatePreedit(text, caretUTF16):
-            setMarkedText(text, caretUTF16: caretUTF16)
+        case let .updatePreedit(text):
+            setMarkedText(text)
         case .clearPreeditWithoutCommit:
             clearMarkedText()
         case let .commitTextReplacingPreedit(text):
@@ -74,14 +74,13 @@ extension KeyboardViewController {
         }
     }
 
-    /// Set marked (composing) text with the caret at `caretUTF16` — the end
-    /// unless a hardware ⌥← / ⌥→ stepped it (`ComposingManager.moveCaret`).
-    /// Used by `.updatePreedit(_:caretUTF16:)`. **Model B**: `text` is the
-    /// whole composition (`Σ nailed.display_text` + derived pending tail);
-    /// the host renders it as one marked region until a hard finalize.
-    func setMarkedText(_ text: String, caretUTF16: Int) {
-        let caret = min(caretUTF16, text.utf16.count)
-        textDocumentProxy.setMarkedText(text, selectedRange: NSRange(location: caret, length: 0))
+    /// Set marked (composing) text with the caret placed at the end.
+    /// Used by `.updatePreedit(_)`. **Model B**: `text` is the whole
+    /// composition (`Σ nailed.display_text` + derived pending tail); the
+    /// host renders it as one marked region until a hard finalize. The
+    /// caret sits at the end of the combined string.
+    func setMarkedText(_ text: String) {
+        textDocumentProxy.setMarkedText(text, selectedRange: NSRange(location: text.utf16.count, length: 0))
     }
 
     /// Clear marked text + unmark (two steps required by UITextInput).

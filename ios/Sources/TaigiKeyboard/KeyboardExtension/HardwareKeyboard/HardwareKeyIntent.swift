@@ -55,10 +55,6 @@ enum HardwareKeyIntent: Equatable {
     case commitAlternateScript
     /// Move the highlight along the bar.
     case navigate(HardwareCandidateNavigation)
-    /// Step the caret inside the romanization being typed, so the next
-    /// character lands there — `ka2`, ⌥← ⌥←, `h` → `kha2`. The engine owns
-    /// the caret (`ComposingManager.moveCaret`); the bar is left as it is.
-    case moveCaret(CaretDirection)
     /// Commit the candidate in this slot of the visible page, counting from
     /// zero — what the bare slot keys address. With `flip`, in the other
     /// script: the 漢羅 key aimed at a slot, which is what ⇧ on the same key
@@ -78,13 +74,6 @@ enum HardwareKeyIntent: Equatable {
 
     /// The four chording modifiers — what a key combination is made of.
     static let chordingModifiers: UIKeyModifierFlags = hostChords.union(.shift)
-
-    /// The modifier under which ← / → step the composing caret — the host's
-    /// own word-jump chord, and the one chord that is neither a candidate
-    /// key (the bare arrows) nor one the system takes first. Fixed, not
-    /// recordable; the 快速齒 pane draws its read-only row from this value.
-    // CROSS-PLATFORM INVARIANT — `ComposingKeyIntent.caretChordModifiers`.
-    static let caretChordModifiers: UIKeyModifierFlags = [.alternate]
 
     /// The nine bare keys that pick slots 0…8 while the bar is up — every
     /// letter no TL or POJ syllable spells, plus `;`. Lowercase, as they are
@@ -116,17 +105,6 @@ enum HardwareKeyIntent: Equatable {
     ) -> HardwareKeyIntent {
         let modifiers = key.chordingModifiers
         let hasHostChord = !modifiers.isDisjoint(with: hostChords)
-
-        // The caret inside the composition, on ⌥← / ⌥→. Exactly ⌥: ⌥⇧←
-        // stays the host's selection, ⌥⌘← its shortcut. Idle, the chord is
-        // the host's.
-        if isComposing, modifiers == caretChordModifiers {
-            switch key.keyCode {
-            case .keyboardLeftArrow: return .moveCaret(.left)
-            case .keyboardRightArrow: return .moveCaret(.right)
-            default: break
-            }
-        }
 
         // The fixed tier, read before anything the user can rebind so that
         // no binding can shadow it: the way through the candidates, the way

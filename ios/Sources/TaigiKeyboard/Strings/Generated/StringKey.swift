@@ -29,7 +29,6 @@ enum StringKey: String {
     case desktopShortcutToggleTranslateSwapped = "i18n_desktop_shortcutToggleTranslateSwapped"
     case desktopShortcutCycleCandidateDisplayMode = "i18n_desktop_shortcutCycleCandidateDisplayMode"
     case desktopShortcutShowSymbolPicker = "i18n_desktop_shortcutShowSymbolPicker"
-    case desktopShortcutMoveComposingCaret = "i18n_desktop_shortcutMoveComposingCaret"
     case desktopShortcutCommitAlternateScriptInSlot = "i18n_desktop_shortcutCommitAlternateScriptInSlot"
     case desktopShortcutsTab = "i18n_desktop_shortcutsTab"
     case desktopActionNextCandidate = "i18n_desktop_actionNextCandidate"
