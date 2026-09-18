@@ -89,6 +89,17 @@ pub const COVERAGE_KIND_FULL: u8 = 0;
 /// dimension; see `docs/engine/continuous-candidate-display.md` §15.5.
 pub const COVERAGE_KIND_PARTIAL_PREFIX: u8 = 1;
 
+/// `RawCandidate.coverage_kind` ordinal for whole-buffer abbreviation hits
+/// ([`fetch_abbrev_candidates`]): the typed buffer is an acronym-shaped
+/// string (`ss`, `tk`, `ㄙㄒ`) and the record's per-syllable-initial face
+/// (`tl_abbrev` / `poj_abbrev` / `tps_abbrev`) equals it. Ranks strictly
+/// below [`COVERAGE_KIND_PARTIAL_PREFIX`] in [`SortKey`]: an acronym-shaped
+/// buffer that is also a valid onset (`ts`, `kh`) is mid-syllable at least
+/// as often as it is an abbreviation, so the single-syllable partial hits
+/// the user was reaching for keep their positions and the abbreviated
+/// words trail them.
+pub const COVERAGE_KIND_ABBREV: u8 = 2;
+
 /// Worst-case rowid hydration budget per partial-prefix lookup.
 /// Single-char prefixes (`tl:k`, `tl:t`) match hundreds of FST entries;
 /// this caps `dict.record(rowid)` calls so per-keystroke work stays
@@ -734,6 +745,14 @@ fn merge_custom_dedupe_sort(
         ));
     }
     dedupe_by_roman_hanji_span(&mut out);
+    sort_by_sort_key(out, raw_len)
+}
+
+/// The eight-dimension [`SortKey`] sort every continuous fetch ends with.
+/// `stable_idx` is the pre-sort element position (see
+/// [`merge_custom_dedupe_sort`] for why it is stamped via `enumerate()`
+/// rather than inside the key extractor).
+fn sort_by_sort_key(out: Vec<RawCandidate>, raw_len: u32) -> Vec<RawCandidate> {
     let mut indexed: Vec<(SortKey, RawCandidate)> = out
         .into_iter()
         .enumerate()
@@ -1440,6 +1459,11 @@ fn tps_toneless_faces(record_tl: &str) -> (String, Option<String>) {
     with_tps_or_variant(phonetics::tps_notone_from_tl(record_tl))
 }
 
+/// The record's `tps_abbrev` face and its C-3a or→er variant.
+fn tps_abbrev_faces(record_tl: &str) -> (String, Option<String>) {
+    with_tps_or_variant(phonetics::tps_abbrev_from_tl(record_tl))
+}
+
 /// Pair a TPS face with its C-3a or→er dialect variant
 /// ([`phonetics::tps_notone_or_variant`]; matches
 /// `dictionary/common/notone.py::apply_or_dialect_variant`).
@@ -1470,8 +1494,7 @@ fn tps_face_starts_with((primary, variant): &(String, Option<String>), body: &st
 /// acronym faces coincide with them) must keep its legitimate variant
 /// hit (Codex confirms 2026-08-19).
 fn is_tps_acronym_face_hit(matched_body: &str, record_tl: &str) -> bool {
-    let abbrev_faces = with_tps_or_variant(phonetics::tps_abbrev_from_tl(record_tl));
-    if !tps_face_eq(&abbrev_faces, matched_body) {
+    if !tps_face_eq(&tps_abbrev_faces(record_tl), matched_body) {
         return false;
     }
     !tps_face_eq(&tps_toneless_faces(record_tl), matched_body)
@@ -1490,6 +1513,85 @@ fn matches_continuous_toneless_key(key: &str, record_tl: &str) -> bool {
         matches_continuous_tps_toneless_key(key, record_tl)
     } else {
         matches_continuous_tl_toneless_key(key, record_tl)
+    }
+}
+
+/// Whole-buffer abbreviation lookup — every dictionary row whose
+/// per-syllable-initial face (`tl_abbrev` / `poj_abbrev` / `tps_abbrev`,
+/// `dictionary/common/abbrev.py`) IS the typed buffer: `tl:ss` → 鎖匙
+/// `só-sî`, `tps:ㄙㄒ` → 鎖匙. `behavioral-invariants.md` §46.
+///
+/// The one continuous path that accepts an acronym-key hit. The
+/// span-local / walker / partial-prefix fetches reject them on purpose
+/// (#297, #443): a SPAN key is a phonetic syllable. Here the key is the
+/// whole buffer and the buffer is acronym-shaped (caller gate
+/// `composing::shadow::abbrev_query_key` — consonant / initial glyphs
+/// only, so no [`TonePin`] or barrier can apply).
+///
+/// Per row: source `filter`, syllable count = key glyph count (one glyph
+/// per syllable), then the family's abbrev face must EQUAL the body
+/// ([`abbrev_face_matches`]) — under an acronym-shaped key an exact hit can
+/// only be an abbrev row or index drift, so the face check is the drift
+/// guard. `syllable_count` stays the record's (鎖匙 = 2). Ranked by the
+/// same [`SortKey`] with [`COVERAGE_KIND_ABBREV`] at `consumed_span =
+/// (0, raw_len)`. **Not truncated**: the caller excludes rows already on
+/// screen first, then applies [`PARTIAL_PREFIX_OUTPUT_CAP`] — the Step 4b
+/// lesson (Codex PR #351), a pre-exclude cap loses real candidates to the
+/// duplicates it cut. Custom entries are not merged here; the fetch that
+/// ran before already merged them for the same buffer. Hydration is
+/// uncapped: `tl:tt` resolves ~8.5k rowids and a rank-blind cap in rowid
+/// order would drop the frequent words the sort exists to surface.
+pub fn fetch_abbrev_candidates(
+    fst_key: &str,
+    raw_len: u32,
+    ctx: &ContinuousFetchCtx<'_>,
+) -> Vec<RawCandidate> {
+    let Some((family, body)) = fst_key.split_once(':') else {
+        return Vec::new();
+    };
+    let body_glyphs = body.chars().count();
+    let filter = Filter::from_enabled_bitmask(ctx.enabled_sources_bitmask);
+    let rowids = ctx.prefix_index.lookup_exact(fst_key);
+    let mut out: Vec<RawCandidate> = Vec::with_capacity(rowids.len());
+    for rowid in rowids {
+        let Some(record) = ctx.dict.record(rowid) else {
+            continue;
+        };
+        if usize::from(record.syllable_count) != body_glyphs
+            || !DictionaryReader::passes_filter(record.bitmask, record.kautian_subtag, &filter)
+            || !abbrev_face_matches(family, body, &record.tl)
+        {
+            continue;
+        }
+        let effective = DictionaryReader::effective_source_bitmask(
+            record.bitmask,
+            record.kautian_subtag,
+            &filter,
+        );
+        out.push(record_to_candidate(
+            record,
+            effective,
+            (0, raw_len),
+            ctx.freq_map,
+            ctx.now_ms,
+            COVERAGE_KIND_ABBREV,
+        ));
+    }
+    dedupe_by_roman_hanji_span(&mut out);
+    sort_by_sort_key(out, raw_len)
+}
+
+/// `body` IS `record_tl`'s abbreviation face in `family` — the runtime
+/// mirror of the column `create_fst.py` indexed the row under
+/// (`tl_abbrev` / `poj_abbrev` / `tps_abbrev` + its C-3a or→er variant;
+/// parity with the shipped CSV: `tests/roman_num_face_parity.rs`,
+/// `tests/tps_abbrev_parity.rs`). Unknown family → `false`.
+fn abbrev_face_matches(family: &str, body: &str, record_tl: &str) -> bool {
+    match family {
+        "tl" => phonetics::derive_abbrev(record_tl) == body,
+        "poj" => phonetics::poj_abbrev_from_tl(record_tl) == body,
+        "tps" => tps_face_eq(&tps_abbrev_faces(record_tl), body),
+        _ => false,
     }
 }
 

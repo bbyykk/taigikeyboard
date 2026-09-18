@@ -23,6 +23,13 @@
 //! tens of thousands of divergences; this is why the two mirrors are separate
 //! functions rather than one with a mode flag.
 //!
+//! The `tl_abbrev` / `poj_abbrev` columns (the whole-buffer abbreviation
+//! lookup `lexicon::fetch_abbrev_candidates` verifies hits against) are
+//! pinned here too, against `phonetics::derive_abbrev` over the TL / POJ
+//! display — the runtime mirror of `dictionary/common/abbrev.py::
+//! extract_abbrev`. Single-syllable rows carry an empty column and are
+//! skipped like any other empty expectation.
+//!
 //! Soft-skips when the CSV is absent (lean checkout), like its
 //! `tps_notone_parity` / `poj_notone_parity` siblings.
 
@@ -48,6 +55,8 @@ struct Row {
     poj_num: String,
     tl_notone: String,
     poj_notone: String,
+    tl_abbrev: String,
+    poj_abbrev: String,
 }
 
 fn read_rows(path: &Path) -> std::io::Result<Vec<Row>> {
@@ -63,11 +72,14 @@ fn read_rows(path: &Path) -> std::io::Result<Vec<Row>> {
     };
     let (tl_idx, tl_num_idx, poj_num_idx) = (column("tl"), column("tl_num"), column("poj_num"));
     let (tl_notone_idx, poj_notone_idx) = (column("tl_notone"), column("poj_notone"));
+    let (tl_abbrev_idx, poj_abbrev_idx) = (column("tl_abbrev"), column("poj_abbrev"));
     let max_idx = tl_idx
         .max(tl_num_idx)
         .max(poj_num_idx)
         .max(tl_notone_idx)
-        .max(poj_notone_idx);
+        .max(poj_notone_idx)
+        .max(tl_abbrev_idx)
+        .max(poj_abbrev_idx);
 
     let mut rows = Vec::new();
     for line in lines {
@@ -85,6 +97,8 @@ fn read_rows(path: &Path) -> std::io::Result<Vec<Row>> {
             poj_num: fields[poj_num_idx].to_string(),
             tl_notone: fields[tl_notone_idx].to_string(),
             poj_notone: fields[poj_notone_idx].to_string(),
+            tl_abbrev: fields[tl_abbrev_idx].to_string(),
+            poj_abbrev: fields[poj_abbrev_idx].to_string(),
         });
     }
     Ok(rows)
@@ -122,6 +136,16 @@ fn runtime_poj_notone_matches_build_pipeline_for_every_row() {
     assert_column_parity("poj_notone", |tl| {
         strip_digits(&phonetics::poj_num_syllable_ends_from_tl(tl).0)
     });
+}
+
+#[test]
+fn runtime_tl_abbrev_matches_build_pipeline_for_every_row() {
+    assert_column_parity("tl_abbrev", phonetics::derive_abbrev);
+}
+
+#[test]
+fn runtime_poj_abbrev_matches_build_pipeline_for_every_row() {
+    assert_column_parity("poj_abbrev", phonetics::poj_abbrev_from_tl);
 }
 
 fn strip_digits(face: &str) -> String {
@@ -188,7 +212,9 @@ fn assert_column_parity(column: &str, derive: impl Fn(&str) -> String) {
             "tl_num" => &row.tl_num,
             "poj_num" => &row.poj_num,
             "tl_notone" => &row.tl_notone,
-            _ => &row.poj_notone,
+            "poj_notone" => &row.poj_notone,
+            "tl_abbrev" => &row.tl_abbrev,
+            _ => &row.poj_abbrev,
         };
         if row.tl.is_empty() || expected.is_empty() {
             continue;

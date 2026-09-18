@@ -1359,6 +1359,42 @@ pub(crate) fn build_partial_prefix_key(
     Some(((0u32, raw.len() as u32), key))
 }
 
+/// Whole-buffer abbreviation query key (`tl:ss`, `tps:ㄙㄒ`) for
+/// [`lexicon::fetch_abbrev_candidates`], or `None` when `raw` is not
+/// acronym-shaped for `mode` — `behavioral-invariants.md` §46.
+///
+/// Acronym-shaped = the lowercased buffer is what the build pipeline's
+/// `*_abbrev` column holds for a ≥ 2-syllable word: TL / POJ one ASCII
+/// consonant per syllable that does not itself parse as a syllable chain
+/// ([`phonetics::is_roman_acronym_key`] — `ng` / `m` / `tngtng` stay the
+/// readings they are), TPS one initial glyph per syllable
+/// ([`phonetics::is_tps_initial_only`]). Every char must be such a glyph,
+/// so a digit, tone mark, hyphen or space disqualifies the buffer — no
+/// [`TonePin`] or barrier ever applies to this path. Vowel-initial
+/// abbreviations (`ai` for 阿姨) are not acronym-shaped and stay syllabic.
+///
+/// Runs every keystroke, so the cheap rejections come first and nothing is
+/// allocated until the buffer has passed the per-char screen; the
+/// syllable-chain check is the O(n²) DP in `phonetics`, no exponential
+/// backtracking on ambiguous nasal chains.
+pub(crate) fn abbrev_query_key(raw: &str, mode: InputMode) -> Option<String> {
+    if raw.chars().count() < 2 {
+        return None;
+    }
+    let is_consonant = |c: char| {
+        c.is_ascii_alphabetic() && !matches!(c.to_ascii_lowercase(), 'a' | 'e' | 'i' | 'o' | 'u')
+    };
+    let shaped = match mode {
+        InputMode::Tl | InputMode::Poj => {
+            raw.chars().all(is_consonant)
+                && phonetics::is_roman_acronym_key(&raw.to_ascii_lowercase())
+        }
+        InputMode::Tps => phonetics::is_tps_initial_only(raw),
+        InputMode::English => false,
+    };
+    shaped.then(|| format!("{}:{}", mode_key_prefix(mode), raw.to_ascii_lowercase()))
+}
+
 #[cfg(test)]
 mod tests {
     //! Unit tests for the pure shadow pipeline. Dispatch-level integration
@@ -2734,5 +2770,54 @@ mod tests {
             None,
             "TL mode must NOT see `poj:`-only entries"
         );
+    }
+
+    // `abbrev_query_key` — the whole-buffer abbreviation gate.
+    #[test]
+    fn abbrev_query_key_accepts_consonant_only_roman_buffers() {
+        // trace: `ss` all consonants, no split (`s` is not a syllable) →
+        // acronym; `mk` likewise although `m` alone IS a left-anchored
+        // syllable (the gate is whole-buffer, not "no exact keys").
+        for raw in ["ss", "tk", "mk", "ngs", "ts", "SS", "Tk"] {
+            assert_eq!(
+                abbrev_query_key(raw, InputMode::Tl).as_deref(),
+                Some(format!("tl:{}", raw.to_lowercase()).as_str()),
+                "{raw} is acronym-shaped"
+            );
+        }
+        assert_eq!(
+            abbrev_query_key("cp", InputMode::Poj).as_deref(),
+            Some("poj:cp")
+        );
+    }
+
+    #[test]
+    fn abbrev_query_key_rejects_syllabic_short_digit_and_separated_buffers() {
+        // trace: `si` has a vowel; `ng` / `m` / `tngtng` / `mngkng` parse as
+        // syllable chains; `s` is one glyph; `ss2` / `s-s` / `s s` carry a
+        // non-consonant; `ai` (阿姨) is vowel-initial.
+        for raw in [
+            "si", "tai", "ng", "m", "tngtng", "mngkng", "s", "ss2", "s-s", "s s", "ai", "",
+        ] {
+            assert_eq!(
+                abbrev_query_key(raw, InputMode::Tl),
+                None,
+                "{raw:?} must not be acronym-shaped"
+            );
+        }
+        assert_eq!(abbrev_query_key("ss", InputMode::English), None);
+    }
+
+    #[test]
+    fn abbrev_query_key_tps_initials_only() {
+        // trace: ㄙ + ㄒ both initials → `tps:ㄙㄒ`.
+        assert_eq!(
+            abbrev_query_key("ㄙㄒ", InputMode::Tps).as_deref(),
+            Some("tps:ㄙㄒ")
+        );
+        // A tone mark, a space, a vowel glyph or a lone initial disqualify.
+        for raw in ["ㄙㄒˊ", "ㄙ ㄒ", "ㄒㄧ", "ㄙ", "ㄚㄅ"] {
+            assert_eq!(abbrev_query_key(raw, InputMode::Tps), None, "{raw:?}");
+        }
     }
 }

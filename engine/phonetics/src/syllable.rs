@@ -421,20 +421,33 @@ pub fn is_roman_acronym_key(body: &str) -> bool {
 }
 
 /// `true` when `body` can be fully partitioned, left to right, into a
-/// sequence of valid syllables (tries every split point, recursing on the
-/// tail — backtracks if a split dead-ends). Used by [`is_roman_acronym_key`]
-/// to tell a fused all-consonant multi-syllable reading (`tngtng` →
-/// `tng`+`tng`) from an acronym (`tt` → no split). Bodies are short FST key
-/// bodies, so the scan + bounded recursion is cheap. `end` ranges over byte
-/// indices guarded by `is_char_boundary`, so `&body[..end]` never panics on
-/// non-ASCII input.
+/// sequence of valid syllables. Used by [`is_roman_acronym_key`] to tell a
+/// fused all-consonant multi-syllable reading (`tngtng` → `tng`+`tng`) from
+/// an acronym (`tt` → no split).
+///
+/// Forward DP over byte offsets (`reachable[end]` = some partition covers
+/// `body[..end]`), not recursive backtracking: the predicate now also runs
+/// on the whole composing buffer every keystroke
+/// (`composing::shadow::abbrev_query_key`), and a buffer like `mngmng…s`
+/// — where every `mng` splits two ways (`mng` / `m`+`ng`) and the tail `s`
+/// makes every branch fail — is exponential with backtracking (Codex
+/// post-impl 2026-09-18: 16 × `mng` + `s` > 8 s). `end` ranges over char
+/// boundaries so `&body[start..end]` never panics on non-ASCII input.
 fn splits_into_syllables(body: &str) -> bool {
-    if body.is_empty() {
-        return true;
+    let mut reachable = vec![false; body.len() + 1];
+    reachable[0] = true;
+    for start in 0..body.len() {
+        if !reachable[start] || !body.is_char_boundary(start) {
+            continue;
+        }
+        for end in start + 1..=body.len() {
+            if !reachable[end] && body.is_char_boundary(end) && is_valid_syllable(&body[start..end])
+            {
+                reachable[end] = true;
+            }
+        }
     }
-    (1..=body.len())
-        .filter(|&end| body.is_char_boundary(end))
-        .any(|end| is_valid_syllable(&body[..end]) && splits_into_syllables(&body[end..]))
+    reachable[body.len()]
 }
 
 /// Canonicalize one POJ-shaped syllable token into its **POJ ASCII** form
@@ -737,6 +750,23 @@ mod tests {
                 .iter()
                 .any(|(find, _)| *find == "oonn"),
             "the per-syllable list keeps the fold",
+        );
+    }
+
+    #[test]
+    fn is_roman_acronym_key_does_not_backtrack_on_ambiguous_nasal_chains() {
+        // trace: each `mng` splits as `mng` or `m`+`ng`; the tail `s` makes
+        // every partition fail, so a backtracking scan is exponential
+        // (2^16 dead branches at 16 repeats). The O(n²) DP answers in
+        // microseconds and the verdict is unchanged: acronym-shaped.
+        let chain = "mng".repeat(16) + "s";
+        let started = std::time::Instant::now();
+        assert!(is_roman_acronym_key(&chain));
+        assert!(!is_roman_acronym_key(&"mng".repeat(16)));
+        assert!(
+            started.elapsed() < std::time::Duration::from_millis(100),
+            "ambiguous chain took {:?}",
+            started.elapsed()
         );
     }
 

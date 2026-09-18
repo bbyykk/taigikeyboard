@@ -48,7 +48,15 @@ pub(crate) fn derive_notone(roman: &str) -> String {
 ///
 /// Whitespace split = ASCII `[ \t\n\x0B\f\r-]+` literal (matches Android JVM
 /// behavior; NBSP U+00A0 stays a non-delimiter).
-pub(crate) fn derive_abbrev(roman: &str) -> String {
+///
+/// Also the runtime mirror of the build pipeline's
+/// `dictionary/common/abbrev.py::extract_abbrev`, which fills the
+/// `tl_abbrev` / `poj_abbrev` CSV columns `create_fst.py` indexes as
+/// `tl:<tl_abbrev>` / `poj:<poj_abbrev>` — so the continuous-input
+/// whole-buffer abbreviation lookup (`lexicon::fetch_abbrev_candidates`)
+/// can verify an FST hit against the record's own reading. Parity with the
+/// shipped CSV is pinned by `lexicon/tests/roman_num_face_parity.rs`.
+pub fn derive_abbrev(roman: &str) -> String {
     let lowered = roman.to_lowercase();
     let syllables: Vec<&str> = lowered
         .split([' ', '\t', '\n', '\u{0B}', '\u{0C}', '\r', '-'])
@@ -65,6 +73,14 @@ pub(crate) fn derive_abbrev(roman: &str) -> String {
         })
         .collect::<Vec<_>>()
         .join("")
+}
+
+/// The `poj_abbrev` face of a canonical TL reading — the abbreviation of its
+/// POJ display (`tsia̍h-pn̄g` → `chia̍h-pn̄g` → `cp`), as
+/// `dictionary/common/stages/abbrev.py` derives it from the `poj` column.
+/// Sibling of [`crate::tps_abbrev_from_tl`] for the third family.
+pub fn poj_abbrev_from_tl(tl: &str) -> String {
+    derive_abbrev(&crate::api::tl_display_to_poj_display(tl))
 }
 
 /// Internal helper used by `derive_abbrev`. NOT exposed as an op (Codex v1

@@ -272,6 +272,25 @@ pub(crate) fn retain_first_by_key<K: std::hash::Hash + Eq>(
     candidates.retain(|c| key(c).is_none_or(|k| seen.insert(k)));
 }
 
+/// Cross-batch exclude: drop from `batch` every candidate whose
+/// `(roman, hanji, consumed_span)` triple is already in `existing`. The
+/// per-fetch `dedupe_by_roman_hanji_span` inside the lexicon does not span
+/// batches, so a dict row reachable through two fetches of the same buffer
+/// (Step 4b extension vs the FULL block, Step 4c abbreviation vs a partial
+/// hit) would otherwise show twice. Borrowed keys — `existing` is not
+/// mutated during the retain, so the set holds `&str` slices into it and
+/// costs no per-keystroke String allocs.
+fn retain_absent_from(existing: &[RawCandidate], batch: &mut Vec<RawCandidate>) {
+    if batch.is_empty() {
+        return;
+    }
+    let seen: std::collections::HashSet<(&str, Option<&str>, ConsumedSpan)> = existing
+        .iter()
+        .map(|x| (x.roman.as_str(), x.hanji.as_deref(), x.consumed_span))
+        .collect();
+    batch.retain(|x| !seen.contains(&(x.roman.as_str(), x.hanji.as_deref(), x.consumed_span)));
+}
+
 /// Two romanizations are the **same reading** when they differ only in
 /// syllable separators: ASCII space (walker synth multi-word join), `-`
 /// (連字 compound), or `--` (輕聲 khinsiann, two `-` chars). Tone
@@ -1276,56 +1295,65 @@ pub(crate) fn assemble_candidates(
                     // then applies `PARTIAL_PREFIX_OUTPUT_CAP` itself.
                     let mut ext =
                         fetch_via_lexicon_partial_inner_unbounded(raw, raw_len, mode, ctx);
-                    if !ext.is_empty() {
-                        // Borrowed key shape — `c` is not mutated during the
-                        // retain on `ext`, so HashSet entries can hold &str
-                        // slices into `c` and avoid per-keystroke String allocs.
-                        //
-                        // Recase byte-identity holds for the dominant case:
-                        // span-local single-edge FULL hits AND walker slot-0
-                        // single-buffer paths, both at span (0, raw_len), both
-                        // recased against the same raw segment as `ext`.
-                        //
-                        // Known divergence (Codex post-impl SHIP-WITH-FIXES
-                        // 2026-05-29): walker slot-0 joins per-edge-recased
-                        // syllables with a space (see [`fetch_walker_slot0_inner`]),
-                        // whereas `ext` recases the full raw segment as one
-                        // string. For multi-edge walker paths with mixed-case
-                        // per-syllable intent like `TaIGi`, walker produces
-                        // `Tâi Gí` while `ext` produces `Tâi-gí` for the same
-                        // dict row — the exclude misses the duplicate. Visible
-                        // only when ≥30 homophones share an exact key AND raw
-                        // is mixed-case per-syllable, so deferred to a
-                        // follow-up. The normal lowercase path (the v3.5.9
-                        // continuous dogfood baseline) is unaffected.
-                        let existing: std::collections::HashSet<(
-                            &str,
-                            Option<&str>,
-                            ConsumedSpan,
-                        )> = c
-                            .iter()
-                            .map(|x| (x.roman.as_str(), x.hanji.as_deref(), x.consumed_span))
-                            .collect();
-                        ext.retain(|x| {
-                            !existing.contains(&(
-                                x.roman.as_str(),
-                                x.hanji.as_deref(),
-                                x.consumed_span,
-                            ))
-                        });
-                        // Truncate AFTER exclude so the visible top-N is the
-                        // best-scoring subset of the non-duplicate extensions,
-                        // not the post-truncate dregs of a homophone-dominated
-                        // pool. The lexicon-side sort is preserved (the
-                        // un-truncated pool was already sorted by SortKey),
-                        // so `truncate` keeps the global score order.
-                        ext.truncate(PARTIAL_PREFIX_OUTPUT_CAP);
-                        c.extend(ext);
-                    }
+                    // Borrowed key shape — `c` is not mutated during the
+                    // retain on `ext`, so HashSet entries can hold &str
+                    // slices into `c` and avoid per-keystroke String allocs.
+                    //
+                    // Recase byte-identity holds for the dominant case:
+                    // span-local single-edge FULL hits AND walker slot-0
+                    // single-buffer paths, both at span (0, raw_len), both
+                    // recased against the same raw segment as `ext`.
+                    //
+                    // Known divergence (Codex post-impl SHIP-WITH-FIXES
+                    // 2026-05-29): walker slot-0 joins per-edge-recased
+                    // syllables with a space (see [`fetch_walker_slot0_inner`]),
+                    // whereas `ext` recases the full raw segment as one
+                    // string. For multi-edge walker paths with mixed-case
+                    // per-syllable intent like `TaIGi`, walker produces
+                    // `Tâi Gí` while `ext` produces `Tâi-gí` for the same
+                    // dict row — the exclude misses the duplicate. Visible
+                    // only when ≥30 homophones share an exact key AND raw
+                    // is mixed-case per-syllable, so deferred to a
+                    // follow-up. The normal lowercase path (the v3.5.9
+                    // continuous dogfood baseline) is unaffected.
+                    retain_absent_from(&c, &mut ext);
+                    // Truncate AFTER exclude so the visible top-N is the
+                    // best-scoring subset of the non-duplicate extensions,
+                    // not the post-truncate dregs of a homophone-dominated
+                    // pool. The lexicon-side sort is preserved (the
+                    // un-truncated pool was already sorted by SortKey),
+                    // so `truncate` keeps the global score order.
+                    ext.truncate(PARTIAL_PREFIX_OUTPUT_CAP);
+                    c.extend(ext);
                 }
             }
             c
         };
+        // ---- Step 4c: whole-buffer abbreviation lookup (both branches).
+        //
+        // `ss` → 鎖匙 `só-sî`, TPS `ㄙㄒ` → 鎖匙 (§46). The gate is the
+        // buffer's shape (`shadow::abbrev_query_key`), not "no exact keys":
+        // `mk` has the left-anchored syllable `m` and is still the
+        // abbreviation of 物件. Hits carry `COVERAGE_KIND_ABBREV`, which
+        // `SortKey` ranks below PARTIAL, so appending keeps
+        // `[FULL…][PARTIAL…][ABBREV…]` without a re-sort — for a valid onset
+        // like `ts` the single-syllable partial hits stay put and the
+        // abbreviated words trail them. Same recase → exclude → truncate
+        // order as Step 4b: a row can be both a partial extension and an
+        // abbreviation hit (`m̄-khíng` under `mk`), and truncating before
+        // the exclude would lose real candidates to the duplicates cut.
+        // The §34 literal is prepended later by the dispatch caller.
+        if let Some(ctx) = lex_ctx.as_ref() {
+            if let Some(key) = crate::shadow::abbrev_query_key(raw, mode) {
+                let mut abbrev = lexicon::fetch_abbrev_candidates(&key, raw_len, ctx);
+                for cand in &mut abbrev {
+                    cand.roman = recase_roman(&cand.roman, raw, mode);
+                }
+                retain_absent_from(&candidates, &mut abbrev);
+                abbrev.truncate(PARTIAL_PREFIX_OUTPUT_CAP);
+                candidates.extend(abbrev);
+            }
+        }
         // ---- Step 5: POJ presentation pass.
         // v3.5.8 — POJ-display render. The Continuous platform
         // builders are mode-agnostic by design (Item 13: "the
