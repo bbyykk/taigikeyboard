@@ -15,32 +15,21 @@ enum ThemeSliderRanges {
     static let shadowStep: Double = 0.5
 }
 
-/// A labeled `ColorPicker` row with a trailing reset button.
-///
-/// Used by the user-theme editor (`ThemeEditorView`, where the binding mutates
-/// an in-memory draft). The row is agnostic to persistence: it surfaces the
-/// picked color, fires `onChange`, and shows the reset affordance when
-/// `isCustomized`.
+/// A labeled `ColorPicker` row with a trailing reset button shown while `onReset`
+/// is non-nil (the caller passes nil when the value already equals its default).
+/// Used by the user-theme editor (`ThemeEditorView`, where the binding mutates an
+/// in-memory draft); `onReset` is the single writer of the reset value.
 struct ThemeColorRow: View {
     let label: String
     @Binding var color: Color
-    let defaultColor: Color
-    let isCustomized: Bool
-    let onChange: (Color) -> Void
-    let onReset: () -> Void
+    let onReset: (() -> Void)?
 
     var body: some View {
         HStack {
             ColorPicker(label, selection: $color, supportsOpacity: false)
-                .onChange(of: color) { _, newValue in
-                    onChange(newValue)
-                }
 
-            if isCustomized {
-                Button {
-                    color = defaultColor
-                    onReset()
-                } label: {
+            if let onReset {
+                Button(action: onReset) {
                     Image(latinSystemName: "arrow.counterclockwise")
                         .foregroundColor(.secondary)
                 }
@@ -80,6 +69,61 @@ struct ThemeSliderRow: View {
                 .onChange(of: value) { _, newValue in
                     onChanged(newValue)
                 }
+        }
+    }
+}
+
+// MARK: - Gradient direction
+
+/// A labeled row of the eight gradient direction presets as arrow buttons, ↑ (0°)
+/// first and clockwise in 45° steps (CSS angle convention, see `ThemeGradient.angle`);
+/// the selected preset is filled with the accent color. Used by the user-theme
+/// editor's 背景 › 漸層 rows.
+struct ThemeGradientDirectionRow: View {
+    let label: String
+    @Binding var angle: Double
+
+    private struct DirectionPreset: Identifiable {
+        let angle: Double
+        let symbol: String
+        var id: Double {
+            angle
+        }
+    }
+
+    private static let presets = [
+        DirectionPreset(angle: 0, symbol: "arrow.up"),
+        DirectionPreset(angle: 45, symbol: "arrow.up.right"),
+        DirectionPreset(angle: 90, symbol: "arrow.right"),
+        DirectionPreset(angle: 135, symbol: "arrow.down.right"),
+        DirectionPreset(angle: 180, symbol: "arrow.down"),
+        DirectionPreset(angle: 225, symbol: "arrow.down.left"),
+        DirectionPreset(angle: 270, symbol: "arrow.left"),
+        DirectionPreset(angle: 315, symbol: "arrow.up.left"),
+    ]
+    private static let buttonSize: CGFloat = 32
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(label)
+            HStack(spacing: 6) {
+                ForEach(Self.presets) { preset in
+                    let isSelected = angle == preset.angle
+                    Button {
+                        angle = preset.angle
+                    } label: {
+                        Image(latinSystemName: preset.symbol)
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundColor(isSelected ? .white : .primary)
+                            .frame(width: Self.buttonSize, height: Self.buttonSize)
+                            .background(
+                                Circle().fill(isSelected ? AppStyle.accentBlue : Color(.tertiarySystemFill)),
+                            )
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityAddTraits(isSelected ? .isSelected : [])
+                }
+            }
         }
     }
 }

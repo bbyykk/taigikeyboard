@@ -478,6 +478,18 @@ object L10n {
         @Composable get() = stringRes(StringKey.THEME_PALETTE_CATPPUCCIN)
     val themeKeyboardSection: String
         @Composable get() = stringRes(StringKey.THEME_KEYBOARD_SECTION)
+    val themeBackgroundSection: String
+        @Composable get() = stringRes(StringKey.THEME_BACKGROUND_SECTION)
+    val themeBackgroundTypeSolid: String
+        @Composable get() = stringRes(StringKey.THEME_BACKGROUND_TYPE_SOLID)
+    val themeBackgroundTypeGradient: String
+        @Composable get() = stringRes(StringKey.THEME_BACKGROUND_TYPE_GRADIENT)
+    val themeGradientStartColor: String
+        @Composable get() = stringRes(StringKey.THEME_GRADIENT_START_COLOR)
+    val themeGradientEndColor: String
+        @Composable get() = stringRes(StringKey.THEME_GRADIENT_END_COLOR)
+    val themeGradientDirection: String
+        @Composable get() = stringRes(StringKey.THEME_GRADIENT_DIRECTION)
     val themeColorKeySection: String
         @Composable get() = stringRes(StringKey.THEME_COLOR_KEY_SECTION)
     val themeCandidateSection: String

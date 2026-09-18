@@ -27,11 +27,11 @@ final class UserThemeStoreTests: XCTestCase {
         super.tearDown()
     }
 
+    /// A fully seeded theme (what the editor saves), with a blue solid background so it
+    /// differs from the seed and survives `load()`'s seeding untouched.
     private func makeUserTheme(name: String = "T", shadow: Double = 0) -> UserTheme {
-        var colors = KeyboardColorSettings()
-        colors.backgroundColor = CodableColor(.blue)
-        var appearance = ThemeAppearance.default
-        appearance.colors = colors
+        var appearance = ThemeAppearance.userThemeSeed
+        appearance.colors.background = .solid(CodableColor(.blue))
         appearance.keyShadowIntensity = shadow
         return UserTheme(
             id: UUID(),
@@ -92,7 +92,7 @@ final class UserThemeStoreTests: XCTestCase {
     }
 
     func testLoad_corruptFile_returnsEmpty() {
-        let fileURL = tempDir.appendingPathComponent("user_themes.json")
+        let fileURL = tempDir.appendingPathComponent(UserThemeStore.fileName)
         try? Data("not json".utf8).write(to: fileURL)
         let store = UserThemeStore(containerURL: tempDir, onMutated: {})
         XCTAssertEqual(store.load(), [])
@@ -109,8 +109,8 @@ final class UserThemeStoreTests: XCTestCase {
     // trace: a theme with custom sizes survives a write/read round-trip intact.
     func testAddAndLoad_fullAppearance_roundTrips() {
         let store = UserThemeStore(containerURL: tempDir, onMutated: {})
-        var appearance = ThemeAppearance.default
-        appearance.colors.backgroundColor = CodableColor(.green)
+        var appearance = ThemeAppearance.userThemeSeed
+        appearance.colors.background = .solid(CodableColor(.green))
         appearance.keyHeightScale = 1.1
         appearance.keyFontSizeScale = 0.9
         appearance.candidateTextSizeScale = 1.05
@@ -128,6 +128,34 @@ final class UserThemeStoreTests: XCTestCase {
         XCTAssertTrue(store.add(theme))
 
         XCTAssertEqual(store.load(), [theme])
+    }
+
+    // trace: a theme saved with nil roles (before the seed existed) loads with every
+    // nil role filled from userThemeSeed and the set roles untouched → the theme no
+    // longer follows light / dark (USER 2026-09-19); nothing is written back.
+    func testLoad_seedsNilRoles_keepsSetRoles() throws {
+        var partial = ThemeAppearance.default
+        partial.colors.keyTextColor = CodableColor(hex: 0x112233)
+        let theme = UserTheme(
+            id: UUID(),
+            name: "Partial",
+            appearance: partial,
+            createdAt: Date(timeIntervalSince1970: 0),
+            updatedAt: Date(timeIntervalSince1970: 0),
+        )
+        let fileURL = tempDir.appendingPathComponent(UserThemeStore.fileName)
+        try JSONEncoder().encode([theme]).write(to: fileURL)
+        let store = UserThemeStore(containerURL: tempDir, onMutated: {})
+
+        let loaded = try XCTUnwrap(store.load().first)
+
+        XCTAssertEqual(loaded.appearance.colors.keyTextColor, CodableColor(hex: 0x112233), "set role kept")
+        XCTAssertEqual(loaded.appearance.colors.background, UserThemeSeed.colors.background, "nil background seeded")
+        XCTAssertEqual(loaded.appearance.colors.normalKeyFillColor, UserThemeSeed.colors.normalKeyFillColor)
+        XCTAssertEqual(loaded.appearance.colors.specialKeyFillColor, UserThemeSeed.colors.specialKeyFillColor)
+        XCTAssertEqual(loaded.appearance.colors.candidateTextColor, UserThemeSeed.colors.candidateTextColor)
+        // The file still holds the unseeded theme (raw decode, no store seeding) → load never wrote back.
+        XCTAssertEqual(try JSONDecoder().decode([UserTheme].self, from: Data(contentsOf: fileURL)), [theme], "load never writes back")
     }
 
     // trace: a theme file written before the size fields existed (only colors +

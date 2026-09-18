@@ -34,7 +34,22 @@ Colours per family: 預設 (adaptive, follows light/dark), five light-only soft 
 
 ### Custom themes
 
-`Create New…` on the custom shelf opens the editor (`App/Tabs/Theme/ThemeEditorView.swift` + `ThemeEditorViewModel.swift`; Android `ui/tabs/theme/ThemeEditorScreen.kt` hosted by `settings/ThemeEditorActivity.kt`). A custom theme captures one `ThemeAppearance` bundle (`Settings/KeyboardThemeModels.swift`, Android `ime/core/ThemeAppearance.kt`): the six role colours (`KeyboardColorSettings`, `nil` = inherit adaptive), the five size scalars, and `keyShadowIntensity`. Up to `UserThemeStore.maxUserThemes = 5` (`Settings/UserThemeStore.swift`; Android `ime/core/UserThemeStore.kt` `MAX_USER_THEMES`). A live keyboard preview (`KeyboardPreviewPanel.swift` / `ThemePreviewEnvironment.swift`) is pinned in the editor.
+`Create New…` on the custom shelf opens the editor (`App/Tabs/Theme/ThemeEditorView.swift` + `ThemeEditorViewModel.swift`; Android `ui/tabs/theme/ThemeEditorScreen.kt` hosted by `settings/ThemeEditorActivity.kt`). A custom theme captures one `ThemeAppearance` bundle (`Settings/KeyboardThemeModels.swift`, Android `ime/core/ThemeAppearance.kt`): the background surface + four role colours (`KeyboardColorSettings`), the five size scalars, and `keyShadowIntensity`. Up to `UserThemeStore.maxUserThemes = 5` (`Settings/UserThemeStore.swift`; Android `ime/core/UserThemeStore.kt` `MAX_USER_THEMES`). A live keyboard preview (`KeyboardPreviewPanel.swift` / `ThemePreviewEnvironment.swift`) is pinned in the editor.
+
+**Editor order** (USER 2026-09-19, three sections = three surfaces; iOS since PR A, Android follows in PR B): **背景** — segmented 純色 / 漸層, then the solid colour row, or the 起點色 / 終點色 rows + a 方向 row of eight arrow presets · **按鍵** — 一般揤鈕色水 · 特殊揤鈕色水 · 揤鈕文字 · 圓角 · 邊粗幼 · 陰影 · 齒盤懸度 · 揤鈕字大細 · **候選詞** — 候選詞文字 · 候選詞大細 · 恢復預設設定 · pinned preview. The candidate bar has no colour of its own: it is the same surface as the keyboard.
+
+**Scheme-invariant user themes** (USER 2026-09-19). A new custom theme starts from `UserThemeSeed` (background `0xD4D5DD`, key text `0x000000`, normal fill `0xFFFFFF`, special fill `0xABB1BA`, candidate text `0x000000`; a CROSS-PLATFORM INVARIANT mirrored in Android `USER_THEME_SEED`), so every role is concrete and the theme renders identically in light and dark mode. `UserThemeStore.load()` fills any `nil` role of an older saved theme from the same seed (no migration write). Each colour row's reset arrow restores the seed value; 恢復預設設定 restores the whole seed. The `default` buffer and built-in themes keep `nil` = adaptive.
+
+### Background surface
+
+`KeyboardColorSettings.background: ThemeBackground?` is the ONE field that paints the keyboard + candidate-bar surface (`Settings/KeyboardColorSettings.swift`; Android mirror in PR B). `nil` = adaptive (KeyboardKit's dynamic background, Liquid Glass eligible — the 經典 預設 head only).
+
+| Case | JSON | Render (iOS) |
+|---|---|---|
+| `.solid(color)` | `{"type":"solid","color":{r,g,b,a}}` | root `.background` = the colour; candidate bar `backgroundColor` = the same colour (`TaigiKeyboardView.candidateStyle`) |
+| `.gradient(ThemeGradient)` | `{"type":"gradient","stops":[…],"angle":180}` | root `LinearGradient` from `ThemeGradient.unitPoints`; candidate bar `.clear`; expanded overlay repaints the same gradient; panel backdrops map the unit points into panel space (`KeyboardOverlayBackdrop.panelUnitPoints`) |
+
+`ThemeGradient.angle` follows the CSS / Figma convention: `0` = bottom→top, `90` = left→right, `180` = top→bottom (`defaultAngle`, used by every built-in gradient theme), clockwise. `unitPoints` normalises the direction vector by its larger component so the diagonal presets (the editor's eight presets, 0…315 in 45° steps) run corner to corner. Decoding is legacy-compatible: an old `backgroundColor` becomes `.solid`, an old `backgroundGradient` (≥2 stops) becomes `.gradient` at `defaultAngle`, an old `candidateBackgroundColor` is ignored, and an unknown `type` degrades to `nil`. Encoding writes only `background`.
 
 ### Key shadow
 
@@ -63,13 +78,13 @@ Slider range 0…4 in 0.5 steps (`App/Tabs/Theme/ThemeControlRows.swift` `ThemeS
 | Special key fill | `Color.keyboardDarkButtonBackground` (adaptive) | `key_function_bgColor` theme attr |
 | Key text | `Color.keyboardButtonForeground` (adaptive) | `key_fgColor` → `?android:textColor` |
 | Candidate text | `Color(.label)` (system) | `smartbar_candidate_fgColor` theme attr |
-| Candidate background | (keyboard background) | `smartbar_bgColor` theme attr |
+| Candidate background | (keyboard background) | `smartbar_bgColor` theme attr (= `?keyboard_bgColor`) |
 
 ### Light/Dark Mode
 
 - iOS: `@Environment(\.colorScheme)` + KeyboardKit adaptive colors
 - Android: XML theme variants — `values/themes.xml` (light) / `values-night/themes.xml` (dark)
-- Custom user colors are **single RGBA/ARGB values** — not mode-aware (same color in both modes)
+- Custom user colors are **single RGBA/ARGB values** — not mode-aware (same color in both modes); since 2026-09-19 a user theme carries no `nil` role at all (seeded), so it never follows the scheme
 
 ### Color Fallback Chain
 
@@ -90,12 +105,11 @@ Slider range 0…4 in 0.5 steps (`App/Tabs/Theme/ThemeControlRows.swift` `ThemeS
 | Key corner radius | 0–15 pt/dp | 6 |
 | Key border width | 0–3 pt/dp | 0 |
 | Key shadow intensity | 0–4 pt/dp | 0 (flat) for a new custom theme; built-in themes keep the platform standard shadow |
-| Keyboard background color | RGBA | (adaptive) |
-| Key text color | RGBA | (adaptive) |
-| Normal key fill color | RGBA | (adaptive) |
-| Special key fill color | RGBA | (adaptive) |
-| Candidate text color | RGBA | (adaptive) |
-| Candidate background color | RGBA | (adaptive) |
+| Background (keyboard + candidate bar) | `ThemeBackground`: solid RGBA, or a 2-stop gradient + angle | seed `0xD4D5DD` solid (user theme); adaptive (`default` buffer) |
+| Key text color | RGBA | seed `0x000000` (user theme); adaptive (`default` buffer) |
+| Normal key fill color | RGBA | seed `0xFFFFFF` (user theme); adaptive (`default` buffer) |
+| Special key fill color | RGBA | seed `0xABB1BA` (user theme); adaptive (`default` buffer) |
+| Candidate text color | RGBA | seed `0x000000` (user theme); adaptive (`default` buffer) |
 
 ### Font Options (global setting — Settings tab, not per theme)
 - System default
@@ -125,11 +139,11 @@ Applied via KeyboardKit's `keyboardButtonStyle { }` closure (per-action customiz
 
 ## Liquid Glass (iOS 26+)
 
-When `KeyboardContext.isLiquidGlassEnabled == true` AND no custom background:
+When `KeyboardContext.isLiquidGlassEnabled == true` AND `background == nil` (adaptive):
 - Keyboard background: `Color.white.opacity(0.001)` (transparent pass-through)
 - Candidate items: `.opacity(0.6)` when pressed/selected
 
-When custom background is set: uses that color, ignores Liquid Glass.
+When a custom background is set (solid or gradient): paints it, ignores Liquid Glass.
 
 ---
 

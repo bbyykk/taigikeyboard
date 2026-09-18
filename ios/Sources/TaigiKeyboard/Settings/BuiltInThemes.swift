@@ -149,14 +149,14 @@ enum BuiltInThemes {
         return colors
     }
 
-    /// One scheme variant for a gradient color: the 2-stop background gradient +
-    /// key/candidate text (`keyText`). Keys are either the neutral fill (`neutralFill`,
-    /// 經典) or transparent so the gradient shows through (框線 / 簡潔). `backgroundColor`
-    /// and `candidateBackgroundColor` stay nil — the gradient owns the background
-    /// and the candidate bar is made transparent in `TaigiKeyboardView.candidateStyle`.
+    /// One scheme variant for a gradient color: the vertical 2-stop background
+    /// gradient + key/candidate text (`keyText`). Keys are either the neutral fill
+    /// (`neutralFill`, 經典) or transparent so the gradient shows through (框線 / 簡潔).
+    /// The gradient owns the whole surface — the candidate bar is made transparent in
+    /// `TaigiKeyboardView.candidateStyle`.
     private static func gradientColors(top: UInt32, bottom: UInt32, keyText: UInt32, neutralFill: UInt32, transparentKeys: Bool) -> KeyboardColorSettings {
         var colors = KeyboardColorSettings()
-        colors.backgroundGradient = ThemeGradient(stops: [CodableColor(hex: top), CodableColor(hex: bottom)])
+        colors.background = .gradient(ThemeGradient(stops: [CodableColor(hex: top), CodableColor(hex: bottom)]))
         colors.keyTextColor = CodableColor(hex: keyText)
         colors.candidateTextColor = CodableColor(hex: keyText)
         if transparentKeys {

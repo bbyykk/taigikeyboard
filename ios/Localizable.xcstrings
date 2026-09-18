@@ -3907,6 +3907,60 @@
         }
       }
     },
+    "i18n_theme_backgroundSection": {
+      "comment": "Theme editor section header: the background group (type picker + its rows). One surface for the keyboard and the candidate bar.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Background"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "背景"
+          }
+        }
+      }
+    },
+    "i18n_theme_backgroundTypeGradient": {
+      "comment": "Theme editor background type (segmented picker): a two-color linear gradient.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gradient"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "グラデーション"
+          }
+        }
+      }
+    },
+    "i18n_theme_backgroundTypeSolid": {
+      "comment": "Theme editor background type (segmented picker): one flat color.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solid"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "単色"
+          }
+        }
+      }
+    },
     "i18n_theme_candidateSection": {
       "comment": "Theme editor section header: the candidate-bar group (candidate colors + text size).",
       "extractionState": "manual",
@@ -4011,24 +4065,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "編集"
-          }
-        }
-      }
-    },
-    "i18n_theme_colorCandidateBackground": {
-      "comment": "Theme editor color-row label: the candidate-bar background color.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Candidate Background"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "候補の背景"
           }
         }
       }
@@ -4339,6 +4375,60 @@
         }
       }
     },
+    "i18n_theme_gradientDirection": {
+      "comment": "Theme editor row label: the gradient direction (eight arrow presets, 45° apart).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Direction"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "方向"
+          }
+        }
+      }
+    },
+    "i18n_theme_gradientEndColor": {
+      "comment": "Theme editor color-row label: the gradient's last stop.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "End Color"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "終了色"
+          }
+        }
+      }
+    },
+    "i18n_theme_gradientStartColor": {
+      "comment": "Theme editor color-row label: the gradient's first stop.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start Color"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "開始色"
+          }
+        }
+      }
+    },
     "i18n_theme_keyBorderWidth": {
       "comment": "Theme editor slider label: key border width.",
       "extractionState": "manual",
@@ -4425,24 +4515,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "キーの影"
-          }
-        }
-      }
-    },
-    "i18n_theme_keyboardSection": {
-      "comment": "Theme editor section header: the keyboard-surface group (background color + key height).",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Keyboard Surface"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "キーボード面"
           }
         }
       }

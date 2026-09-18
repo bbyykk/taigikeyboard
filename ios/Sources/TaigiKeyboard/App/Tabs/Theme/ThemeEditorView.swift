@@ -2,9 +2,13 @@ import SwiftUI
 
 /// The user-theme editor: the full appearance bundle + a live draft preview
 /// pinned at the bottom. Pushed as a child page (uses the parent `NavigationStack`);
-/// reuses `ThemeColorRow` / `ThemeSliderRow`. Adds a shadow slider
-/// (user-theme-only feature) and a reset-to-defaults row. Font is a global
-/// setting, not part of a theme, so the editor has no font control.
+/// reuses `ThemeColorRow` / `ThemeSliderRow` / `ThemeGradientDirectionRow`.
+///
+/// Three sections, one per visual surface (USER 2026-09-19): **背景** (type
+/// 純色 / 漸層 and its rows — the keyboard and the candidate bar share this one
+/// surface), **按鍵** (fills, text, shape, size), **候選詞** (text color + size),
+/// then 恢復預設. Font is a global setting, not part of a theme, so the editor
+/// has no font control.
 ///
 /// The name is entered in a `TextField` alert at save time, not inline — so the
 /// editor has no inline text input and the software keyboard never appears to
@@ -26,43 +30,58 @@ struct ThemeEditorView: View {
     var body: some View {
         VStack(spacing: 0) {
             Form {
-                // Keyboard overall: background color + height
-                Section(header: Text(lang.string(.themeKeyboardSection))) {
-                    colorRow(lang.string(.themeColorKeyboardBackground), \.backgroundColor,
-                             ThemeDefaults.keyboardBackground)
-                    sliderRow(lang.string(.themeKeyHeight), \.keyHeightScale,
-                              ThemeSliderRanges.scale, ThemeSliderRanges.scaleStep)
+                // Background: one surface for keyboard + candidate bar.
+                Section(header: Text(lang.string(.themeBackgroundSection))) {
+                    Picker("", selection: viewModel.backgroundKindBinding) {
+                        Text(lang.string(.themeBackgroundTypeSolid)).tag(ThemeBackground.Kind.solid)
+                        Text(lang.string(.themeBackgroundTypeGradient)).tag(ThemeBackground.Kind.gradient)
+                    }
+                    .pickerStyle(.segmented)
+                    .labelsHidden()
+
+                    switch viewModel.backgroundKind {
+                    case .solid:
+                        ThemeColorRow(
+                            label: lang.string(.themeColorKeyboardBackground),
+                            color: viewModel.solidBackgroundBinding,
+                            onReset: viewModel.isSolidBackgroundCustomized ? { viewModel.resetSolidBackground() } : nil,
+                        )
+                    case .gradient:
+                        // The two stops ARE the gradient, not overrides of a seed → no reset arrow.
+                        ColorPicker(lang.string(.themeGradientStartColor), selection: viewModel.gradientStopBinding(0), supportsOpacity: false)
+                        ColorPicker(lang.string(.themeGradientEndColor), selection: viewModel.gradientStopBinding(1), supportsOpacity: false)
+                        ThemeGradientDirectionRow(
+                            label: lang.string(.themeGradientDirection),
+                            angle: viewModel.gradientAngleBinding,
+                        )
+                    }
                 }
 
-                // Key: colors + font size + corner radius + border width + shadow
+                // Keys: fills + text, then shape, then size.
                 Section(header: Text(lang.string(.themeColorKeySection))) {
-                    colorRow(lang.string(.themeColorKeyText), \.keyTextColor,
-                             ThemeDefaults.keyText)
-                    colorRow(lang.string(.themeColorNormalKeyFill), \.normalKeyFillColor,
-                             ThemeDefaults.normalKeyFill)
-                    colorRow(lang.string(.themeColorSpecialKeyFill), \.specialKeyFillColor,
-                             ThemeDefaults.specialKeyFill)
-                    sliderRow(lang.string(.themeKeyFontSize), \.keyFontSizeScale,
-                              ThemeSliderRanges.scale, ThemeSliderRanges.scaleStep)
+                    colorRow(lang.string(.themeColorNormalKeyFill), \.normalKeyFillColor)
+                    colorRow(lang.string(.themeColorSpecialKeyFill), \.specialKeyFillColor)
+                    colorRow(lang.string(.themeColorKeyText), \.keyTextColor)
                     sliderRow(lang.string(.themeKeyCornerRadius), \.keyCornerRadius,
                               ThemeSliderRanges.radius, ThemeSliderRanges.radiusStep)
                     sliderRow(lang.string(.themeKeyBorderWidth), \.keyBorderWidth,
                               ThemeSliderRanges.borderWidth, ThemeSliderRanges.borderWidthStep)
                     sliderRow(lang.string(.themeKeyShadow), \.keyShadowIntensity,
                               ThemeSliderRanges.shadow, ThemeSliderRanges.shadowStep)
+                    sliderRow(lang.string(.themeKeyHeight), \.keyHeightScale,
+                              ThemeSliderRanges.scale, ThemeSliderRanges.scaleStep)
+                    sliderRow(lang.string(.themeKeyFontSize), \.keyFontSizeScale,
+                              ThemeSliderRanges.scale, ThemeSliderRanges.scaleStep)
                 }
 
-                // Candidate: colors + text size
+                // Candidates: text color + size (the bar shares the background surface).
                 Section(header: Text(lang.string(.themeCandidateSection))) {
-                    colorRow(lang.string(.themeColorCandidateText), \.candidateTextColor,
-                             ThemeDefaults.candidateText)
-                    colorRow(lang.string(.themeColorCandidateBackground), \.candidateBackgroundColor,
-                             ThemeDefaults.candidateBackground)
+                    colorRow(lang.string(.themeColorCandidateText), \.candidateTextColor)
                     sliderRow(lang.string(.themeCandidateTextSize), \.candidateTextSizeScale,
                               ThemeSliderRanges.scale, ThemeSliderRanges.scaleStep)
                 }
 
-                // Reset the draft appearance to defaults (name kept). Draft-only —
+                // Reset the draft appearance to the seed (name kept). Draft-only —
                 // does not persist or change the applied theme until Save.
                 Section {
                     Button(role: .destructive) {
@@ -133,15 +152,11 @@ struct ThemeEditorView: View {
     private func colorRow(
         _ label: String,
         _ keyPath: WritableKeyPath<KeyboardColorSettings, CodableColor?>,
-        _ defaultColor: Color,
     ) -> some View {
         ThemeColorRow(
             label: label,
-            color: viewModel.colorBinding(keyPath, default: defaultColor),
-            defaultColor: defaultColor,
-            isCustomized: viewModel.isColorCustomized(keyPath),
-            onChange: { _ in },
-            onReset: { viewModel.resetColor(keyPath) },
+            color: viewModel.colorBinding(keyPath),
+            onReset: viewModel.isColorCustomized(keyPath) ? { viewModel.resetColor(keyPath) } : nil,
         )
     }
 

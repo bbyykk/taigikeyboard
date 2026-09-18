@@ -17,6 +17,7 @@ import Foundation
 final class UserThemeStore {
     /// Maximum number of user themes (USER 2026-06-07). At cap, `add` no-ops.
     static let maxUserThemes = 5
+    static let fileName = "user_themes.json"
 
     private let fileURL: URL?
     private let onMutated: () -> Void
@@ -26,14 +27,21 @@ final class UserThemeStore {
     ///     store degrades to empty, never crashes).
     ///   - onMutated: bumps the cross-process theme-revision counter.
     init(containerURL: URL?, onMutated: @escaping () -> Void) {
-        fileURL = containerURL?.appendingPathComponent("user_themes.json")
+        fileURL = containerURL?.appendingPathComponent(Self.fileName)
         self.onMutated = onMutated
     }
 
-    /// Loads all persisted themes; returns `[]` when absent or corrupt.
+    /// Loads all persisted themes; returns `[]` when absent or corrupt. Every theme's
+    /// `nil` color roles are filled from `UserThemeSeed` so a theme saved before the
+    /// seed existed is scheme-invariant too (no migration write).
     func load() -> [UserTheme] {
         guard let fileURL, let data = try? Data(contentsOf: fileURL) else { return [] }
-        return (try? JSONDecoder().decode([UserTheme].self, from: data)) ?? []
+        let themes = (try? JSONDecoder().decode([UserTheme].self, from: data)) ?? []
+        return themes.map { theme in
+            var seeded = theme
+            seeded.appearance.colors = theme.appearance.colors.seededForUserTheme()
+            return seeded
+        }
     }
 
     /// Appends a theme and persists. Returns `false` when already at

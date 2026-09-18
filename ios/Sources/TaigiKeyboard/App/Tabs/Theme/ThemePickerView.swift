@@ -353,8 +353,8 @@ private struct ThemeScreenshotPlaceholder: View {
 /// border, and shadow — so the saved theme's distinctive key look reads at a
 /// glance (the old colors-only swatch hid radius / border / shadow). Border and
 /// shadow mirror the real keyboard (`TaigiKeyboardView`): a black stroke and a
-/// soft drop shadow sized by `keyShadowIntensity`. nil color roles fall back to
-/// the same adaptive defaults the keyboard uses.
+/// soft drop shadow sized by `keyShadowIntensity`. User themes are seeded on
+/// load, so a nil role only occurs for a malformed entry and falls back to the seed.
 private struct CustomThemeButtonPreview: View {
     let appearance: ThemeAppearance
 
@@ -365,11 +365,9 @@ private struct CustomThemeButtonPreview: View {
     private static let glyphBaseSize: CGFloat = 32
 
     var body: some View {
-        let defaults = ThemeDefaults.self
         let colors = appearance.colors
-        let background = colors.backgroundColor?.color ?? defaults.keyboardBackground
-        let keyFill = colors.normalKeyFillColor?.color ?? defaults.normalKeyFill
-        let keyText = colors.keyTextColor?.color ?? defaults.keyText
+        let keyFill = (colors.normalKeyFillColor ?? UserThemeSeed.normalKeyFill).color
+        let keyText = (colors.keyTextColor ?? UserThemeSeed.keyText).color
         let cornerRadius = CGFloat(appearance.keyCornerRadius)
         let borderWidth = CGFloat(appearance.keyBorderWidth)
         let shadow = CGFloat(appearance.keyShadowIntensity)
@@ -393,6 +391,7 @@ private struct CustomThemeButtonPreview: View {
             // shadow == 0 → radius 0 + opacity 0 = no shadow (flat themes).
             .shadow(color: .black.opacity(shadow > 0 ? 0.3 : 0), radius: shadow, y: shadow / 2)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(background)
+            // Same surface view as the keyboard root (`TaigiKeyboardView`).
+            .background { (colors.background ?? UserThemeSeed.background).view }
     }
 }

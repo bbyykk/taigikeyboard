@@ -70,9 +70,10 @@ struct BuiltInTheme: Equatable {
 /// Font is intentionally NOT part of a theme: it is a GLOBAL setting
 /// (`SharedSettings.fontType`), so switching themes never changes the font.
 ///
-/// `colors` stays OPTIONAL per role (reuses `KeyboardColorSettings`): a `nil`
-/// role inherits KeyboardKit's adaptive color, preserving the "customize 2 of 6"
-/// behavior. The defaults match `ThemeDefaults`.
+/// `colors` stays OPTIONAL per role (reuses `KeyboardColorSettings`) for the
+/// `default` buffer and built-in themes, where a `nil` role inherits KeyboardKit's
+/// adaptive color. User themes are always seeded (`userThemeSeed`) so they carry
+/// no `nil` role and look the same in light and dark mode.
 struct ThemeAppearance: Codable, Equatable {
     var colors: KeyboardColorSettings
     var keyShadowIntensity: Double
@@ -95,6 +96,14 @@ struct ThemeAppearance: Codable, Equatable {
         keyCornerRadius: 6,
         keyBorderWidth: 0,
     )
+
+    /// The draft a NEW user theme starts from: factory sizes + the concrete light
+    /// palette (`UserThemeSeed.colors`). Also what 恢復預設 restores.
+    static let userThemeSeed: ThemeAppearance = {
+        var appearance = ThemeAppearance.default
+        appearance.colors = UserThemeSeed.colors
+        return appearance
+    }()
 }
 
 // Decode lives in an extension so the struct keeps its synthesized memberwise init.
