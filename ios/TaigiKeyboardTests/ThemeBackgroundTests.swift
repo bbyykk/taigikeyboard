@@ -17,8 +17,7 @@ final class ThemeBackgroundTests: XCTestCase {
     }
 
     private func panelPoints(angle: Double, fullKeyboardHeight: CGFloat, topInset: CGFloat) throws -> (start: UnitPoint, end: UnitPoint) {
-        let backdrop = KeyboardOverlayBackdrop(gradient: gradient(angle: angle), fullKeyboardHeight: fullKeyboardHeight, topInset: topInset)
-        return try XCTUnwrap(backdrop.panelUnitPoints)
+        gradient(angle: angle).unitPoints(in: KeyboardSurfaceSlice(fullHeight: fullKeyboardHeight, topInset: topInset))
     }
 
     // MARK: - Legacy decode
@@ -141,9 +140,54 @@ final class ThemeBackgroundTests: XCTestCase {
         XCTAssertEqual(points.end.y, 1, accuracy: 1e-9)
     }
 
-    // trace: a flat / default theme has no gradient → no panel points (the backdrop paints the flat color)
-    func testPanelUnitPoints_noGradient_isNil() {
-        XCTAssertNil(KeyboardOverlayBackdrop(gradient: nil, fullKeyboardHeight: 300, topInset: 50).panelUnitPoints)
+    // MARK: - Photo background
+
+    // trace: `{"type":"image","file":"a.jpg","dim":0.5}` round-trips; dim clamps into 0…0.8; absent dim = default
+    func testImageBackground_roundTripAndDimClamp() throws {
+        var colors = KeyboardColorSettings()
+        colors.background = .image(ThemeImageBackground(file: "a.jpg", dim: 0.5))
+        let data = try JSONEncoder().encode(colors)
+        XCTAssertTrue(try XCTUnwrap(String(data: data, encoding: .utf8)).contains(#""type":"image""#))
+        XCTAssertEqual(try JSONDecoder().decode(KeyboardColorSettings.self, from: data), colors)
+        XCTAssertEqual(ThemeImageBackground(file: "a.jpg", dim: 2).dim, ThemeImageBackground.dimRange.upperBound, "dim clamps high")
+        XCTAssertEqual(ThemeImageBackground(file: "a.jpg", dim: -1).dim, 0, "dim clamps low")
+        let absentDim = try decode(#"{ "background": { "type": "image", "file": "b.jpg" } }"#)
+        XCTAssertEqual(absentDim.background?.image, ThemeImageBackground(file: "b.jpg", dim: ThemeImageBackground.defaultDim))
+    }
+
+    // trace: an empty file name is not a photo → decode degrades to adaptive (same as an unknown type)
+    func testImageBackground_emptyFile_degradesToAdaptive() throws {
+        XCTAssertNil(try decode(#"{ "background": { "type": "image", "file": "" } }"#).background)
+    }
+
+    // trace: aspect-fill cover rect — a 2:1 photo over a 1:1 keyboard fills the height and centres horizontally;
+    // a 1:2 photo fills the width and centres vertically; a panel slice keeps the whole-keyboard framing
+    func testCoverRect_aspectFillCentred() {
+        let square = CGRect(x: 0, y: 0, width: 100, height: 100)
+        XCTAssertEqual(ThemeImageBackground.coverRect(imageSize: CGSize(width: 200, height: 100), in: square), CGRect(x: -50, y: 0, width: 200, height: 100))
+        XCTAssertEqual(ThemeImageBackground.coverRect(imageSize: CGSize(width: 100, height: 200), in: square), CGRect(x: 0, y: -50, width: 100, height: 200))
+        let slicedKeyboard = CGRect(x: 0, y: -50, width: 100, height: 300)
+        XCTAssertEqual(ThemeImageBackground.coverRect(imageSize: CGSize(width: 100, height: 100), in: slicedKeyboard), CGRect(x: -100, y: -50, width: 300, height: 300))
+        XCTAssertEqual(ThemeImageBackground.coverRect(imageSize: .zero, in: square), square, "degenerate image size falls back to the bounds")
+    }
+
+    // trace: the surface pairs the background with its photo tone — dark key text → white overlay,
+    // light key text → black; unset role = seed (black text) → white; adaptive (no background) → nil
+    func testSurface_pairsBackgroundWithKeyTextTone() {
+        var colors = KeyboardColorSettings()
+        XCTAssertNil(colors.surface, "adaptive default has no custom surface")
+        colors.background = .image(ThemeImageBackground(file: "a.jpg"))
+        XCTAssertEqual(colors.surface?.dimsTowardWhite, true)
+        colors.keyTextColor = CodableColor(hex: 0xFFFFFF)
+        XCTAssertEqual(colors.surface?.dimsTowardWhite, false)
+        colors.keyTextColor = CodableColor(hex: 0x1C1C1E)
+        XCTAssertEqual(colors.surface, ThemeSurface(background: colors.background!, dimsTowardWhite: true))
+    }
+
+    // trace: a panel slice's keyboard rect is the whole keyboard shifted up by the chrome above the panel
+    func testSliceKeyboardRect_shiftsUpByTopInset() {
+        let slice = KeyboardSurfaceSlice(fullHeight: 300, topInset: 50)
+        XCTAssertEqual(slice.keyboardRect(width: 400), CGRect(x: 0, y: -50, width: 400, height: 300))
     }
 
     // trace: a new-format gradient with one stop is not renderable → decode degrades to adaptive

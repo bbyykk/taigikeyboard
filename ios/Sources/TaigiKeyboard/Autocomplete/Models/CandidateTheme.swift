@@ -22,12 +22,11 @@ struct CandidateTheme: Equatable {
     let primaryTextColor: Color
     let secondaryTextColor: Color
 
-    /// The active theme's background gradient (stops + angle), or nil for a
-    /// flat/default theme. Consumed by the expanded candidate overlay and the panel
-    /// backdrops so they repaint the gradient as an opaque backdrop (continuous with
-    /// the gradient-painted keyboard root) instead of inheriting the candidate
-    /// strip's transparent style.
-    let backgroundGradient: ThemeGradient?
+    /// The active theme's custom surface (solid / gradient / photo + photo tone), or nil
+    /// for the adaptive default. Consumed by the expanded candidate overlay and the panel
+    /// backdrops so they repaint the surface as an opaque backdrop (continuous with the
+    /// keyboard root) instead of inheriting the candidate strip's transparent style.
+    let surface: ThemeSurface?
 
     /// Candidate-strip first-candidate highlight + pressed tints, derived from the
     /// gradient theme's first stop so those states match the theme hue: highlight is a
@@ -60,17 +59,16 @@ struct CandidateTheme: Equatable {
         }
 
         let customTextColor = colorSettings.candidateTextColor?.color
-        let gradient = colorSettings.backgroundGradient
         // Gradient themes tint the strip's first-candidate + pressed states with a
-        // deepened version of the first stop; flat themes leave these nil (neutral fallback).
-        let firstStop = gradient?.stops.first
+        // deepened version of the first stop; other themes leave these nil (neutral fallback).
+        let firstStop = colorSettings.backgroundGradient?.stops.first
         return CandidateTheme(
             height: baseHeight * candidateTextSizeScale + bottomPadding,
             primaryFontSize: primaryBase * candidateTextSizeScale,
             secondaryFontSize: secondaryBase * candidateTextSizeScale,
             primaryTextColor: customTextColor ?? Color(.label),
             secondaryTextColor: customTextColor?.opacity(0.7) ?? Color(.secondaryLabel),
-            backgroundGradient: gradient,
+            surface: colorSettings.surface,
             firstCandidateHighlightColor: firstStop.map { $0.lightened(towardWhite: KeyboardColorSettings.candidateHighlightLightenFactor).color },
             pressedCandidateColor: firstStop.map { $0.deepened(by: KeyboardColorSettings.candidatePressedDeepenFactor).color },
         )
@@ -84,7 +82,7 @@ struct CandidateTheme: Equatable {
         secondaryFontSize: baseSecondaryFontSize,
         primaryTextColor: Color(.label),
         secondaryTextColor: Color(.secondaryLabel),
-        backgroundGradient: nil,
+        surface: nil,
         firstCandidateHighlightColor: nil,
         pressedCandidateColor: nil,
     )

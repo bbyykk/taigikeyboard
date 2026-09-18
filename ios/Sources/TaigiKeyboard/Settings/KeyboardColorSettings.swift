@@ -114,41 +114,112 @@ struct ThemeGradient: Codable, Equatable {
             end: UnitPoint(x: 0.5 + halfX, y: 0.5 + halfY),
         )
     }
+
+    /// The unit points remapped into a panel that covers `[topInset, fullHeight]` of the
+    /// keyboard: x is unchanged (same width), `y' = (y · fullHeight − topInset) / panelHeight`,
+    /// so the panel paints exactly its slice of the whole-keyboard gradient and stays
+    /// continuous with the keyboard above it. A degenerate panel height falls back to the
+    /// unshifted points.
+    func unitPoints(in slice: KeyboardSurfaceSlice) -> (start: UnitPoint, end: UnitPoint) {
+        let points = unitPoints
+        let panelHeight = slice.fullHeight - slice.topInset
+        guard panelHeight > 0 else { return points }
+        func mapped(_ point: UnitPoint) -> UnitPoint {
+            UnitPoint(x: point.x, y: (point.y * slice.fullHeight - slice.topInset) / panelHeight)
+        }
+        return (start: mapped(points.start), end: mapped(points.end))
+    }
 }
 
-extension LinearGradient {
-    /// The theme gradient as a SwiftUI gradient; `points` overrides the gradient's own
-    /// unit points (the overlay backdrops pass points remapped into panel space).
-    init(_ gradient: ThemeGradient, points: (start: UnitPoint, end: UnitPoint)? = nil) {
-        let points = points ?? gradient.unitPoints
-        self.init(colors: gradient.colors, startPoint: points.start, endPoint: points.end)
+/// Where a painted surface sits inside the whole keyboard: the keyboard's full height and
+/// the height of the chrome above the surface (the candidate bar for the overlay panels).
+struct KeyboardSurfaceSlice: Equatable {
+    let fullHeight: CGFloat
+    let topInset: CGFloat
+
+    /// The whole keyboard's frame in the coordinates of a surface `width` wide that shows
+    /// this slice: same width, full height, shifted up by the chrome above it.
+    func keyboardRect(width: CGFloat) -> CGRect {
+        CGRect(x: 0, y: -topInset, width: width, height: fullHeight)
+    }
+}
+
+// MARK: - Theme image background
+
+/// A photo as the keyboard surface: `file` is the JPEG's name inside the App Group
+/// `ThemeImageStore` directory (written by the host app, read by the extension), `dim`
+/// the opacity of the tone overlay laid over the desaturated photo so keys stay readable
+/// (USER 2026-09-19 「圖片彩度不能太搶眼」). The overlay is white when the key text is
+/// dark and black otherwise.
+// CROSS-PLATFORM INVARIANT — mirrors android .../ime/core/KeyboardColorSettings.kt ThemeImageBackground
+// (same JSON fields, `saturation`, `dimRange`, `defaultDim`). Drift causes silent divergence.
+struct ThemeImageBackground: Codable, Equatable {
+    /// Saturation multiplier applied to every photo (1 = untouched).
+    static let saturation: Double = 0.7
+    static let dimRange: ClosedRange<Double> = 0 ... 0.8
+    static let dimStep: Double = 0.05
+    static let defaultDim: Double = 0.35
+
+    let file: String
+    var dim: Double
+
+    init(file: String, dim: Double = ThemeImageBackground.defaultDim) {
+        self.file = file
+        self.dim = min(max(dim, Self.dimRange.lowerBound), Self.dimRange.upperBound)
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let file = try container.decode(String.self, forKey: .file)
+        guard !file.isEmpty else {
+            throw DecodingError.dataCorruptedError(forKey: .file, in: container, debugDescription: "empty image file name")
+        }
+        try self.init(file: file, dim: container.decodeIfPresent(Double.self, forKey: .dim) ?? Self.defaultDim)
+    }
+
+    /// The rectangle that scales `imageSize` to cover `bounds` (aspect fill, centred) — the
+    /// photo's drawn frame over the whole keyboard, from which a panel shows its slice.
+    static func coverRect(imageSize: CGSize, in bounds: CGRect) -> CGRect {
+        guard imageSize.width > 0, imageSize.height > 0 else { return bounds }
+        let scale = max(bounds.width / imageSize.width, bounds.height / imageSize.height)
+        let size = CGSize(width: imageSize.width * scale, height: imageSize.height * scale)
+        return CGRect(
+            x: bounds.midX - size.width / 2,
+            y: bounds.midY - size.height / 2,
+            width: size.width,
+            height: size.height,
+        )
     }
 }
 
 // MARK: - Theme background
 
 /// What paints the keyboard surface — one field, mutually exclusive cases. The
-/// candidate bar is the same surface: a solid background colours both, a
-/// gradient paints once behind both (the bar goes transparent). `nil` on
+/// candidate bar is the same surface: a solid background colours both, a gradient
+/// or photo paints once behind both (the bar goes transparent). `nil` on
 /// `KeyboardColorSettings.background` means "adaptive" (KeyboardKit's dynamic
-/// background + Liquid Glass) and is reserved for the 經典 預設 head.
+/// background + Liquid Glass) and is reserved for the 經典 預設 head. Rendering
+/// lives in `ThemeBackgroundSurface`.
 ///
-/// JSON: `{"type":"solid","color":{…}}` / `{"type":"gradient","stops":[…],"angle":180}`.
+/// JSON: `{"type":"solid","color":{…}}` / `{"type":"gradient","stops":[…],"angle":180}` /
+/// `{"type":"image","file":"<uuid>.jpg","dim":0.35}`.
 // CROSS-PLATFORM INVARIANT — mirrors android .../ime/core/KeyboardColorSettings.kt ThemeBackground
 // (same `type` discriminator and field names; Android stores the colour as an ARGB int).
 enum ThemeBackground: Codable, Equatable {
     case solid(CodableColor)
     case gradient(ThemeGradient)
+    case image(ThemeImageBackground)
 
-    /// The JSON discriminator, also the editor's 純色 / 漸層 segmented choice.
+    /// The JSON discriminator, also the editor's 純色 / 漸層 / 照片 segmented choice.
     enum Kind: String, Codable, CaseIterable {
-        case solid, gradient
+        case solid, gradient, image
     }
 
     var kind: Kind {
         switch self {
         case .solid: .solid
         case .gradient: .gradient
+        case .image: .image
         }
     }
 
@@ -166,13 +237,11 @@ enum ThemeBackground: Codable, Equatable {
         return nil
     }
 
-    /// The surface as a view — the keyboard root and the custom-theme card share it.
-    @ViewBuilder
-    var view: some View {
-        switch self {
-        case let .solid(color): color.color
-        case let .gradient(gradient): LinearGradient(gradient)
+    var image: ThemeImageBackground? {
+        if case let .image(image) = self {
+            return image
         }
+        return nil
     }
 
     private enum CodingKeys: String, CodingKey {
@@ -187,6 +256,8 @@ enum ThemeBackground: Codable, Equatable {
         case .gradient:
             // The gradient's keys sit beside `type` in the same object.
             self = try .gradient(ThemeGradient(from: decoder))
+        case .image:
+            self = try .image(ThemeImageBackground(from: decoder))
         }
     }
 
@@ -198,6 +269,8 @@ enum ThemeBackground: Codable, Equatable {
             try container.encode(color, forKey: .color)
         case let .gradient(gradient):
             try gradient.encode(to: encoder)
+        case let .image(image):
+            try image.encode(to: encoder)
         }
     }
 }
@@ -223,11 +296,17 @@ struct KeyboardColorSettings: Equatable {
         background?.solidColor
     }
 
-    /// The background gradient, or nil for a solid / adaptive background. Single
-    /// source for the render branch, the candidate-bar transparency and the overlay
-    /// backdrops.
+    /// The background gradient, or nil for a solid / photo / adaptive background. Single
+    /// source for the candidate-tint derivation and the built-in theme tests.
     var backgroundGradient: ThemeGradient? {
         background?.gradient
+    }
+
+    /// The custom surface to paint (`ThemeBackgroundSurface`), or nil for the adaptive
+    /// default. The photo tone overlay is white when the key text is dark and black
+    /// otherwise (the seed's black text is the fallback, so an unset role reads as "light").
+    var surface: ThemeSurface? {
+        background.map { ThemeSurface(background: $0, dimsTowardWhite: (keyTextColor ?? UserThemeSeed.keyText).isDark) }
     }
 
     /// Factors used to derive the candidate strip's first-candidate highlight and
@@ -240,6 +319,14 @@ struct KeyboardColorSettings: Equatable {
     // CANDIDATE_HIGHLIGHT_LIGHTEN_FACTOR / CANDIDATE_PRESSED_DEEPEN_FACTOR. Drift causes silent divergence.
     static let candidateHighlightLightenFactor: Double = 0.5
     static let candidatePressedDeepenFactor: Double = 0.65
+}
+
+/// A custom keyboard surface together with the tone its photo overlay takes — resolved once
+/// from `KeyboardColorSettings` so no render site can pair a background with the wrong tone.
+struct ThemeSurface: Equatable {
+    let background: ThemeBackground
+    /// Whether a photo's dim overlay is white (dark key text) rather than black.
+    let dimsTowardWhite: Bool
 }
 
 // Codable lives in an extension so the struct keeps its synthesized memberwise init.

@@ -3943,6 +3943,24 @@
         }
       }
     },
+    "i18n_theme_backgroundTypePhoto": {
+      "comment": "Theme editor background type (segmented picker): a photo from the user's library.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Photo"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "写真"
+          }
+        }
+      }
+    },
     "i18n_theme_backgroundTypeSolid": {
       "comment": "Theme editor background type (segmented picker): one flat color.",
       "extractionState": "manual",
@@ -4677,6 +4695,60 @@
           "stringUnit": {
             "state": "translated",
             "value": "藤紫"
+          }
+        }
+      }
+    },
+    "i18n_theme_photoChange": {
+      "comment": "Theme editor row label / button: open the photo picker to replace the current photo.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change Photo"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "写真を変更"
+          }
+        }
+      }
+    },
+    "i18n_theme_photoDim": {
+      "comment": "Theme editor slider label: how strongly the photo is toned down (a white or black overlay) so keys stay readable.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fade"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "淡くする"
+          }
+        }
+      }
+    },
+    "i18n_theme_photoPick": {
+      "comment": "Theme editor row label / button: open the photo picker when no photo is set yet.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose Photo"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "写真を選択"
           }
         }
       }

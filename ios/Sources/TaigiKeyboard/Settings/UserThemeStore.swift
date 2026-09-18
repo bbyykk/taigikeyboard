@@ -82,18 +82,21 @@ final class UserThemeStore {
         guard let data = try? JSONEncoder().encode(themes) else { return false }
         do {
             try data.write(to: fileURL, options: .atomic)
-            excludeFromBackup(fileURL)
+            fileURL.excludeFromBackup()
             onMutated()
             return true
         } catch {
             return false
         }
     }
+}
 
-    /// Marks the file excluded from OS backup (best-effort; mirrors
-    /// `SQLiteConnectionManager`'s user-data exclusion).
-    private func excludeFromBackup(_ url: URL) {
-        var url = url
+extension URL {
+    /// Marks the file or directory excluded from OS backup (best-effort). User data — theme
+    /// JSON, theme photos — is excluded like the user-data databases
+    /// (`SQLiteConnectionManager`), see `behavioral-invariants.md` §29.
+    func excludeFromBackup() {
+        var url = self
         var resourceValues = URLResourceValues()
         resourceValues.isExcludedFromBackup = true
         try? url.setResourceValues(resourceValues)

@@ -19,6 +19,11 @@ import SwiftUI
 final class ThemeEditorViewModel: ObservableObject {
     @Published var name: String
     @Published var appearance: ThemeAppearance
+    /// The 背景 segmented choice. Normally `background.kind`; it can run ahead of the
+    /// background while 照片 is chosen but no photo has been picked yet, so the picker
+    /// row shows without the surface changing (the draft keeps its solid / gradient
+    /// until a photo lands).
+    @Published private(set) var backgroundKind: ThemeBackground.Kind
 
     /// `nil` when creating a new theme; the existing id when editing.
     private let editingId: UUID?
@@ -27,17 +32,12 @@ final class ThemeEditorViewModel: ObservableObject {
 
     /// Creates a fresh draft (new theme) or a prefilled draft (editing `existing`).
     init(editing existing: UserTheme? = nil) {
-        if let existing {
-            editingId = existing.id
-            name = existing.name
-            appearance = existing.appearance
-            createdAt = existing.createdAt
-        } else {
-            editingId = nil
-            name = ""
-            appearance = .userThemeSeed
-            createdAt = Date()
-        }
+        let initial = existing?.appearance ?? .userThemeSeed
+        editingId = existing?.id
+        name = existing?.name ?? ""
+        appearance = initial
+        createdAt = existing?.createdAt ?? Date()
+        backgroundKind = (initial.colors.background ?? UserThemeSeed.background).kind
     }
 
     /// Whether the title is for an edit (vs. a new theme).
@@ -88,24 +88,43 @@ final class ThemeEditorViewModel: ObservableObject {
         appearance = next
     }
 
-    var backgroundKind: ThemeBackground.Kind {
-        background.kind
-    }
-
-    /// Segmented 純色 / 漸層 choice. Switching keeps the current hue: solid → gradient
-    /// runs the solid color into a lighter tint of it; gradient → solid keeps the first stop.
+    /// Segmented 純色 / 漸層 / 照片 choice. Switching keeps the current hue: solid → gradient
+    /// runs the solid color into a lighter tint of it; gradient → solid keeps the first
+    /// stop; leaving a photo lands on the seed colour. Choosing 照片 changes nothing until
+    /// a photo is picked (`setPhoto`).
     var backgroundKindBinding: Binding<ThemeBackground.Kind> {
         Binding(
             get: { self.backgroundKind },
             set: { kind in
-                switch (kind, self.background) {
-                case (.solid, .solid), (.gradient, .gradient):
-                    return
-                case let (.gradient, .solid(color)):
-                    self.setBackground(.gradient(.seeded(from: color)))
-                case let (.solid, .gradient(gradient)):
-                    self.setBackground(.solid(gradient.stops[0]))
+                self.backgroundKind = kind
+                guard kind != self.background.kind else { return }
+                let solidColor = self.background.solidColor ?? self.background.gradient?.stops[0] ?? UserThemeSeed.solidColor
+                switch kind {
+                case .solid: self.setBackground(.solid(solidColor))
+                case .gradient: self.setBackground(.gradient(.seeded(from: solidColor)))
+                case .image: return
                 }
+            },
+        )
+    }
+
+    /// The draft photo, or nil while 照片 is chosen but nothing has been picked.
+    var photo: ThemeImageBackground? {
+        background.image
+    }
+
+    /// Makes the stored photo `file` (see `ThemeImageStore.save`) the background, keeping
+    /// the current 淡化 when replacing a photo.
+    func setPhoto(file: String) {
+        setBackground(.image(ThemeImageBackground(file: file, dim: photo?.dim ?? ThemeImageBackground.defaultDim)))
+    }
+
+    var photoDimBinding: Binding<Double> {
+        Binding(
+            get: { self.photo?.dim ?? ThemeImageBackground.defaultDim },
+            set: { dim in
+                guard let photo = self.photo else { return }
+                self.setBackground(.image(ThemeImageBackground(file: photo.file, dim: dim)))
             },
         )
     }
@@ -182,6 +201,7 @@ final class ThemeEditorViewModel: ObservableObject {
     /// `save()`. `ThemeAppearance` is a value type, so this cannot leak to the live theme.
     func resetToDefaults() {
         appearance = .userThemeSeed
+        backgroundKind = background.kind
     }
 
     /// Binding for a scalar appearance field (sliders).
