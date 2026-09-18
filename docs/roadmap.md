@@ -3,14 +3,14 @@
 > **Type**: Planning (forward-looking)
 > **Keywords**: `roadmap`, `planning`, `released versions`, `release trains`
 > **Status**: Active
-> **Last updated**: 2026-09-13 (desktop 3.6.x sections collapsed into `docs/reports/desktop-3.6.x-design-notes.md`; repository-size record retired — rationale + timings in `docs/architecture/build-artifacts.md`; released-versions index through mobile / desktop 3.6.8)
+> **Last updated**: 2026-09-19 (mobile custom theme background round added; desktop 3.6.x sections collapsed into `docs/reports/desktop-3.6.x-design-notes.md`; repository-size record retired — rationale + timings in `docs/architecture/build-artifacts.md`; released-versions index through mobile / desktop 3.6.8)
 
 ---
 
 ## Summary
 
 - **Forward-looking work items only.** Shipped detail lives in `docs/releases/<version>/plan.md` + `changelog/<version>.md` + Claude auto-memory.
-- **Active**: Telex tone-1/4 keys design (USER 2026-09-11「之後的版本再處理」). Merged desktop 3.6.x items below await dogfood only.
+- **Active**: Mobile custom theme background round (PR A–D, USER-scoped 2026-09-19); Telex tone-1/4 keys design (USER 2026-09-11「之後的版本再處理」). Merged desktop 3.6.x items below await dogfood only.
 - **No open deferred TODO**: the keyboard theme picker (the last 2026-06-01 candidate) shipped in v3.6.2; the one design-locked, unscheduled item is 變換後羅馬字 commit (§ Out of scope / deferred).
 - **Release scope / timing / tag is user-gated** per [`~/.claude/rules/diagnosis-discipline.md` § No unilateral release scope].
 
@@ -19,6 +19,59 @@
 ## Active / In-flight items
 
 kautian subcollections (腔調 + 姓名附錄 toggles + 語音差異 詞級擴展) — 5 phases MERGED, shipped **v3.6.0** (#354-#358).
+
+---
+
+### Mobile custom theme — one background surface, gradient direction, photo background (USER-scoped 2026-09-19)
+
+**Status**: Phase 0 (this section + project memory `project_mobile_custom_theme_background.md`) on main. PR A–D pending. Dogfood item S54 written with PR A.
+
+USER request (2026-09-19, five points, verbatim intent): (1) 候選詞列背景 and 鍵盤背景 merge into ONE colour; (2) background gradient with a Figma-like selectable direction and selectable colours; (3) upload a photo as the keyboard background — resize / aspect ratio handled, saturation must not be distracting; (4) a custom theme has no light / dark split — same colours in both modes; (5) re-order the editor controls, clean, simple, elegant. Editor sections = 3 (背景 / 按鍵 / 候選詞), photo tone-down = fixed saturation cap + one 淡化 slider, gradient direction = 8 arrow presets (USER picks 2026-09-19).
+
+#### Today (grounded in code)
+
+| Piece | iOS | Android |
+|---|---|---|
+| Colour model | `Settings/KeyboardColorSettings.swift:67` — six optional roles (`nil` = inherit adaptive) + `backgroundGradient: ThemeGradient?` (`:60`, vertical stops, built-in themes only) | `ime/core/KeyboardColorSettings.kt:37` — same shape, ARGB `Int?`, `ThemeGradient` `:14` |
+| Candidate bar background | separate `candidateBackgroundColor`; built-in themes never set it (`BuiltInThemes.swift:155`); render `TaigiKeyboardView.swift:445-459` | `SmartbarView.kt:141-156`, `SmartbarManager.kt:709-730`, `KeyboardPreviewPanel.kt:251` |
+| Root background | `TaigiKeyboardView.swift:159-172` — liquid glass → vertical `LinearGradient` → solid; overlays repaint the gradient (`Overlays/KeyboardOverlayBackdrop.swift`, `ExpandedCandidateOverlay.swift:212`) | `KeyboardLayout.kt:79` + `KeyboardThemeSurfaceController.kt:24` (`GradientDrawable(TOP_BOTTOM)` on the shared parent) + `KeyboardOverlayAppearance.kt` |
+| Light / dark | user themes store one static RGBA per role, but a `nil` role flips with the scheme | same |
+| Editor order | 齒盤介面(背景色 · 高度) → 揤鈕介面(3 colours · 字級 · 圓角 · 框線 · 陰影) → 候選詞介面(2 colours · 字級) → 恢復預設 (`App/Tabs/Theme/ThemeEditorView.swift:28-75`) | `ui/tabs/theme/ThemeEditorScreen.kt:165-310`; `ThemeEditorActivity.kt:79` strips any gradient on save |
+| Photo picker | none | none |
+
+#### Design (USER-approved 2026-09-19)
+
+1. **One background surface.** `candidateBackgroundColor` is deleted everywhere; the candidate bar is the same surface as the keyboard: solid → same colour, gradient / photo → transparent over the root paint (the path built-in gradient themes already use).
+2. **`background: ThemeBackground?`** replaces `backgroundColor` + `backgroundGradient` (one field, mutually exclusive cases): `solid(color)` · `gradient(stops, angle)` · `image(file, dim)` (image case lands in PR C/D). `nil` = adaptive (the 經典 預設 head only). JSON `{"type":"solid"|"gradient"|"image", …}`, identical on both platforms. Decoders map the old keys: `backgroundColor` → solid, `backgroundGradient` → gradient angle 180, `candidateBackgroundColor` ignored. Built-in gradient themes keep angle 180.
+3. **Gradient direction** = CSS/Figma angle in degrees (180 = top→bottom). Editor: 8 arrow presets (45° steps), two colour rows (起點 / 終點). Unit points derive from the angle with Chebyshev normalisation so diagonals hit the corners; overlay panels transform the same points into panel coordinates (generalises the vertical slice shift in `KeyboardOverlayBackdrop`).
+4. **Photo background.** Host app `PhotosPicker` (iOS) / `PickVisualMedia` (Android) — neither needs a permission. On pick: decode, downscale to long edge ≤ 1280 px, JPEG q0.85, write `theme_images/<uuid>.jpg` under the App Group container (iOS, backup-excluded) / `filesDir` (Android). Render: scaled-to-fill, centre-cropped, fixed saturation 0.7, then a 淡化 overlay (white when key text is dark, black otherwise) at the theme's `dim` (slider 0–0.8, default 0.35). Candidate bar transparent. Extension caches the decoded image by file name; delete / replace removes the file; the store sweeps orphans. Decoded size ≈ 5 MB, far under the 64 MB extension cap. Liquid Glass stays off for any custom background (today's rule).
+5. **Scheme-invariant user themes.** A new custom theme seeds every role with a concrete light hex (CROSS-PLATFORM INVARIANT: background `0xD4D5DD`, key text `0x000000`, normal fill `0xFFFFFF`, special fill `0xABB1BA`, candidate text `0x000000`), so a user theme never holds `nil`; existing saved themes with `nil` roles resolve through the same seed at load (no migration write). Per-row reset returns the seed value; 恢復預設 returns the whole seed. Built-in themes untouched.
+6. **Editor order** (both platforms): **背景** [類型 純色 | 漸層 | 照片 → 顏色 / 起點色 · 終點色 · 方向 / 縮圖 · 更換 · 移除 · 淡化] · **按鍵** [一般鍵 · 功能鍵 · 文字 · 圓角 · 框線 · 陰影 · 高度 · 字級] · **候選詞** [文字 · 字級] · 恢復預設 · pinned live preview.
+
+#### Phases
+
+| Phase | Scope | Status |
+|---|---|---|
+| 0 | roadmap section + project memory | on main |
+| A | iOS: `ThemeBackground` model + decode compat, candidate-bg removal, gradient angle + 8-direction row, seeded user themes, editor re-order, i18n keys, tests, `docs/ui/theme.md` | pending |
+| B | Android port of A (model, render, editor, tests) | pending |
+| C | iOS photo background (`PhotosPicker`, image store, render, editor rows) | pending |
+| D | Android photo background (`PickVisualMedia`, image store, render, editor rows) | pending |
+
+#### Best practices alignment
+
+| Mainstream pattern | Source | This plan |
+|---|---|---|
+| Background = colour ∘ gradient ∘ image ∘ overlay layers, image `contentMode` | KeyboardKit 10 `Keyboard.Background` (`references/KeyboardKit-Documentation/data/documentation/keyboardkit/keyboard/background.json`: `backgroundColor`, `backgroundGradient`, `imageData`, `imageContentMode`, `overlayColor`); Hamster `KeyboardBackgroundStyle.swift:31-52` | same layer order in `ThemeBackground`; KK's gradient is vertical-only, so the angle gradient is drawn with SwiftUI `LinearGradient` on the root as today |
+| Image background drawn with `matchParentSize` + `contentScale` inside the themed box; `allowHardware(false)` to avoid decode crashes | florisboard `lib/snygg/src/main/kotlin/org/florisboard/lib/snygg/ui/SnyggBox.kt:94-106` | Android render = Compose `Image` crop over the keyboard content box |
+| Bitmap cache keyed by path, evicted on theme change | trime `data/theme/ColorManager.kt:96-167` | per-process decoded-image cache keyed by file name, dropped on theme revision |
+| 8-orientation gradient drawable on the View seam | Android `GradientDrawable.Orientation` (already used in `KeyboardThemeSurfaceController.kt`) | the 8 presets map 1:1 to `Orientation` on the View seam; Compose uses unit points |
+
+**Deliberately not adopted**: a free 0–360° angle dial (heavier UI + a11y for a keyboard-sized surface; 8 presets cover Figma's rotate-45° affordance); a saturation slider (fixed cap + one 淡化 knob, USER 2026-09-19); per-scheme light / dark colour pairs for user themes (USER point 4); keeping `candidateBackgroundColor` as a hidden field (USER point 1 — one surface). YAGNI: multi-stop gradients (two stops), radial gradients, image position / zoom controls.
+
+#### Dogfood
+
+S54 (written with PR A; per-platform rows added by B / C / D).
 
 ---
 
