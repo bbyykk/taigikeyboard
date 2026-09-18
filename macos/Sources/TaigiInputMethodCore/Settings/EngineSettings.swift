@@ -187,18 +187,28 @@ struct EngineSettings: Equatable, Sendable {
     let dictionarySources: DictionarySourceToggles
 
     /// What a fresh install types with. Every value matches the iOS and Android
-    /// default for the same setting, so someone using two of the three platforms
+    /// default for the same setting, so someone using two of the four platforms
     /// gets the same composition and the same candidate order out of the box.
-    static let defaults = EngineSettings(
-        inputMode: .tl,
-        isTranslateSwapped: false,
-        isOutputBothScripts: false,
-        isFullWidthPunctuation: false,
-        candidateDisplayMode: .sideBySide,
-        isLiteralRomanCandidateEnabled: true,
-        isFrequencyRecordingEnabled: true,
-        isAssociationRecordingEnabled: true,
-        isCustomDictEnabled: true,
-        dictionarySources: .defaults,
-    )
+    ///
+    /// Hanji-first since 2026-09-18 (USER 「預設都是先輸出漢字，也就是漢字是
+    /// title，羅馬字是 subtitle」): the stored swap is on, and the two effective
+    /// fields are DERIVED from it under 並排 the way `SettingsStore.current`
+    /// derives them, so the snapshot cannot say one thing about the swap and
+    /// another about the width.
+    static let defaults: EngineSettings = {
+        let storedSwap = true
+        let mode = CandidateDisplayMode.sideBySide
+        return EngineSettings(
+            inputMode: .tl,
+            isTranslateSwapped: mode.effectiveTranslateSwapped(stored: storedSwap),
+            isOutputBothScripts: false,
+            isFullWidthPunctuation: mode.effectiveFullWidthPunctuation(stored: storedSwap),
+            candidateDisplayMode: mode,
+            isLiteralRomanCandidateEnabled: true,
+            isFrequencyRecordingEnabled: true,
+            isAssociationRecordingEnabled: true,
+            isCustomDictEnabled: true,
+            dictionarySources: .defaults,
+        )
+    }()
 }

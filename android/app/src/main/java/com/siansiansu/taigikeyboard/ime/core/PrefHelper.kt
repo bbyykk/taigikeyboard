@@ -321,7 +321,9 @@ class PrefHelper(
     // under CandidateDisplayMode.ROMAN_ONLY (and `true` for the swap under
     // COMBINED) without touching storage, so leaving either mode restores the
     // user's choice; layout readers use `isFullWidthPunctuation`.
-    var storedIsTranslateSwapped: Boolean by preference(PreferenceKeys.IS_TRANSLATE_SWAPPED, false)
+    // Hanji-first out of the box (USER 2026-09-18): hanji title, romanization
+    // subtitle, commit writes the hanji. Same default on iOS, macOS, Windows.
+    var storedIsTranslateSwapped: Boolean by preference(PreferenceKeys.IS_TRANSLATE_SWAPPED, true)
 
     var storedOutputBothScripts: Boolean by preference(PreferenceKeys.OUTPUT_BOTH_SCRIPTS, false)
 
@@ -861,7 +863,7 @@ class PrefHelper(
             prefs[PreferenceKeys.ACTIVE_SUBTYPE_ID] = -1
             prefs[PreferenceKeys.SUBTYPES] = ""
             prefs[PreferenceKeys.INPUT_MODE] = "tl"
-            prefs[PreferenceKeys.IS_TRANSLATE_SWAPPED] = false
+            prefs[PreferenceKeys.IS_TRANSLATE_SWAPPED] = true
             prefs[PreferenceKeys.OUTPUT_BOTH_SCRIPTS] = false
             prefs[PreferenceKeys.CANDIDATE_DISPLAY_MODE] = CandidateDisplayMode.SIDE_BY_SIDE.storageValue
             prefs[PreferenceKeys.ENABLE_DOUBLE_TAP_OO] = true

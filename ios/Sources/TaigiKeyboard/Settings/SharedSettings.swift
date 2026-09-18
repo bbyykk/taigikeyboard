@@ -39,7 +39,10 @@ final class SharedSettings {
 
     private static let isDoubleTapOOEnabledKey: SettingsKey<Bool> = .bool("enableDoubleTapOO", default: true)
     private static let isDoubleTapNNEnabledKey: SettingsKey<Bool> = .bool("enableDoubleTapNN", default: true)
-    private static let isTranslateSwappedKey: SettingsKey<Bool> = .bool("isTranslateSwapped", default: false)
+    /// Hanji-first out of the box (USER 2026-09-18): the hanji is the title,
+    /// the romanization the subtitle, and a commit writes the hanji. Same
+    /// default on Android, macOS and Windows.
+    private static let isTranslateSwappedKey: SettingsKey<Bool> = .bool("isTranslateSwapped", default: true)
     private static let isOutputBothScriptsKey: SettingsKey<Bool> = .bool("outputBothScripts", default: false)
     // Raw string key shared by all four platforms; unknown / malformed → `.sideBySide`.
     private static let candidateDisplayModeKey: SettingsKey<CandidateDisplayMode> = .rawRep("candidateDisplayMode", default: .sideBySide)
@@ -608,7 +611,7 @@ final class SharedSettings {
         inputMode = .tl
         isDoubleTapOOEnabled = true
         isDoubleTapNNEnabled = true
-        storedIsTranslateSwapped = false
+        storedIsTranslateSwapped = true
         storedIsOutputBothScripts = false
         candidateDisplayMode = .sideBySide
         isLiteralRomanCandidateEnabled = true

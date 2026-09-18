@@ -9,11 +9,18 @@ import XCTest
 /// feature ships OFF, so every session here opts in explicitly. The sibling
 /// controller suites leave it off, so this one owns the feature's whole
 /// observable surface.
+///
+/// Every case also starts roman-first — the direction that earns the space —
+/// though the shipped default is hanji-first (2026-09-18). In BOTH domains,
+/// for the reason on `withTranslateSwapped`: `.standard` here for the shared
+/// coordinator, the scratch store in `makeSession` for the controller. The
+/// 漢字優先 cases opt in on top, as they always did.
 @MainActor
 final class AutoSpaceControllerTests: XCTestCase {
     override func setUp() {
         super.setUp()
         InstalledLexicon.installOnce()
+        setSettingRestoredAtTeardown(SettingsStore.Keys.isTranslateSwapped.name, to: false)
     }
 
     // MARK: - Trailing space after a commit
@@ -476,6 +483,9 @@ final class AutoSpaceControllerTests: XCTestCase {
         let store = try makeScratchSettingsStore()
         // The shipped default is OFF; this suite is about the feature ON.
         store.isAutoSpaceEnabled = true
+        // And the shipped default is hanji-first; this suite's baseline is
+        // roman-first, the direction that earns the space (see the type's note).
+        store.storedIsTranslateSwapped = false
         configure?(store)
         controller.settings = store
         controller.activateServer(client)

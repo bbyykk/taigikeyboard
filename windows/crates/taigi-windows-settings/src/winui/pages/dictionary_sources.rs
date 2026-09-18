@@ -4,6 +4,7 @@
 //! `DictionaryTogglesView.swift`. Every toggle is read live by the engine
 //! bridge on the next fetch.
 
+use super::reset_row;
 use crate::winui::cards;
 use crate::winui::window::{Message, ResetScope, SettingsWindow};
 use taigi_windows_core::settings::{keys, SettingsKey};
@@ -128,14 +129,7 @@ pub fn view(
         source_rows(window, strings, context, &OTHERS),
         cards::section_title(strings.resolve(StringKey::DictionarySupplementSectionTitle)),
         source_rows(window, strings, context, &SUPPLEMENTS),
-        cards::section_gap(),
-        cards::action_row(
-            strings.resolve(StringKey::ThemeEditorResetAll),
-            strings.resolve(StringKey::SettingsReset),
-            false,
-            true,
-            context.callback(|()| Message::Reset(ResetScope::DictionarySources)),
-        ),
+        reset_row(strings, ResetScope::DictionarySources, context),
     ))
 }
 

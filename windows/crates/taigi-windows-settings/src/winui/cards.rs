@@ -178,17 +178,21 @@ pub fn switch(is_on: bool, is_enabled: bool, on_toggled: Callback<bool>) -> View
 }
 
 /// A pop-up of named choices in one card; the answer is the chosen index
-/// into `labels`.
+/// into `labels`. `is_enabled` is false for a row another setting has made
+/// moot — greyed, never cleared, like `switch_row`, so the stored choice
+/// shows and comes back with the setting that masks it.
 pub fn choice_row(
     header: &str,
     labels: Vec<String>,
     selected: Option<usize>,
+    is_enabled: bool,
     on_change: Callback<Option<usize>>,
 ) -> View {
     row(
         header,
         ComboBox::new()
             .items_source(labels)
+            .is_enabled(is_enabled)
             // Safe where a `ListView`'s is not (`list_selection`): a pop-up's items are a
             // PROPERTY, and reactor's visitor emits `ComboBoxItemsSource` before
             // `ComboBoxSelectedIndex` in the same batch.

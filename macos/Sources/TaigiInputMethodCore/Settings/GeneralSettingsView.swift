@@ -1,4 +1,4 @@
-// The 一般 pane: romanization system, display language, updates, and the attribution footer.
+// The 一般 pane: romanization system, output script, display language, updates, and the attribution footer.
 
 import AppKit
 import SwiftUI
@@ -35,6 +35,16 @@ struct GeneralSettingsView: View {
 
     @AppStorage(SettingsStore.Keys.toneInputScheme.name)
     private var toneInputScheme = SettingsStore.Keys.toneInputScheme.defaultValue
+
+    /// The STORED swap — the same key the `` ` `` shortcut flips, so the
+    /// picker and the chord are one setting seen from two places. Read raw
+    /// on purpose: the picker shows what is stored, and `candidateDisplayMode`
+    /// below decides whether that has any effect right now.
+    @AppStorage(SettingsStore.Keys.isTranslateSwapped.name)
+    private var isTranslateSwapped = SettingsStore.Keys.isTranslateSwapped.defaultValue
+
+    @AppStorage(SettingsStore.Keys.candidateDisplayMode.name)
+    private var candidateDisplayMode = SettingsStore.Keys.candidateDisplayMode.defaultValue
 
     @AppStorage(SettingsStore.Keys.isAutoSpaceEnabled.name)
     private var isAutoSpaceEnabled = SettingsStore.Keys.isAutoSpaceEnabled.defaultValue
@@ -85,6 +95,19 @@ struct GeneralSettingsView: View {
                     Text(language.string(.settingsToneSchemeStandard)).tag(ToneInputScheme.standard)
                     Text(language.string(.settingsToneSchemeTelex)).tag(ToneInputScheme.telex)
                 }
+
+                // Which script a commit writes (USER 2026-09-18): the same
+                // stored swap the `` ` `` shortcut toggles, so the two never
+                // disagree. Disabled exactly where the shortcut is inert —
+                // 候選詞顯示 = 羅馬字 shows no Hanji to lead with
+                // (`allowsSwapToggle`); under 漢羅濫 both scripts are on
+                // screen and this only picks the punctuation width, as the
+                // shortcut does there.
+                Picker(language.string(.desktopShortcutSectionOutput), selection: $isTranslateSwapped) {
+                    Text(language.string(.settingsOutputScriptHanji)).tag(true)
+                    Text(language.string(.settingsOutputScriptRoman)).tag(false)
+                }
+                .disabled(!candidateDisplayMode.allowsSwapToggle)
 
                 Picker(language.string(.settingsDisplayLanguage), selection: displayLanguageSelection) {
                     ForEach(DisplayLanguage.selectableLanguages, id: \.self) { option in
@@ -146,8 +169,22 @@ struct GeneralSettingsView: View {
                     }
                 }
             }
+
+            // Its own section, at the end, drawn the way the 外觀 and 快捷鍵
+            // panes draw theirs: it acts on every setting above it — not on
+            // the update row, which holds no setting of the user's to restore.
+            Section {
+                WideActionRow(titleKey: .themeEditorResetAll, action: restoreDefaults)
+            }
         }
         .formStyle(.grouped)
+    }
+
+    /// Puts the whole pane back to what a fresh install renders with. The
+    /// `@AppStorage` bindings repaint on their own, and `DisplayLanguageStore`
+    /// observes its key, so the pane re-reads in the shipped language too.
+    private func restoreDefaults() {
+        SettingsStore().resetGeneralSettings()
     }
 
     /// The row shown while a newer version is known but not installed.

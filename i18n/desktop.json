@@ -40,7 +40,7 @@
       }
     },
     "shortcutSectionOutput": {
-      "comment": "快捷鍵 pane, second block's header: the keys that end a composition into the document, and the switch for which script is written. 輸出 rather than 拍字 (USER 2026-09-10) — the block is about what reaches the document, not about the typing itself.",
+      "comment": "快捷鍵 pane, second block's header: the keys that end a composition into the document, and the switch for which script is written. 輸出 rather than 拍字 (USER 2026-09-10) — the block is about what reaches the document, not about the typing itself. Reused as the 一般 pane's output-script picker label (漢字 / 羅馬字), the same thing named in the same word.",
       "scope": {
         "platforms": [
           "macos",

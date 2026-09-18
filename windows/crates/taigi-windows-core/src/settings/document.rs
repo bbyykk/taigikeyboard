@@ -149,6 +149,13 @@ impl SettingsDocument {
         self.revision = self.revision.saturating_add(1);
     }
 
+    /// Puts every setting the 一般 pane owns back to shipped state.
+    pub fn reset_general(&mut self) {
+        for name in keys::GENERAL_KEYS {
+            self.remove(name);
+        }
+    }
+
     /// Puts every key the 外觀 pane owns back to shipped state.
     pub fn reset_appearance(&mut self) {
         for name in keys::APPEARANCE_KEYS {
@@ -265,6 +272,10 @@ mod tests {
     fn empty_document_reads_every_default() {
         let doc = SettingsDocument::default();
         assert_eq!(doc.engine_settings(), EngineSettings::default());
+        // Hanji-first out of the box (USER 2026-09-18), and the punctuation
+        // width derived from it under side-by-side follows.
+        assert!(doc.engine_settings().is_translate_swapped);
+        assert!(doc.engine_settings().is_full_width_punctuation);
         assert!(!doc.bool(&keys::IS_AUTO_SPACE_ENABLED));
         assert_eq!(doc.string(&keys::DISPLAY_LANGUAGE), "system");
         assert_eq!(
@@ -335,6 +346,25 @@ mod tests {
     }
 
     #[test]
+    fn reset_general_removes_the_pane_s_keys_and_nothing_else() {
+        // trace: 一般 owns the swap, the tone keys and auto-space; the
+        // candidate layout is 外觀's and the update date is bookkeeping —
+        // both survive. Removed, not written: the swap reads its default
+        // (hanji-first) with no key stored.
+        let mut doc = SettingsDocument::default();
+        doc.set_bool(&keys::IS_TRANSLATE_SWAPPED, false);
+        doc.set_bool(&keys::IS_AUTO_SPACE_ENABLED, true);
+        doc.set_choice(&keys::CANDIDATE_LAYOUT, CandidateLayout::Vertical);
+        doc.set_i64(&keys::UPDATE_NEXT_CHECK_MS, 42);
+        doc.reset_general();
+        assert!(!doc.contains(keys::IS_TRANSLATE_SWAPPED.name));
+        assert!(!doc.contains(keys::IS_AUTO_SPACE_ENABLED.name));
+        assert!(doc.engine_settings().is_translate_swapped);
+        assert!(doc.contains(keys::CANDIDATE_LAYOUT.name), "外觀's key");
+        assert!(doc.contains(keys::UPDATE_NEXT_CHECK_MS.name), "bookkeeping");
+    }
+
+    #[test]
     fn roman_only_masks_the_swap_pair_without_touching_what_is_stored() {
         // trace: stored swap=true, both=true; mode=romanOnly → the snapshot
         // reads (false, false) while `bool(&key)` still answers true; back to
@@ -372,14 +402,16 @@ mod tests {
 
     #[test]
     fn combined_forces_the_swap_and_leaves_the_bracket_toggle_alone() {
-        // trace: stored swap=false, both=false; mode=combined → (true, false):
-        // each script is its own adjacent cell, hanji first, and a commit
-        // writes the hanji — the projection of that onto the pair is a forced
-        // swap. Stored both=true
-        // → (true, true), so 括號標註 still yields `漢字 (羅馬字)`. Roman-only
-        // still masks to (false, false); back to sideBySide reads the stored
-        // (false, true) again with no bool written in between.
+        // trace: stored swap=false (written — the fresh default is
+        // hanji-first), both=false; mode=combined → (true, false): each
+        // script is its own adjacent cell, hanji first, and a commit writes
+        // the hanji — the projection of that onto the pair is a forced swap.
+        // Stored both=true → (true, true), so 括號標註 still yields
+        // `漢字 (羅馬字)`. Roman-only still masks to (false, false); back to
+        // sideBySide reads the stored (false, true) again with no bool
+        // written in between.
         let mut doc = SettingsDocument::default();
+        doc.set_bool(&keys::IS_TRANSLATE_SWAPPED, false);
         doc.set_choice(
             &keys::CANDIDATE_DISPLAY_MODE,
             CandidateDisplayMode::Combined,

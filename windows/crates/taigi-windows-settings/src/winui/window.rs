@@ -189,6 +189,7 @@ impl SettingsWrite {
 /// that pane owns.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ResetScope {
+    General,
     Appearance,
     /// Both shortcut registries at once, and no conflict pass afterwards:
     /// the shipped defaults hold no chord in common
@@ -618,6 +619,7 @@ impl Component for SettingsWindow {
                 .settings
                 .update(move |document| document.set_bool(&key, is_on)),
             Message::Reset(scope) => self.settings.update(|document| match scope {
+                ResetScope::General => document.reset_general(),
                 ResetScope::Appearance => document.reset_appearance(),
                 ResetScope::Shortcuts => {
                     document.reset_composing_shortcuts();

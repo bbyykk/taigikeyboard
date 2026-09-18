@@ -1,12 +1,12 @@
-//! The 一般 pane: romanization system, tone keys, display language,
-//! auto-space, the typed-text candidate, the update row, and the attribution
-//! footer. Port of `GeneralSettingsView.swift`.
+//! The 一般 pane: romanization system, tone keys, output script, display
+//! language, auto-space, the typed-text candidate, the update row, the reset
+//! card, and the attribution footer. Port of `GeneralSettingsView.swift`.
 
-use super::choice_row;
+use super::{choice_row, reset_row};
 use crate::presentation::{display_language_label, SPONSOR_URL};
 use crate::updates::INSTALLED_VERSION;
 use crate::winui::cards;
-use crate::winui::window::{Message, SettingsWindow, SettingsWrite};
+use crate::winui::window::{Message, ResetScope, SettingsWindow, SettingsWrite};
 use taigi_windows_core::keys::ToneInputScheme;
 use taigi_windows_core::settings::{keys, InputMode, SettingChoice};
 use taigi_windows_core::strings::{DisplayLanguage, StringKey, StringResolver};
@@ -36,6 +36,7 @@ pub fn view(
             strings.resolve(StringKey::SettingsInputMode),
             InputMode::ALL,
             document.choice(&keys::INPUT_MODE),
+            true,
             |mode: InputMode| strings.resolve(mode.label_key()).to_owned(),
             |mode| Message::set_choice(mode, &keys::INPUT_MODE),
             context,
@@ -48,14 +49,37 @@ pub fn view(
             strings.resolve(StringKey::SettingsToneInputScheme),
             ToneInputScheme::ALL,
             document.choice(&keys::TONE_INPUT_SCHEME),
+            true,
             |scheme: ToneInputScheme| strings.resolve(scheme.label_key()).to_owned(),
             |scheme| Message::set_choice(scheme, &keys::TONE_INPUT_SCHEME),
+            context,
+        ),
+        // Which script a commit writes (USER 2026-09-18): the same stored
+        // swap the backtick shortcut toggles, so the two never disagree.
+        // Disabled exactly where the shortcut is inert — 候選詞顯示 = 羅馬字
+        // shows no Hanji to lead with (`allows_swap_toggle`); under 漢羅濫
+        // both scripts are on screen and this only picks the punctuation
+        // width, as the shortcut does there. A cleared pop-up writes nothing,
+        // the rule `Message::set_choice` states for every other picker.
+        choice_row(
+            strings.resolve(StringKey::DesktopShortcutSectionOutput),
+            OUTPUT_SCRIPTS,
+            document.bool(&keys::IS_TRANSLATE_SWAPPED),
+            document
+                .choice(&keys::CANDIDATE_DISPLAY_MODE)
+                .allows_swap_toggle(),
+            |is_hanji: bool| strings.resolve(output_script_label(is_hanji)).to_owned(),
+            |is_hanji| match is_hanji {
+                Some(is_hanji) => Message::SetSwitch(keys::IS_TRANSLATE_SWAPPED, is_hanji),
+                None => Message::SetChoice(None),
+            },
             context,
         ),
         choice_row(
             strings.resolve(StringKey::SettingsDisplayLanguage),
             &DisplayLanguage::PICKER,
             DisplayLanguage::from_tag(&document.string(&keys::DISPLAY_LANGUAGE)),
+            true,
             |language: DisplayLanguage| display_language_label(language, strings),
             |language| Message::SetChoice(language.map(SettingsWrite::display_language)),
             context,
@@ -90,8 +114,23 @@ pub fn view(
         ),
         cards::section_gap(),
         update_row(window, strings, context),
+        // Not on the update row: it holds no setting of the user's to
+        // restore.
+        reset_row(strings, ResetScope::General, context),
         footer(strings, context),
     ))
+}
+
+/// The 輸出 pop-up's roster: the stored swap as the two scripts it picks
+/// between, Hanji (the default) first.
+const OUTPUT_SCRIPTS: &[bool] = &[true, false];
+
+fn output_script_label(is_hanji: bool) -> StringKey {
+    if is_hanji {
+        StringKey::SettingsOutputScriptHanji
+    } else {
+        StringKey::SettingsOutputScriptRoman
+    }
 }
 
 /// One row, never two (`GeneralSettingsView.swift:89-117`): a known update
