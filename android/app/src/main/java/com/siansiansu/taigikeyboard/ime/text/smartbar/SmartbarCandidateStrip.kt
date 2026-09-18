@@ -113,19 +113,11 @@ fun TaigiCandidateStrip(
             )
         }
 
-    val backgroundModifier =
-        if (display.candidateBackgroundColor != null) {
-            Modifier.background(Color(display.candidateBackgroundColor))
-        } else {
-            Modifier
-        }
-
+    // The strip is transparent: the theme surface (solid / gradient) is painted on the
+    // common parent, so the candidate bar shares it with the keyboard.
     LazyRow(
         state = listState,
-        modifier =
-            modifier
-                .fillMaxSize()
-                .then(backgroundModifier),
+        modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(end = 48.dp),
     ) {
         // No explicit `key` lambda: candidate ids are not unique (e.g.

@@ -14,7 +14,7 @@ class UserThemeStore(
     private val read: () -> String,
     private val write: (String) -> Unit,
 ) {
-    /** Loads all persisted themes; returns [] when absent or corrupt. */
+    /** Loads all persisted themes (seeded at decode, see [UserTheme.fromJson]); [] when absent or corrupt. */
     fun load(): List<UserTheme> = UserTheme.decodeList(read())
 
     /**

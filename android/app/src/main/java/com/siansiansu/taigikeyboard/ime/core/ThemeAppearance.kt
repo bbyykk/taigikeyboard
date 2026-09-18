@@ -10,10 +10,11 @@ import org.json.JSONObject
  * Font is intentionally NOT part of a theme: it is a GLOBAL setting
  * (PrefHelper.fontType), so switching themes never changes the font.
  *
- * [colors] stays nullable per role (reuses [KeyboardColorSettings]): a null role
- * inherits the platform adaptive color. The model OWNS the size defaults (the
- * [PrefHelper] appearance keys reference them); mirrors iOS ThemeDefaults <-
- * ThemeAppearance.default. Mirrors iOS ThemeAppearance.
+ * [colors] stays nullable per role (reuses [KeyboardColorSettings]) for the default
+ * buffer and built-in themes, where a null role inherits the platform adaptive
+ * color. User themes are always seeded ([USER_THEME_SEED]) so they carry no null
+ * role and look the same in light and dark mode. The model OWNS the size defaults
+ * (the [PrefHelper] appearance keys reference them). Mirrors iOS ThemeAppearance.
  */
 data class ThemeAppearance(
     val colors: KeyboardColorSettings = KeyboardColorSettings(),
@@ -47,6 +48,13 @@ data class ThemeAppearance(
 
         /** Factory appearance — adaptive colors, flat shadow, project-default sizes. */
         val DEFAULT = ThemeAppearance()
+
+        /**
+         * The draft a NEW user theme starts from: factory sizes + the concrete light
+         * palette ([UserThemeSeed.colors]). Also what 恢復預設 restores. Mirrors iOS
+         * ThemeAppearance.userThemeSeed.
+         */
+        val USER_THEME_SEED = DEFAULT.copy(colors = UserThemeSeed.colors)
 
         /**
          * Forward-compatible decode: any field absent in stored JSON falls back

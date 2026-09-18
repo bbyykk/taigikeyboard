@@ -72,14 +72,11 @@ fun KeyboardLayout(
     val context = LocalContext.current
     val themeColors = remember(context) { ThemePalette.from(context) }
     val themeBgColor = remember(context) { Color(getColorFromAttr(context, R.attr.keyboard_bgColor)) }
-    // Gradient themes paint the background once on the common View parent
-    // (`text_input_content`, via KeyboardThemeSurfaceController); the Compose body
-    // stays transparent so that gradient shows continuously candidate-bar -> keys.
-    // Flat themes keep the legacy custom-fill-or-theme background.
-    val bgColor = when {
-        appearance.colorSettings.hasBackgroundGradient -> Color.Transparent
-        else -> appearance.colorSettings.backgroundColor?.let { Color(it) } ?: themeBgColor
-    }
+    // A custom background (solid or gradient) is painted once on the common parent —
+    // `text_input_content` via KeyboardThemeSurfaceController in the IME, the preview
+    // panel's column in the app — so the Compose body stays transparent and the surface
+    // runs continuously candidate-bar -> keys. The adaptive default keeps the theme attr.
+    val bgColor = if (appearance.colorSettings.background != null) Color.Transparent else themeBgColor
 
     val touchModifier = Modifier.pointerInteropFilter { event ->
         if (!isPreview) return@pointerInteropFilter coordinator.onMotionEvent(event)

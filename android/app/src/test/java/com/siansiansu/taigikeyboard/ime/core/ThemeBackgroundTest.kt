@@ -1,0 +1,167 @@
+package com.siansiansu.taigikeyboard.ime.core
+
+import org.json.JSONObject
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Test
+
+/**
+ * Tests for [ThemeBackground] / [ThemeGradient] — the single background field a theme
+ * carries (USER 2026-09-19: one surface for keyboard + candidate bar), its legacy-key
+ * decoding, the angle -> unit-point math shared with the overlay backdrops, and the
+ * user-theme seed. Mirrors iOS ThemeBackgroundTests.
+ */
+class ThemeBackgroundTest {
+    private fun decode(json: String): KeyboardColorSettings = KeyboardColorSettings.fromJson(JSONObject(json))
+
+    private fun gradient(angle: Float): ThemeGradient = ThemeGradient(listOf(BLACK, WHITE), angle)
+
+    // region Legacy decode
+
+    @Test
+    fun decode_legacyBackgroundColor_becomesSolid() {
+        val colors = decode("""{ "backgroundColor": $RED }""")
+        assertEquals(ThemeBackground.Solid(RED), colors.background)
+        assertNull(colors.backgroundGradient)
+    }
+
+    // An old 2-stop `backgroundGradient` (no angle) -> gradient at the vertical default angle,
+    // winning over a legacy `backgroundColor` beside it (the gradient overrode the flat fill before).
+    @Test
+    fun decode_legacyBackgroundGradient_becomesVerticalGradient() {
+        val colors = decode("""{ "backgroundColor": $RED, "backgroundGradient": { "stops": [$BLACK, $WHITE] } }""")
+        val gradient = colors.backgroundGradient
+        assertNotNull(gradient)
+        assertEquals(ThemeGradient.DEFAULT_ANGLE, gradient?.angle)
+        assertEquals(listOf(BLACK, WHITE), gradient?.stops)
+    }
+
+    // A legacy 1-stop gradient is not renderable -> falls through to the legacy solid colour.
+    @Test
+    fun decode_legacySingleStopGradient_fallsBackToSolid() {
+        val colors = decode("""{ "backgroundColor": $GREEN, "backgroundGradient": { "stops": [$BLACK] } }""")
+        assertEquals(ThemeBackground.Solid(GREEN), colors.background)
+    }
+
+    // `candidateBackgroundColor` is dropped on decode — the candidate bar is the keyboard surface.
+    @Test
+    fun decode_legacyCandidateBackground_isIgnored() {
+        assertEquals(KeyboardColorSettings(), decode("""{ "candidateBackgroundColor": $RED }"""))
+    }
+
+    // An unknown background `type` (written by a newer build) degrades to adaptive, other roles kept.
+    @Test
+    fun decode_unknownBackgroundType_degradesToAdaptive() {
+        val colors = decode("""{ "background": { "type": "hologram" }, "keyTextColor": $BLUE }""")
+        assertNull(colors.background)
+        assertEquals(BLUE, colors.keyTextColor)
+    }
+
+    // A new-format gradient with one stop is not renderable -> decode degrades to adaptive.
+    @Test
+    fun decode_newFormatSingleStopGradient_degradesToAdaptive() {
+        assertNull(decode("""{ "background": { "type": "gradient", "stops": [$BLACK] } }""").background)
+    }
+
+    // endregion
+
+    // region Round trip
+
+    // Encode writes only the `background` key (type + fields), never the legacy keys; decode restores it.
+    @Test
+    fun roundTrip_gradientWithAngle_andNoLegacyKeys() {
+        val colors = KeyboardColorSettings(background = ThemeBackground.Gradient(ThemeGradient(listOf(0xFF112233.toInt(), 0xFF445566.toInt()), 45f)))
+        val json = colors.toJson()
+        assertFalse("legacy key must not be written: $json", json.contains("backgroundColor"))
+        assertFalse("legacy key must not be written: $json", json.contains("backgroundGradient"))
+        assertEquals("gradient", JSONObject(json).getJSONObject("background").getString("type"))
+        assertEquals(colors, KeyboardColorSettings.fromJson(json))
+    }
+
+    @Test
+    fun roundTrip_solid() {
+        val colors = KeyboardColorSettings(background = ThemeBackground.Solid(0xFFABCDEF.toInt()))
+        val json = colors.toJson()
+        assertEquals("solid", JSONObject(json).getJSONObject("background").getString("type"))
+        assertEquals(colors, KeyboardColorSettings.fromJson(json))
+    }
+
+    // endregion
+
+    // region Angle -> unit points
+
+    // CSS convention — 180 = top->bottom edge-to-edge; 90 = left->right; 0 = bottom->top;
+    // 135 = top-left -> bottom-right corner-to-corner (Chebyshev-normalised diagonal).
+    @Test
+    fun unitPoints_presets() {
+        val cases =
+            listOf(
+                Triple(180f, UnitPoint(0.5f, 0f), UnitPoint(0.5f, 1f)),
+                Triple(0f, UnitPoint(0.5f, 1f), UnitPoint(0.5f, 0f)),
+                Triple(90f, UnitPoint(0f, 0.5f), UnitPoint(1f, 0.5f)),
+                Triple(270f, UnitPoint(1f, 0.5f), UnitPoint(0f, 0.5f)),
+                Triple(135f, UnitPoint(0f, 0f), UnitPoint(1f, 1f)),
+                Triple(315f, UnitPoint(1f, 1f), UnitPoint(0f, 0f)),
+                Triple(45f, UnitPoint(0f, 1f), UnitPoint(1f, 0f)),
+                Triple(225f, UnitPoint(1f, 0f), UnitPoint(0f, 1f)),
+            )
+        for ((angle, start, end) in cases) {
+            val (actualStart, actualEnd) = gradient(angle).unitPoints()
+            assertEquals("angle $angle start.x", start.x, actualStart.x, EPSILON)
+            assertEquals("angle $angle start.y", start.y, actualStart.y, EPSILON)
+            assertEquals("angle $angle end.x", end.x, actualEnd.x, EPSILON)
+            assertEquals("angle $angle end.y", end.y, actualEnd.y, EPSILON)
+        }
+    }
+
+    // endregion
+
+    // region Seed
+
+    // The seed sets every role (no null) so a user theme never follows light / dark.
+    @Test
+    fun userThemeSeed_hasNoNullRole() {
+        val seed = UserThemeSeed.colors
+        assertEquals(ThemeBackground.Solid(0xFFD4D5DD.toInt()), seed.background)
+        assertNotNull(seed.keyTextColor)
+        assertNotNull(seed.normalKeyFillColor)
+        assertNotNull(seed.specialKeyFillColor)
+        assertNotNull(seed.candidateTextColor)
+    }
+
+    // Seeding fills only null roles; set roles (incl. a gradient background) are kept verbatim.
+    @Test
+    fun seededForUserTheme_fillsOnlyNullRoles() {
+        val colors = KeyboardColorSettings(background = ThemeBackground.Gradient(gradient(90f)), keyTextColor = 0xFF123456.toInt())
+        val seeded = colors.seededForUserTheme()
+        assertEquals(colors.background, seeded.background)
+        assertEquals(0xFF123456.toInt(), seeded.keyTextColor)
+        assertEquals(UserThemeSeed.NORMAL_KEY_FILL, seeded.normalKeyFillColor)
+        assertEquals(UserThemeSeed.SPECIAL_KEY_FILL, seeded.specialKeyFillColor)
+        assertEquals(UserThemeSeed.CANDIDATE_TEXT, seeded.candidateTextColor)
+        assertEquals("seeding the seed is a no-op", UserThemeSeed.colors, UserThemeSeed.colors.seededForUserTheme())
+    }
+
+    // Switching 純色 -> 漸層 seeds a vertical gradient from the solid colour into a lighter tint of it.
+    @Test
+    fun seededGradient_runsSolidIntoLighterTint() {
+        val seeded = ThemeGradient.seeded(0xFF204080.toInt())
+        assertEquals(2, seeded.stops.size)
+        assertEquals(0xFF204080.toInt(), seeded.stops[0])
+        assertEquals(ThemeGradient.DEFAULT_ANGLE, seeded.angle)
+        assertEquals(lightenedArgb(0xFF204080.toInt(), 0.45), seeded.stops[1])
+    }
+
+    // endregion
+
+    private companion object {
+        const val EPSILON = 1e-6f
+        const val RED = 0xFFFF0000.toInt()
+        const val GREEN = 0xFF00FF00.toInt()
+        const val BLUE = 0xFF0000FF.toInt()
+        const val BLACK = 0xFF000000.toInt()
+        const val WHITE = 0xFFFFFFFF.toInt()
+    }
+}

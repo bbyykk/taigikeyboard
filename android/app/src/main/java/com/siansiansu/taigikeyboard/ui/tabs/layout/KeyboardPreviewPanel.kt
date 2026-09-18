@@ -35,6 +35,7 @@ import com.siansiansu.taigikeyboard.ime.core.KeyboardColorSettings
 import com.siansiansu.taigikeyboard.ime.core.PrefHelper
 import com.siansiansu.taigikeyboard.ime.core.Subtype
 import com.siansiansu.taigikeyboard.ime.core.ThemeAppearance
+import com.siansiansu.taigikeyboard.ime.core.themeBackground
 import com.siansiansu.taigikeyboard.ime.popup.KeyAnchor
 import com.siansiansu.taigikeyboard.ime.popup.NoOpPopupHost
 import com.siansiansu.taigikeyboard.ime.text.key.KeyData
@@ -72,14 +73,18 @@ fun KeyboardPreviewPanel(
     // control) and stays flat.
     keyShadowIntensity: Float = ThemeAppearance.DEFAULT_KEY_SHADOW_INTENSITY,
 ) {
-    Column(modifier = Modifier.fillMaxWidth()) {
+    // The theme surface (solid / gradient) is painted once behind candidate row + keys, as
+    // the IME paints it on `text_input_content`; both children stay transparent over it.
+    val isDarkTheme = isSystemInDarkTheme()
+    val context = LocalContext.current
+    val adaptiveBackground = remember(isDarkTheme) { resolveKeyboardThemeColor(context, R.attr.keyboard_bgColor) }
+    Column(modifier = Modifier.fillMaxWidth().themeBackground(colorSettings.background, fallback = adaptiveBackground)) {
         CandidatePreviewRow(
             colorSettings = colorSettings,
             candidateTextSizeScale = candidateTextSizeScale,
             fontType = fontType,
         )
 
-        val context = LocalContext.current
         val resources = LocalResources.current
         // Force Taigi mode preview when user is in English mode — mirrors
         // `LayoutManager.fetchComputedLayoutForPreview`.
@@ -248,7 +253,8 @@ private fun CandidatePreviewRow(
     val firstCandidateBgColor = remember(isDarkTheme) { resolveKeyboardThemeColor(context, R.attr.key_bgColor) }
     val iconTint = remember(isDarkTheme) { resolveKeyboardThemeColor(context, R.attr.smartbar_fgColor) }
 
-    val bgColor = colorSettings.candidateBackgroundColor?.let { Color(it) } ?: defaultBgColor
+    // A custom background is painted by the panel behind this row; the adaptive default keeps the attr.
+    val bgColor = if (colorSettings.background != null) Color.Transparent else defaultBgColor
     val textColor = colorSettings.candidateTextColor?.let { Color(it) } ?: defaultTextColor
     val effectiveSubtitleColor = colorSettings.candidateTextColor?.let { Color(it) } ?: subtitleColor
 

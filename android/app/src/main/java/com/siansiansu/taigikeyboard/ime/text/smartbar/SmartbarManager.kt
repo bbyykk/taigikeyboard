@@ -294,7 +294,6 @@ class SmartbarManager(
                 orMapsToER = false,
                 textSizeScale = 1.0f,
                 candidateTextColor = null,
-                candidateBackgroundColor = null,
                 themeTitleColor = 0,
                 themeSubtitleColor = 0,
                 themeKeyBgColor = 0,
@@ -647,13 +646,13 @@ class SmartbarManager(
         symbolSelectionOverlayView?.hide()
         settingsSelectionOverlayView?.hide()
 
-        // Resolve the active theme once so the overlay paints the gradient backdrop
+        // Resolve the active theme once so the overlay paints the theme surface
         // (continuous with the keyboard) instead of the flat `?smartbar_bgColor` chrome.
         val colorSettings = themeCache.resolve(isKeyboardNightMode(taigikeyboard.context)).colors
         overlay.show(
             currentSuggestions,
             keyboardHeight,
-            colorSettings.gradientStops()?.toList(),
+            colorSettings.background,
             colorSettings.candidateTextColor,
         )
     }
@@ -704,9 +703,9 @@ class SmartbarManager(
         val height =
             smartbarView?.height?.takeIf { it > 0 }
                 ?: context.resources.getDimension(R.dimen.smartbar_height).toInt()
-        // Gradient themes tint first-candidate + pressed with the theme hue (deepened top stop);
+        // Gradient themes tint first-candidate + pressed with the theme hue (deepened first stop);
         // flat themes keep the neutral key_bgColor / semiTransparentColor attrs.
-        val gradientTop = colorSettings.gradientStops()?.firstOrNull()
+        val gradientTop = colorSettings.backgroundGradient?.stops?.first()
         return CandidateDisplayParams(
             isTranslateSwapped = cachedIsTranslateSwapped,
             candidateDisplayMode = prefs.candidateDisplayMode,
@@ -715,11 +714,6 @@ class SmartbarManager(
             orMapsToER = prefs.tpsOrMapsToER,
             textSizeScale = theme.candidateTextSizeScale,
             candidateTextColor = colorSettings.candidateTextColor,
-            // Gradient themes own the background on the common parent, so the Compose
-            // candidate strip must be transparent over it — explicitly, not by relying
-            // on a gradient theme also leaving candidateBackgroundColor null.
-            candidateBackgroundColor =
-                if (colorSettings.hasBackgroundGradient) null else colorSettings.candidateBackgroundColor,
             themeTitleColor = getColorFromAttr(context, R.attr.smartbar_candidate_fgColor),
             themeSubtitleColor = getColorFromAttr(context, R.attr.smartbar_candidate_subtitle_fgColor),
             themeKeyBgColor =

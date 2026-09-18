@@ -1,6 +1,5 @@
 package com.siansiansu.taigikeyboard.ui.tabs.theme
 
-import android.view.ContextThemeWrapper
 import androidx.annotation.DrawableRes
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
@@ -71,8 +70,9 @@ import com.siansiansu.taigikeyboard.ime.core.PrefHelper
 import com.siansiansu.taigikeyboard.ime.core.ThemeAppearance
 import com.siansiansu.taigikeyboard.ime.core.ThemeId
 import com.siansiansu.taigikeyboard.ime.core.UserTheme
+import com.siansiansu.taigikeyboard.ime.core.UserThemeSeed
 import com.siansiansu.taigikeyboard.ime.core.UserThemeStore
-import com.siansiansu.taigikeyboard.ime.theme.getColorFromAttr
+import com.siansiansu.taigikeyboard.ime.core.themeBackground
 import com.siansiansu.taigikeyboard.settings.ThemeEditorActivity
 import com.siansiansu.taigikeyboard.ui.theme.AppStyle
 import com.siansiansu.taigikeyboard.ui.theme.SectionHeader
@@ -462,25 +462,16 @@ private fun CreateNewThemeCard(onClick: () -> Unit) {
     }
 }
 
-// A custom-theme card preview: the theme background with one large centered key
-// applying the theme's full button style — fill, glyph, corner radius, border, and
-// shadow — so the saved key look reads at a glance. Null color roles fall back to
-// the same KeyboardTheme adaptive colors the running keyboard uses. Mirrors iOS
-// CustomThemeButtonPreview.
+// A custom-theme card preview: the theme background (solid or gradient, same surface
+// painting as the keyboard) with one large centered key applying the theme's full
+// button style — fill, glyph, corner radius, border, and shadow — so the saved key
+// look reads at a glance. User themes are seeded at decode, so a null role only occurs
+// for a malformed entry and falls back to the seed. Mirrors iOS CustomThemeButtonPreview.
 @Composable
 private fun CustomThemeButtonPreview(appearance: ThemeAppearance) {
-    val context = LocalContext.current
-    val themed = remember(context) { ContextThemeWrapper(context, R.style.KeyboardTheme) }
     val colors = appearance.colors
-    // Resolve the adaptive fallbacks once per (theme, colors) — not every frame of
-    // the shelf's selection animation.
-    val resolved = remember(themed, colors) {
-        ThemePreviewColors(
-            background = colors.backgroundColor ?: getColorFromAttr(themed, R.attr.keyboard_bgColor),
-            keyFill = colors.normalKeyFillColor ?: getColorFromAttr(themed, R.attr.key_bgColor),
-            keyText = colors.keyTextColor ?: getColorFromAttr(themed, R.attr.key_fgColor),
-        )
-    }
+    val keyFill = Color(colors.normalKeyFillColor ?: UserThemeSeed.NORMAL_KEY_FILL)
+    val keyText = Color(colors.keyTextColor ?: UserThemeSeed.KEY_TEXT)
     val cornerShape = RoundedCornerShape(appearance.keyCornerRadius.dp)
     val borderWidth = appearance.keyBorderWidth
     val shadow = appearance.keyShadowIntensity
@@ -489,7 +480,7 @@ private fun CustomThemeButtonPreview(appearance: ThemeAppearance) {
         modifier =
             Modifier
                 .fillMaxSize()
-                .background(Color(resolved.background)),
+                .themeBackground(colors.background, fallback = Color(UserThemeSeed.SOLID_COLOR)),
         contentAlignment = Alignment.Center,
     ) {
         Box(
@@ -497,27 +488,20 @@ private fun CustomThemeButtonPreview(appearance: ThemeAppearance) {
                 Modifier
                     .size(width = 88.dp, height = 54.dp)
                     .let { if (shadow > 0f) it.shadow(shadow.dp, cornerShape, clip = false) else it }
-                    .background(Color(resolved.keyFill), cornerShape)
+                    .background(keyFill, cornerShape)
                     // Border follows the key text color (mirrors the real keyboard's
                     // role-first border) so the preview matches the live 框線 look.
-                    .let { if (borderWidth > 0f) it.border(borderWidth.dp, Color(resolved.keyText), cornerShape) else it },
+                    .let { if (borderWidth > 0f) it.border(borderWidth.dp, keyText, cornerShape) else it },
             contentAlignment = Alignment.Center,
         ) {
             Text(
                 text = CUSTOM_PREVIEW_GLYPH,
-                color = Color(resolved.keyText),
+                color = keyText,
                 fontSize = (CUSTOM_PREVIEW_GLYPH_BASE_SP * appearance.keyFontSizeScale).sp,
             )
         }
     }
 }
-
-// Resolved ARGB colors for the custom-theme preview (memoized per theme).
-private data class ThemePreviewColors(
-    val background: Int,
-    val keyFill: Int,
-    val keyText: Int,
-)
 
 // Sample glyph on the preview key — a Taigi romanization letter with a tone mark.
 private const val CUSTOM_PREVIEW_GLYPH = "â"

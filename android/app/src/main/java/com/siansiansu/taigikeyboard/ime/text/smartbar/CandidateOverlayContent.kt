@@ -61,6 +61,8 @@ import com.siansiansu.taigikeyboard.engine.RustEngineBridge
 import com.siansiansu.taigikeyboard.i18n.generated.StringKey
 import com.siansiansu.taigikeyboard.i18n.stringRes
 import com.siansiansu.taigikeyboard.ime.core.CANDIDATE_HIGHLIGHT_LIGHTEN_FACTOR
+import com.siansiansu.taigikeyboard.ime.core.ThemeBackground
+import com.siansiansu.taigikeyboard.ime.core.themeBackground
 import com.siansiansu.taigikeyboard.ime.core.CANDIDATE_PRESSED_DEEPEN_FACTOR
 import com.siansiansu.taigikeyboard.ime.core.deepenedArgb
 import com.siansiansu.taigikeyboard.ime.core.lightenedArgb
@@ -118,7 +120,7 @@ fun CandidateOverlayContent(
     isFullWidthPunctuation: Boolean,
     candidateDisplayMode: CandidateDisplayMode,
     resetKey: Int,
-    backgroundGradient: List<Int>?,
+    background: ThemeBackground?,
     candidateTextColor: Int?,
     onSuggestionSelected: (TaigiWord, Int) -> Unit,
     onCollapse: () -> Unit,
@@ -127,7 +129,7 @@ fun CandidateOverlayContent(
 ) {
     val context = LocalContext.current
     val fontScale = LocalConfiguration.current.fontScale
-    val colors = rememberCandidateOverlayColors(resetKey, backgroundGradient, candidateTextColor)
+    val colors = rememberCandidateOverlayColors(resetKey, background, candidateTextColor)
     val fontFamily = remember(typeface) { FontFamily(ComposeTypeface(typeface)) }
 
     // Click protection re-arms on every show() (resetKey bump); updateSuggestions must NOT re-arm.
@@ -186,13 +188,13 @@ fun CandidateOverlayContent(
         return minOf((suggestionIndex.toFloat() / suggestions.size * rows.size).toInt(), rows.size - 1)
     }
 
-    // Gradient theme: paint the gradient as an opaque backdrop so the overlay stays
-    // continuous with the gradient-painted keyboard. The overlay is a SIBLING of the
-    // gradient-painted text_input_content (not a child), so it must paint the gradient
-    // itself — a transparent overlay would reveal the transparent IME window. Flat
-    // themes fall back to the solid `?smartbar_bgColor` chrome. This overlay spans the
-    // full keyboard, so no top inset is needed (the offset panels pass smartbar height).
-    Box(modifier = modifier.fillMaxSize().keyboardOverlayBackdrop(backgroundGradient, colors.background)) {
+    // Custom theme: paint the theme surface as an opaque backdrop so the overlay stays
+    // continuous with the painted keyboard. The overlay is a SIBLING of the painted
+    // text_input_content (not a child), so it must paint the surface itself — a
+    // transparent overlay would reveal the transparent IME window. The adaptive default
+    // falls back to the solid `?smartbar_bgColor` chrome. This overlay spans the full
+    // keyboard, so no top inset is needed (the offset panels pass smartbar height).
+    Box(modifier = modifier.fillMaxSize().themeBackground(background, colors.background)) {
         LazyColumn(
             state = listState,
             modifier = Modifier.fillMaxSize(),
@@ -517,14 +519,14 @@ private data class CandidateOverlayColors(
 @Composable
 private fun rememberCandidateOverlayColors(
     refreshKey: Int,
-    backgroundGradient: List<Int>?,
+    background: ThemeBackground?,
     candidateTextColor: Int?,
 ): CandidateOverlayColors {
     val context = LocalContext.current
-    return remember(refreshKey, context, backgroundGradient, candidateTextColor) {
+    return remember(refreshKey, context, background, candidateTextColor) {
         // Gradient themes tint first-candidate + pressed with the theme hue (deepened top stop),
         // matching the strip; flat themes keep the neutral key_bgColor / semiTransparentColor attrs.
-        val gradientTop = backgroundGradient?.takeIf { it.size >= 2 }?.first()
+        val gradientTop = background?.asGradient?.stops?.first()
         // Role-first foreground (mirrors the strip): a light-only theme's fixed
         // candidateTextColor keeps text/control glyphs dark on a light gradient in
         // system dark mode; null (adaptive default) falls back to the night attrs.

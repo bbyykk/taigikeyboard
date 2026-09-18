@@ -2,7 +2,7 @@ package com.siansiansu.taigikeyboard.ime.core
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
-import org.junit.Assert.assertTrue
+import org.junit.Assert.assertNotNull
 import org.junit.Test
 import java.util.UUID
 
@@ -11,7 +11,7 @@ import java.util.UUID
  * [ThemeAppearance] the renderer consumes. Mirrors iOS ThemeResolverTests.
  */
 class ThemeResolverTest {
-    private fun customizedColors(): KeyboardColorSettings = KeyboardColorSettings(backgroundColor = RED)
+    private fun customizedColors(): KeyboardColorSettings = KeyboardColorSettings(background = ThemeBackground.Solid(RED))
 
     private fun appearance(
         colors: KeyboardColorSettings = KeyboardColorSettings(),
@@ -68,7 +68,7 @@ class ThemeResolverTest {
         val resolved = ThemeResolver.resolved("standardBlue", false, appearance(customizedColors()), emptyList())
         assertEquals(expected.colors(false), resolved.colors)
         assertNotEquals(KeyboardColorSettings(), resolved.colors)
-        assertTrue(resolved.colors.hasBackgroundGradient)
+        assertNotNull(resolved.colors.backgroundGradient)
         assertEquals(0f, resolved.keyShadowIntensity, 0f)
     }
 

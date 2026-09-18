@@ -131,26 +131,17 @@ class SmartbarView : LinearLayout {
     }
 
     /**
-     * Applies the resolved theme to the smartbar chrome. A gradient theme paints
-     * its background on the common parent (`text_input_content`), so the smartbar
-     * root + toolbar-toggle + expand-toggle + candidate container all go transparent
-     * to let the gradient show through. A flat/legacy theme restores the attr-backed
-     * `?smartbar_bgColor` chrome and applies the theme's candidate background (null
-     * candidate background -> cleared, matching the XML default).
+     * Applies the resolved theme to the smartbar chrome. A custom background (solid or
+     * gradient) is painted on the common parent (`text_input_content`), so the smartbar
+     * root + toolbar-toggle + expand-toggle all go transparent to let that surface show
+     * through — the candidate bar has no colour of its own. The adaptive default restores
+     * the attr-backed `?smartbar_bgColor` chrome.
      */
     fun applyThemeSurface(colors: KeyboardColorSettings) {
-        val gradient = colors.hasBackgroundGradient
-        val chromeBg = if (gradient) Color.TRANSPARENT else getColorFromAttr(context, R.attr.smartbar_bgColor)
+        val chromeBg = if (colors.background != null) Color.TRANSPARENT else getColorFromAttr(context, R.attr.smartbar_bgColor)
         setBackgroundColor(chromeBg)
         toolbarToggleButton?.setBackgroundColor(chromeBg)
         expandToggleButton?.setBackgroundColor(chromeBg)
-
-        val candidateBg = if (gradient) Color.TRANSPARENT else colors.candidateBackgroundColor
-        if (candidateBg != null) {
-            candidatesContainer?.setBackgroundColor(candidateBg)
-        } else {
-            candidatesContainer?.background = null
-        }
 
         applyChromeForeground(colors.candidateTextColor)
     }

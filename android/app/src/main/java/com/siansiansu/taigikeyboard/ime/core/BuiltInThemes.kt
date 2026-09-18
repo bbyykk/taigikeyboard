@@ -169,21 +169,20 @@ object BuiltInThemes {
     }
 
     /**
-     * One scheme variant for a gradient color: the 2-stop background gradient +
-     * key/candidate text ([keyText]). Keys are either the neutral fill ([neutralFill],
-     * 經典) or transparent so the gradient shows through (框線 / 簡潔). backgroundColor
-     * and candidateBackgroundColor stay null so the gradient owns the background and
-     * the candidate bar is transparent over it. light/dark themes pass their own
-     * keyText/neutralFill.
+     * One scheme variant for a gradient color: the vertical 2-stop background gradient
+     * + key/candidate text ([keyText]). Keys are either the neutral fill ([neutralFill],
+     * 經典) or transparent so the gradient shows through (框線 / 簡潔). The gradient owns
+     * the whole surface — the candidate bar is transparent over it. light/dark themes
+     * pass their own keyText/neutralFill.
      */
     private fun gradientColors(top: Int, bottom: Int, keyText: Int, neutralFill: Int, transparentKeys: Boolean): KeyboardColorSettings {
         val fill = if (transparentKeys) TRANSPARENT_KEY_FILL else argb(neutralFill)
         return KeyboardColorSettings(
+            background = ThemeBackground.Gradient(ThemeGradient(listOf(argb(top), argb(bottom)))),
             keyTextColor = argb(keyText),
             normalKeyFillColor = fill,
             specialKeyFillColor = fill,
             candidateTextColor = argb(keyText),
-            backgroundGradient = ThemeGradient(listOf(argb(top), argb(bottom))),
         )
     }
 

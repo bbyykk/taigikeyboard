@@ -62,10 +62,7 @@ class ThemeEditorActivity : ComponentActivity() {
     }
 
     // Returns false only when adding a NEW theme loses a cap race (caller re-shows
-    // the cap dialog). Strips any background gradient — custom themes are flat;
-    // gradients are a built-in-only feature the editor cannot author. (iOS omits
-    // this strip — its draft type also can't hold a gradient; Android keeps an
-    // explicit guard against future field-add drift.)
+    // the cap dialog).
     private fun saveTheme(
         prefs: PrefHelper,
         store: UserThemeStore,
@@ -73,10 +70,9 @@ class ThemeEditorActivity : ComponentActivity() {
         name: String,
         appearance: ThemeAppearance,
     ): Boolean {
-        val sanitized = appearance.copy(colors = appearance.colors.copy(backgroundGradient = null))
         val now = System.currentTimeMillis()
         if (editing == null) {
-            val theme = UserTheme(UUID.randomUUID().toString(), name, sanitized, createdAt = now, updatedAt = now)
+            val theme = UserTheme(UUID.randomUUID().toString(), name, appearance, createdAt = now, updatedAt = now)
             if (!store.add(theme)) return false
             prefs.selectedThemeId = theme.id
         } else {
@@ -86,7 +82,7 @@ class ThemeEditorActivity : ComponentActivity() {
                 finish()
                 return true
             }
-            val theme = editing.copy(name = name, appearance = sanitized, updatedAt = now)
+            val theme = editing.copy(name = name, appearance = appearance, updatedAt = now)
             store.update(theme)
             prefs.selectedThemeId = theme.id
         }

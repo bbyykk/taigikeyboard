@@ -27,9 +27,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -61,12 +58,12 @@ import androidx.core.graphics.createBitmap
 import androidx.core.graphics.set
 import androidx.core.graphics.toColorInt
 import com.siansiansu.taigikeyboard.i18n.generated.L10n
+import com.siansiansu.taigikeyboard.ui.components.SegmentedChoiceRow
 import kotlin.math.roundToInt
 import android.graphics.Color as AndroidColor
 
 // Bottom-sheet color picker with grid, spectrum, and RGB slider tabs
 
-private val DEFAULT_PICKER_COLOR = AndroidColor.rgb(213, 214, 221)
 private const val SWATCHES_PER_ROW = 12
 private const val SPECTRUM_BITMAP_WIDTH = 200
 private const val SPECTRUM_BITMAP_HEIGHT = 360
@@ -90,21 +87,21 @@ private const val THUMB_INNER_RATIO = 0.7f
 @Composable
 fun ColorPickerDialog(
     title: String,
-    currentColor: Int?,
+    currentColor: Int,
     onDismiss: () -> Unit,
-    onColorSelected: (Int?) -> Unit,
+    onColorSelected: (Int) -> Unit,
 ) {
     val initialHsv =
         remember {
             floatArrayOf(0f, 0f, 0f).also { hsv ->
-                AndroidColor.colorToHSV(currentColor ?: DEFAULT_PICKER_COLOR, hsv)
+                AndroidColor.colorToHSV(currentColor, hsv)
             }
         }
     var hue by remember { mutableFloatStateOf(initialHsv[0]) }
     var saturation by remember { mutableFloatStateOf(initialHsv[1]) }
     var brightness by remember { mutableFloatStateOf(initialHsv[2]) }
     var hexInput by remember {
-        mutableStateOf(String.format("#%06X", 0xFFFFFF and (currentColor ?: DEFAULT_PICKER_COLOR)))
+        mutableStateOf(String.format("#%06X", 0xFFFFFF and currentColor))
     }
     var selectedTab by remember { mutableIntStateOf(TAB_SPECTRUM) }
 
@@ -161,16 +158,12 @@ fun ColorPickerDialog(
                     L10n.themeColorPickerSpectrum,
                     L10n.themeColorPickerSliders,
                 )
-            SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
-                tabLabels.forEachIndexed { index, label ->
-                    SegmentedButton(
-                        selected = selectedTab == index,
-                        onClick = { selectedTab = index },
-                        shape = SegmentedButtonDefaults.itemShape(index, tabLabels.size),
-                        icon = {},
-                    ) { Text(label, fontSize = 13.sp) }
-                }
-            }
+            SegmentedChoiceRow(
+                labels = tabLabels,
+                selectedIndex = selectedTab,
+                onSelect = { selectedTab = it },
+                fontSize = 13.sp,
+            )
 
             Spacer(Modifier.height(16.dp))
 
