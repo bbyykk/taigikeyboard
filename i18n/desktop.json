@@ -25,8 +25,7 @@
       "scope": {
         "platforms": [
           "macos",
-          "windows",
-          "ios"
+          "windows"
         ],
         "surfaces": [
           "host"
@@ -45,8 +44,7 @@
       "scope": {
         "platforms": [
           "macos",
-          "windows",
-          "ios"
+          "windows"
         ],
         "surfaces": [
           "host"
@@ -65,8 +63,7 @@
       "scope": {
         "platforms": [
           "macos",
-          "windows",
-          "ios"
+          "windows"
         ],
         "surfaces": [
           "host"
@@ -104,8 +101,7 @@
       "scope": {
         "platforms": [
           "macos",
-          "windows",
-          "ios"
+          "windows"
         ],
         "surfaces": [
           "host"
@@ -124,8 +120,7 @@
       "scope": {
         "platforms": [
           "macos",
-          "windows",
-          "ios"
+          "windows"
         ],
         "surfaces": [
           "host"
@@ -144,8 +139,7 @@
       "scope": {
         "platforms": [
           "macos",
-          "windows",
-          "ios"
+          "windows"
         ],
         "surfaces": [
           "host"
@@ -183,8 +177,7 @@
       "scope": {
         "platforms": [
           "macos",
-          "windows",
-          "ios"
+          "windows"
         ],
         "surfaces": [
           "host"
@@ -203,8 +196,7 @@
       "scope": {
         "platforms": [
           "macos",
-          "windows",
-          "ios"
+          "windows"
         ],
         "surfaces": [
           "host"
@@ -223,8 +215,7 @@
       "scope": {
         "platforms": [
           "macos",
-          "windows",
-          "ios"
+          "windows"
         ],
         "surfaces": [
           "host"
@@ -866,8 +857,7 @@
       "scope": {
         "platforms": [
           "macos",
-          "windows",
-          "ios"
+          "windows"
         ],
         "surfaces": [
           "host"
@@ -886,8 +876,7 @@
       "scope": {
         "platforms": [
           "macos",
-          "windows",
-          "ios"
+          "windows"
         ],
         "surfaces": [
           "host"
@@ -906,8 +895,7 @@
       "scope": {
         "platforms": [
           "macos",
-          "windows",
-          "ios"
+          "windows"
         ],
         "surfaces": [
           "host"
@@ -926,8 +914,7 @@
       "scope": {
         "platforms": [
           "macos",
-          "windows",
-          "ios"
+          "windows"
         ],
         "surfaces": [
           "host"
@@ -946,8 +933,7 @@
       "scope": {
         "platforms": [
           "macos",
-          "windows",
-          "ios"
+          "windows"
         ],
         "surfaces": [
           "host"
@@ -966,8 +952,7 @@
       "scope": {
         "platforms": [
           "macos",
-          "windows",
-          "ios"
+          "windows"
         ],
         "surfaces": [
           "host"
@@ -986,8 +971,7 @@
       "scope": {
         "platforms": [
           "macos",
-          "windows",
-          "ios"
+          "windows"
         ],
         "surfaces": [
           "host"
@@ -1006,8 +990,7 @@
       "scope": {
         "platforms": [
           "macos",
-          "windows",
-          "ios"
+          "windows"
         ],
         "surfaces": [
           "host"
@@ -1026,8 +1009,7 @@
       "scope": {
         "platforms": [
           "macos",
-          "windows",
-          "ios"
+          "windows"
         ],
         "surfaces": [
           "host"
@@ -1046,8 +1028,7 @@
       "scope": {
         "platforms": [
           "macos",
-          "windows",
-          "ios"
+          "windows"
         ],
         "surfaces": [
           "host"
@@ -1066,8 +1047,7 @@
       "scope": {
         "platforms": [
           "macos",
-          "windows",
-          "ios"
+          "windows"
         ],
         "surfaces": [
           "host"
@@ -1086,8 +1066,7 @@
       "scope": {
         "platforms": [
           "macos",
-          "windows",
-          "ios"
+          "windows"
         ],
         "surfaces": [
           "host"

@@ -83,7 +83,6 @@ final class SharedSettings {
 
     private static let isTpsOrMappedToERKey: SettingsKey<Bool> = .bool("tpsOrMapsToER", default: true)
     private static let isToolbarAutoCollapseKey: SettingsKey<Bool> = .bool("toolbarAutoCollapse", default: true)
-    private static let isHardwareKeyboardCompactKey: SettingsKey<Bool> = .bool("hardwareKeyboardCompact", default: true)
 
     /// Globe key has a device-dependent default (`DeviceCapabilities.prefersGlobeKeyByDefault`)
     /// so the getter is hand-written; the descriptor is reused for writes
@@ -438,51 +437,6 @@ final class SharedSettings {
         set { userDefaults.set(newValue, for: Self.isToolbarAutoCollapseKey) }
     }
 
-    // MARK: - Hardware Keyboard
-
-    /// Hide the on-screen key rows while an external keyboard is attached
-    /// (default: true). The candidate bar stays; typing comes from the
-    /// hardware keys (`HardwareKeyIntent`).
-    var isHardwareKeyboardCompact: Bool {
-        get { userDefaults.value(for: Self.isHardwareKeyboardCompactKey) }
-        set { userDefaults.set(newValue, for: Self.isHardwareKeyboardCompactKey) }
-    }
-
-    /// The user's hardware key contract, resolved (`HardwareKeyBindings`).
-    /// A stored empty string is a cleared row; an absent key is "never
-    /// touched" and takes the default; an unparseable value reads as cleared
-    /// rather than silently restoring the default.
-    var hardwareKeyBindings: HardwareKeyBindings {
-        var composing: [HardwareComposingAction: HardwareKeyChord?] = [:]
-        for action in HardwareComposingAction.allCases {
-            guard let stored = userDefaults.string(forKey: action.settingsKeyName) else { continue }
-            composing[action] = HardwareKeyChord(rawValue: stored)
-        }
-        var shortcuts: [HardwareShortcutAction: HardwareKeyChord?] = [:]
-        for action in HardwareShortcutAction.allCases {
-            guard let stored = userDefaults.string(forKey: action.settingsKeyName) else { continue }
-            shortcuts[action] = HardwareKeyChord(rawValue: stored)
-        }
-        return HardwareKeyBindings(composing: composing, shortcuts: shortcuts)
-    }
-
-    /// Records `chord` under `settingsKeyName`, or clears the row when nil.
-    func setHardwareChord(_ chord: HardwareKeyChord?, forKey settingsKeyName: String) {
-        userDefaults.set(chord?.rawValue ?? "", forKey: settingsKeyName)
-    }
-
-    /// Puts every hardware shortcut row back to shipped state — removed
-    /// rather than written, so "never touched" stays distinguishable from a
-    /// chord the user chose.
-    func resetHardwareShortcuts() {
-        for action in HardwareComposingAction.allCases {
-            userDefaults.removeObject(forKey: action.settingsKeyName)
-        }
-        for action in HardwareShortcutAction.allCases {
-            userDefaults.removeObject(forKey: action.settingsKeyName)
-        }
-    }
-
     // MARK: - Globe Key
 
     /// Globe key toggle. Default depends on device type for backward compatibility:
@@ -689,8 +643,6 @@ final class SharedSettings {
         isKautianNameAppendixEnabled = true
         // Toolbar
         isToolbarAutoCollapse = true
-        isHardwareKeyboardCompact = true
-        resetHardwareShortcuts()
         // Globe key: remove stored value so device-based default takes effect
         userDefaults.remove(Self.isGlobeKeyEnabledKey)
         // TPS

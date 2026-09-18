@@ -660,26 +660,6 @@ public class ComposingManager: ComposingStateProvider, ContinuousCandidateFetche
         applyAsSelfCommit(RustEngineBridge.composingReset(generation: currentGeneration))
     }
 
-    /// Steps the caret inside the romanization being typed, so the next
-    /// character lands there — `ka2`, ⌥← ⌥←, `h` → `kha2`. The bar, if
-    /// up, is left exactly as it is.
-    // CROSS-PLATFORM INVARIANT — mirrors macos `ComposingManager.moveCaret`
-    // (`macos/Sources/TaigiInputMethodCore/Composing/ComposingManager.swift:182-192`).
-    public func moveCaret(_ direction: CaretDirection) {
-        logger.debug("[COMPOSE] fn=moveCaret \(String(describing: direction))")
-        let settings = settingsProvider.current
-        let spacing = Self.continuousSpacingFlags(settings)
-        apply(RustEngineBridge.composingMoveCaret(
-            direction,
-            mode: settings.inputMode,
-            toggles: settings.toneToggles,
-            effectiveSwapped: spacing.effectiveSwapped,
-            outputBothScripts: spacing.outputBothScripts,
-            candidateDisplayMode: settings.candidateDisplayMode,
-            generation: currentGeneration,
-        ))
-    }
-
     public func setSelectedCandidateIndex(_ index: Int) {
         logger.debug("[COMPOSE] fn=setSelectedCandidateIndex index=\(index)")
         apply(RustEngineBridge.composingSetSelectedCandidateIndex(index, generation: currentGeneration))

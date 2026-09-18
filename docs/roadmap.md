@@ -3,14 +3,14 @@
 > **Type**: Planning (forward-looking)
 > **Keywords**: `roadmap`, `planning`, `released versions`, `release trains`
 > **Status**: Active
-> **Last updated**: 2026-09-18 (iPad external keyboard item added; desktop 3.6.x sections collapsed into `docs/reports/desktop-3.6.x-design-notes.md`; repository-size record retired — rationale + timings in `docs/architecture/build-artifacts.md`; released-versions index through mobile / desktop 3.6.8)
+> **Last updated**: 2026-09-13 (desktop 3.6.x sections collapsed into `docs/reports/desktop-3.6.x-design-notes.md`; repository-size record retired — rationale + timings in `docs/architecture/build-artifacts.md`; released-versions index through mobile / desktop 3.6.8)
 
 ---
 
 ## Summary
 
 - **Forward-looking work items only.** Shipped detail lives in `docs/releases/<version>/plan.md` + `changelog/<version>.md` + Claude auto-memory.
-- **Active**: iPad external keyboard (PR1 in progress, USER 2026-09-18); Telex tone-1/4 keys design (USER 2026-09-11「之後的版本再處理」). Merged desktop 3.6.x items below await dogfood only.
+- **Active**: Telex tone-1/4 keys design (USER 2026-09-11「之後的版本再處理」). Merged desktop 3.6.x items below await dogfood only.
 - **No open deferred TODO**: the keyboard theme picker (the last 2026-06-01 candidate) shipped in v3.6.2; the one design-locked, unscheduled item is 變換後羅馬字 commit (§ Out of scope / deferred).
 - **Release scope / timing / tag is user-gated** per [`~/.claude/rules/diagnosis-discipline.md` § No unilateral release scope].
 
@@ -19,46 +19,6 @@
 ## Active / In-flight items
 
 kautian subcollections (腔調 + 姓名附錄 toggles + 語音差異 詞級擴展) — 5 phases MERGED, shipped **v3.6.0** (#354-#358).
-
----
-
-### iPad external keyboard — hardware-key composing in the iOS extension (USER-scoped 2026-09-18)
-
-**Status**: all MERGED 2026-09-18 — PR1 #77 `1634eceb`, PR2 #78 `d3e02eae`, PR3 #80 `cfcf7336` (#79 auto-closed with its base branch). TPS hardware mapping closed — not built (USER 2026-09-18). Dogfood S47 / S48 / S49 pending on a real iPad (USER 「最後再 dogfood」).
-USER 2026-09-18: 「for ios, design and implement iPad 外接鍵盤, 鍵盤佈局, 設定、快速齒、外觀等等選單參考 macOS 實作」.
-
-**Why**: the keyboard extension has no hardware-key path at all (`grep pressesBegan ios/` = 0 hits, 2026-09-18). With a Magic Keyboard attached a letter reaches the host through the `UIResponder.insertText` override (`KeyboardExtension/KeyboardViewController.swift:298`) and never composes. macOS already owns the whole key contract (`macos/.../Controller/ComposingKeyIntent.swift`, `ComposingAction.swift`, `ComposingKeyBindings.swift`, `Settings/ShortcutSettingsView.swift`); iPad mirrors it.
-
-**Design (grounded in code)**
-
-| Piece | iOS | macOS source of truth |
-|---|---|---|
-| Key event value | `HardwareKeySnapshot` from `UIPress.key` (`characters`, `charactersIgnoringModifiers`, `keyCode: UIKeyboardHIDUsage`, `modifierFlags`) — Apple "Handling key presses made on a physical keyboard" (developer.apple.com/documentation/uikit, read 2026-09-18 via Context7) | `KeyEventSnapshot` (`ComposingKeyIntent.swift:53`) |
-| Classifier | `HardwareKeyIntent.intent(for:isComposing:isShowingCandidates:)` — pure, tested | `ComposingKeyIntent.intent(for:…)` (`:227`) |
-| Dispatch | `KeyboardViewController.pressesBegan` → `HardwareKeyDispatcher` → existing `ActionHandler.handle(.character / .space / .backspace / .primary(.return))`, `handle(suggestion)`, `composingManager.setSelectedCandidateIndex / reset / commitRawInput` | `TaigiInputController.handle(event)` |
-| Slot keys | bare `q w d f z x v y ;` while the bar is up (`CandidateSlotKeySet.bareKeyRow`, `ComposingKeyBindings.swift:72`); labels drawn on the bar cells only while a hardware keyboard is attached | `CandidateIndexLabel.swift` |
-| Navigation | `← →` = ±1 candidate (clamped, never wraps); `↑ ↓ PgUp PgDn [ ]` = ±9 (one page); page = `selected / 9` — no separate page state | `HorizontalPageLayout.target(for:from:)` |
-| Fixed keys | Esc = cancel (`reset()`); Backspace = `handle(.backspace)`; Return = confirm highlighted (index 0 = literal, as touch `handleReturnAction`); ⇧Return = `commitRawInput`; Tab / ⇧Tab = next / previous; Space = touch parity (`handleSpaceAction`) until PR2 | `ComposingAction` defaults (`:96-103`) |
-| Host chords | any unbound ⌘ / ⌃ / ⌥ chord → commit composition, then `super.pressesBegan` | `.commitThenPassThrough` (`:323`) |
-| Layout | hardware keyboard attached (`GCKeyboard.coalesced != nil` or a `UIPress.key` seen) + setting 「外接鍵盤時收合螢幕鍵盤」(default on) → root view = candidate bar only, key rows hidden | n/a (desktop has no on-screen keys) |
-| Settings | new toggle in the 鍵盤 section of `App/Tabs/Settings/SettingsTab.swift`; key `hardwareKeyboardCompact` (`SharedSettings`) | `GeneralSettingsView` |
-
-iOS deviation, deliberate: idle Backspace / letters / punctuation route through `ActionHandler` (touch parity — NextWord re-predict, auto-space arm) rather than pass through; on iOS the extension is the only writer, there is no host to hand the key to. Uppercase from ⇧ is passed as `letterCase: .uppercased` into the existing case transform (`ActionHandler+KeyActions.swift:11`).
-
-**Rounds**
-
-| PR | Scope | Status |
-|---|---|---|
-| PR1 | classifier + dispatcher + slot keys/labels + navigation + compact bar + setting toggle + S47 | MERGED #77 |
-| PR2 (MERGED #78) | 快速齒 pane on iOS (Settings › 鍵盤 › 快速齒, iPad): the seven `HardwareComposingAction` rows + the four switches that apply on iOS (`HardwareShortcutAction`: toggleRomanization ⌃⌘C, cycleCandidateDisplayMode ⌃⌘H, toggleTranslateSwapped `` ` ``, showSymbolPicker ⌃⌘,), recorder = an invisible first responder's `pressesBegan` (`HardwareKeyCaptureView`), storage `composingShortcut.<raw>` / `hardwareShortcut.<raw>` in the App Group with the desktop's `"<d/c/o/s>\|<hex>"` chord encoding (`HardwareKeyChord`); `HardwareKeyBindings` resolves duplicates (stored beats default, last writer wins, always-bound pool restored, a chord on both rosters fires the shortcut); Space with the bar up = `commitAlternateScript`, ⇧slot = the same aimed at a slot (`ActionHandler.handleAlternateScript` → `alternateCommit`, the twin of macOS `CandidateDocumentText.resolvedAlternate`) | MERGED #78 |
-| PR3 (MERGED #80) | ⌥← / ⌥→ composing caret: `Preedit.caret_utf16` now honoured on iOS (`updatePreedit(_:caretUTF16:)` → `setMarkedText(_:caretUTF16:)`), `RustEngineBridge.composingMoveCaret` + `ComposingManager.moveCaret`, `HardwareKeyIntent` tier 0 on exactly ⌥, read-only pane row. Compact-bar appearance: nothing to add — the bar already follows 候選詞文字大小 / theme (`CandidateTheme`), and macOS's 外觀 items (window layout / size) have no on-screen analogue. | MERGED #80 |
-| — | **TPS hardware mapping — not built (USER 2026-09-18 「不實作方音符號, 因為鍵盤沒有對應的 mapping」).** The on-screen TPS grid is the app's own arrangement with no physical-key counterpart (only row 1 carries a QWERTY legend; the bottom-row ㄌ ㆡ ㄙ ㆨ ㆤ have no key), so under TPS a hardware letter types its ASCII as document text. Closed. | closed |
-
-**Rejected**: `UIKeyCommand` table (swallows keys before `UIKeyInput`, and cannot express "only while composing"); `keyCommands` for slot keys (same); Telex scheme on iOS (iOS has no `ToneInputScheme`; digits stay tones, letters pick).
-
-**Decided under auto mode (2026-09-18)**: the iOS global roster carries the four switches only; `openLastSettingsPane` (an extension cannot open its host app without a URL round-trip) and `showTelexGuide` (no Telex scheme on iOS) are left out. Idle Return / unbound Return mid-composition fall to the fixed rule (newline / commit as typed) so the key that sends is never swallowed.
-
-**Dogfood**: S47 (PR1), S48 (PR2), S49 (PR3).
 
 ---
 

@@ -12,6 +12,7 @@ Project-specific imperative rules distilled from past incidents. The dated narra
 - **Verify hard-prerequisite claims**: memory + Codex agreement is not verification; `dictionary/build/merge_csv.py` `groupby((hanzi, _tl_key))` already enforces `(hanzi, tl)` uniqueness.
 - **Circuit-break at 3+ failed fixes**: compare to `references/aiongtaigi-sushi` / `references/florisboard` before adding a mitigation; the IME window uses platform-default insets, never `MATCH_PARENT × MATCH_PARENT` + custom inset.
 - **Release scope is USER-gated**: never write "documented known limitation", "post-vX", "deferred" or "ready to tag" without the USER's dated words (USER: 「不要擅自決定哪些超出 v3.5.8 的範圍,v3.5.8 該 release 的時候我會給你明確的指示」).
+- **Spike a platform-capability assumption before planning on it**: a third-party iOS keyboard extension never receives hardware-keyboard `UIPress` events (`pressesBegan` on `UIInputViewController` is dead on device; iPadOS delivers them to the host app only). iPad external-keyboard composing is impossible in the extension — do not re-propose (#77/#78/#80 reverted 2026-09-18). Any plan resting on an unverified OS capability starts with a ≤20-line on-device spike, not a dogfood row.
 
 ## Review (`~/.claude/rules/round-workflow.md`, `code-review-rules.md`)
 

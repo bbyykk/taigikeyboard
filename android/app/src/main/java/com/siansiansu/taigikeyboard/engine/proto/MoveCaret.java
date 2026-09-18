@@ -7,17 +7,16 @@ package com.siansiansu.taigikeyboard.engine.proto;
 
 /**
  * <pre>
- * Step the caret inside the pending tail one Unicode scalar value left or
- * right (`⌥←` / `⌥→` on macOS and on an iPad external keyboard, `Ctrl+←` /
- * `Ctrl+→` on Windows). The
+ * Desktop only — step the caret inside the pending tail one Unicode scalar
+ * value left or right (`⌥←` / `⌥→` on macOS, `Ctrl+←` / `Ctrl+→` on Windows). The
  * buffer does not change, so the response carries `UpdatePreedit` (with the
  * new `caret_utf16`) and NO `PerformAutocomplete`: candidates, highlight and
  * page stay. At either edge of the pending tail — the caret never enters a
  * nailed segment — the request is a no-op with no effects. Every mutator
  * then edits at the caret: `Append` inserts there, `DeleteBackward` /
  * `ReplaceLast` act on the character before it, `TelexKey` on the chunk
- * before it. Android never sends this, so its caret stays at the end and
- * every mutator behaves as before; iOS sends it only from a hardware key.
+ * before it. Mobile never sends this, so its caret stays at the end and
+ * every mutator behaves as before.
  * </pre>
  *
  * Protobuf type {@code taigi.engine.MoveCaret}
@@ -158,17 +157,16 @@ public  final class MoveCaret extends
 
   /**
    * <pre>
-   * Step the caret inside the pending tail one Unicode scalar value left or
-   * right (`⌥←` / `⌥→` on macOS and on an iPad external keyboard, `Ctrl+←` /
-   * `Ctrl+→` on Windows). The
+   * Desktop only — step the caret inside the pending tail one Unicode scalar
+   * value left or right (`⌥←` / `⌥→` on macOS, `Ctrl+←` / `Ctrl+→` on Windows). The
    * buffer does not change, so the response carries `UpdatePreedit` (with the
    * new `caret_utf16`) and NO `PerformAutocomplete`: candidates, highlight and
    * page stay. At either edge of the pending tail — the caret never enters a
    * nailed segment — the request is a no-op with no effects. Every mutator
    * then edits at the caret: `Append` inserts there, `DeleteBackward` /
    * `ReplaceLast` act on the character before it, `TelexKey` on the chunk
-   * before it. Android never sends this, so its caret stays at the end and
-   * every mutator behaves as before; iOS sends it only from a hardware key.
+   * before it. Mobile never sends this, so its caret stays at the end and
+   * every mutator behaves as before.
    * </pre>
    *
    * Protobuf type {@code taigi.engine.MoveCaret}

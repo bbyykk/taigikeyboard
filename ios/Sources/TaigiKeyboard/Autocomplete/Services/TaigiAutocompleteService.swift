@@ -18,10 +18,6 @@ enum CandidateCellScript {
     /// `additionalInfo` key on a hanji cell carrying the roman it appends
     /// under 括號標註 (`漢字 (羅馬字)`).
     static let bracketRomanKey = "roman"
-    /// `additionalInfo` key on a roman cell carrying the presentable 漢字 the
-    /// 漢羅 key commits instead (`ActionHandler.alternateCommit`). Absent
-    /// when the candidate has none. Same key NextWord predictions carry.
-    static let alternateHanjiKey = "hanzi"
 
     /// The §42 marker this suggestion commits by, or `nil` when it is not a
     /// split cell. A marker is honoured only when it is one this build knows
@@ -89,13 +85,6 @@ func splitIntoSingleScriptCells<T>(
         guard let roman, seenRomanCells.insert(roman).inserted else { continue }
         var romanInfo = identity
         romanInfo[CandidateCellScript.infoKey] = CandidateCellScript.roman
-        // The presentable 漢字 beside this roman — what the 漢羅 key writes
-        // for the cell. Never derived from `displayText`: a §34 literal that
-        // adopted a dictionary identity carries that identity there and has
-        // no 漢字 of its own.
-        if let hanji = hanji(item), !hanji.isEmpty {
-            romanInfo[CandidateCellScript.alternateHanjiKey] = hanji
-        }
         suggestions.append(AutocompleteSuggestion(text: roman, title: roman, subtitle: nil, additionalInfo: romanInfo))
     }
     return suggestions

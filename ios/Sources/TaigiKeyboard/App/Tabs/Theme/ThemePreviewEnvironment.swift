@@ -63,10 +63,6 @@ final class ThemePreviewEnvironment: KeyboardEnvironment {
         base.keyboardLayoutType
     }
 
-    /// The preview never has an external keyboard to collapse for.
-    var isHardwareKeyboardCompact: Bool { false }
-    var hardwareKeyBindings: HardwareKeyBindings { .default }
-
     var settingsUserDefaults: UserDefaults {
         base.settingsUserDefaults
     }
