@@ -392,6 +392,8 @@ private struct CustomThemeButtonPreview: View {
             .shadow(color: .black.opacity(shadow > 0 ? 0.3 : 0), radius: shadow, y: shadow / 2)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             // Same surface view as the keyboard root (`TaigiKeyboardView`).
-            .background { (colors.background ?? UserThemeSeed.background).view }
+            .background {
+                ThemeBackgroundSurface(surface: colors.surface ?? ThemeSurface(background: UserThemeSeed.background, dimsTowardWhite: true)).equatable()
+            }
     }
 }

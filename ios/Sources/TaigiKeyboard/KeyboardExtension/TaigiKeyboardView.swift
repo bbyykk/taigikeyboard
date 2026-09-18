@@ -157,8 +157,8 @@ struct TaigiKeyboardView: View {
             // for a gradient, and takes the same solid colour otherwise).
             if useLiquidGlassBg {
                 Color.white.opacity(0.001)
-            } else if let background = colors.background {
-                background.view
+            } else if let surface = colors.surface {
+                ThemeBackgroundSurface(surface: surface).equatable()
             } else {
                 Color.keyboardBackground
             }
@@ -439,11 +439,11 @@ struct TaigiKeyboardView: View {
     ) -> CandidateView.Style {
         var style = CandidateView.Style.adaptive(for: context)
         style.height = height
-        // The candidate bar is the keyboard surface: a gradient shows through (the bar
-        // goes transparent so the root paint runs candidate→bottom as one fill); a
+        // The candidate bar is the keyboard surface: a gradient / photo shows through (the
+        // bar goes transparent so the root paint runs candidate→bottom as one fill); a
         // solid background colours the bar the same; adaptive keeps KeyboardKit's bar.
         switch colorSettings.background {
-        case .gradient:
+        case .gradient, .image:
             style.backgroundColor = .clear
         case let .solid(color):
             style.backgroundColor = color.color

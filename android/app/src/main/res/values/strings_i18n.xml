@@ -243,6 +243,10 @@
     <string name="i18n_theme_backgroundTypeGradient">漸層</string>
     <string name="i18n_theme_gradientStartColor">起點色</string>
     <string name="i18n_theme_gradientEndColor">終點色</string>
+    <string name="i18n_theme_backgroundTypePhoto">照片</string>
+    <string name="i18n_theme_photoPick">選擇照片</string>
+    <string name="i18n_theme_photoChange">更換照片</string>
+    <string name="i18n_theme_photoDim">淡化</string>
     <string name="i18n_theme_gradientDirection">方向</string>
     <string name="i18n_theme_colorKeySection">揤鈕介面</string>
     <string name="i18n_theme_candidateSection">候選詞介面</string>

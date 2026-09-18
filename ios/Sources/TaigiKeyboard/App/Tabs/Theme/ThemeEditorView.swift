@@ -1,3 +1,4 @@
+import PhotosUI
 import SwiftUI
 
 /// The user-theme editor: the full appearance bundle + a live draft preview
@@ -5,10 +6,11 @@ import SwiftUI
 /// reuses `ThemeColorRow` / `ThemeSliderRow` / `ThemeGradientDirectionRow`.
 ///
 /// Three sections, one per visual surface (USER 2026-09-19): **背景** (type
-/// 純色 / 漸層 and its rows — the keyboard and the candidate bar share this one
-/// surface), **按鍵** (fills, text, shape, size), **候選詞** (text color + size),
+/// 純色 / 漸層 / 照片 and its rows — the keyboard and the candidate bar share this
+/// one surface), **按鍵** (fills, text, shape, size), **候選詞** (text color + size),
 /// then 恢復預設. Font is a global setting, not part of a theme, so the editor
-/// has no font control.
+/// has no font control. The photo comes from `PhotosPicker` (no library permission
+/// needed) and is stored through `SharedSettings.saveThemeImage`.
 ///
 /// The name is entered in a `TextField` alert at save time, not inline — so the
 /// editor has no inline text input and the software keyboard never appears to
@@ -22,6 +24,7 @@ struct ThemeEditorView: View {
     @State private var showsCapAlert = false
     @State private var showsNameAlert = false
     @State private var pendingName = ""
+    @State private var pickedPhoto: PhotosPickerItem?
 
     init(editing: UserTheme? = nil) {
         _viewModel = StateObject(wrappedValue: ThemeEditorViewModel(editing: editing))
@@ -35,6 +38,7 @@ struct ThemeEditorView: View {
                     Picker("", selection: viewModel.backgroundKindBinding) {
                         Text(lang.string(.themeBackgroundTypeSolid)).tag(ThemeBackground.Kind.solid)
                         Text(lang.string(.themeBackgroundTypeGradient)).tag(ThemeBackground.Kind.gradient)
+                        Text(lang.string(.themeBackgroundTypePhoto)).tag(ThemeBackground.Kind.image)
                     }
                     .pickerStyle(.segmented)
                     .labelsHidden()
@@ -54,6 +58,17 @@ struct ThemeEditorView: View {
                             label: lang.string(.themeGradientDirection),
                             angle: viewModel.gradientAngleBinding,
                         )
+                    case .image:
+                        ThemePhotoRow(
+                            label: lang.string(viewModel.photo == nil ? .themePhotoPick : .themePhotoChange),
+                            file: viewModel.photo?.file,
+                            selection: $pickedPhoto,
+                        )
+                        if viewModel.photo != nil {
+                            sliderRow(lang.string(.themePhotoDim), viewModel.photoDimBinding,
+                                      ThemeImageBackground.dimRange, ThemeImageBackground.dimStep,
+                                      defaultValue: ThemeImageBackground.defaultDim)
+                        }
                     }
                 }
 
@@ -120,6 +135,18 @@ struct ThemeEditorView: View {
                 }
             }
         }
+        .task(id: pickedPhoto) {
+            guard let pickedPhoto, let data = try? await pickedPhoto.loadTransferable(type: Data.self) else { return }
+            // Downsample + encode + write off the main actor; only the file name comes back.
+            let file = await Task.detached(priority: .userInitiated) { ThemeImageCache.shared.store.save(data) }.value
+            if let file {
+                viewModel.setPhoto(file: file)
+            }
+            self.pickedPhoto = nil
+        }
+        // A photo picked then discarded (Back, or replaced before Save) is an orphan file
+        // until a theme mutation sweeps; sweep on the way out so it never lingers.
+        .onDisappear { SharedSettings.shared.sweepThemeImages() }
         .alert(lang.string(.themeNameHeader), isPresented: $showsNameAlert) {
             TextField(lang.string(.themeNamePlaceholder), text: $pendingName)
             Button(lang.string(.themeEditorSave)) { commit() }
@@ -166,11 +193,21 @@ struct ThemeEditorView: View {
         _ range: ClosedRange<Double>,
         _ step: Double,
     ) -> some View {
+        sliderRow(label, viewModel.scalarBinding(keyPath), range, step, defaultValue: ThemeAppearance.default[keyPath: keyPath])
+    }
+
+    private func sliderRow(
+        _ label: String,
+        _ value: Binding<Double>,
+        _ range: ClosedRange<Double>,
+        _ step: Double,
+        defaultValue: Double,
+    ) -> some View {
         ThemeSliderRow(
             label: label,
-            value: viewModel.scalarBinding(keyPath),
+            value: value,
             range: range, step: step,
-            defaultValue: ThemeAppearance.default[keyPath: keyPath],
+            defaultValue: defaultValue,
             onChanged: { _ in },
         )
     }

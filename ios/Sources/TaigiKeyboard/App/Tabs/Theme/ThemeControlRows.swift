@@ -1,6 +1,7 @@
 // Shared appearance-control-row components (color row, slider row) for the
 // custom theme editor draft (ThemeEditorView).
 
+import PhotosUI
 import SwiftUI
 
 /// Shared slider ranges/steps for the user-theme editor draft.
@@ -124,6 +125,52 @@ struct ThemeGradientDirectionRow: View {
                     .accessibilityAddTraits(isSelected ? .isSelected : [])
                 }
             }
+        }
+    }
+}
+
+// MARK: - Photo row
+
+/// A `PhotosPicker` row: a thumbnail of the current theme photo (or a placeholder while
+/// none is picked) beside the 選擇照片 / 更換照片 label. Tapping anywhere on the row opens
+/// the system picker (images only; no photo-library permission is required).
+struct ThemePhotoRow: View {
+    let label: String
+    /// The current theme photo's file name, or nil.
+    let file: String?
+    @Binding var selection: PhotosPickerItem?
+
+    private static let thumbnailSize: CGFloat = 44
+    /// Row-sized thumbnail, prepared once per photo off the main actor (the cached photo is
+    /// 1280 px; scaling it every body evaluation is waste).
+    @State private var thumbnail: UIImage?
+
+    var body: some View {
+        PhotosPicker(selection: $selection, matching: .images) {
+            HStack(spacing: 12) {
+                Group {
+                    if let thumbnail {
+                        Image(uiImage: thumbnail).resizable().scaledToFill()
+                    } else {
+                        Color(.tertiarySystemFill)
+                    }
+                }
+                .frame(width: Self.thumbnailSize, height: Self.thumbnailSize)
+                .clipShape(RoundedRectangle(cornerRadius: AppStyle.smallCornerRadius))
+                Text(label)
+                    .foregroundColor(.primary)
+                Spacer()
+                Image(latinSystemName: "photo.on.rectangle")
+                    .foregroundColor(.secondary)
+            }
+        }
+        .task(id: file) {
+            guard let file, let image = ThemeImageCache.shared.image(for: file) else {
+                thumbnail = nil
+                return
+            }
+            let side = Self.thumbnailSize * UIScreen.main.scale
+            thumbnail = await image.byPreparingThumbnail(ofSize: CGSize(width: side, height: side))
         }
     }
 }

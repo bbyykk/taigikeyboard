@@ -486,6 +486,14 @@ object L10n {
         @Composable get() = stringRes(StringKey.THEME_GRADIENT_START_COLOR)
     val themeGradientEndColor: String
         @Composable get() = stringRes(StringKey.THEME_GRADIENT_END_COLOR)
+    val themeBackgroundTypePhoto: String
+        @Composable get() = stringRes(StringKey.THEME_BACKGROUND_TYPE_PHOTO)
+    val themePhotoPick: String
+        @Composable get() = stringRes(StringKey.THEME_PHOTO_PICK)
+    val themePhotoChange: String
+        @Composable get() = stringRes(StringKey.THEME_PHOTO_CHANGE)
+    val themePhotoDim: String
+        @Composable get() = stringRes(StringKey.THEME_PHOTO_DIM)
     val themeGradientDirection: String
         @Composable get() = stringRes(StringKey.THEME_GRADIENT_DIRECTION)
     val themeColorKeySection: String

@@ -503,10 +503,14 @@ final class SharedSettings {
     }
 
     // User themes live in a backup-excluded JSON file in the App Group; each mutation bumps
-    // themeRevision to refresh the other process.
+    // themeRevision to refresh the other process, then sweeps the theme photos no saved
+    // theme references any more (a replaced / deleted photo never lingers).
     private lazy var userThemeStore = UserThemeStore(
         containerURL: Self.sharedContainerURL,
-        onMutated: { [weak self] in self?.bumpThemeRevision() },
+        onMutated: { [weak self] in
+            self?.bumpThemeRevision()
+            self?.sweepThemeImages()
+        },
     )
 
     // Writing themeRevision posts didChangeNotification so the extension re-resolves the theme.
@@ -581,6 +585,15 @@ final class SharedSettings {
 
     func deleteUserTheme(id: UUID) {
         userThemeStore.delete(id: id)
+    }
+
+    /// Removes theme photos no saved user theme references any more. Runs after every
+    /// theme mutation and when the editor closes (a photo picked in the editor is only
+    /// kept once its theme is saved).
+    func sweepThemeImages() {
+        let referenced = Set(loadUserThemes().compactMap { $0.appearance.colors.background?.image?.file })
+        ThemeImageCache.shared.store.sweep(keeping: referenced)
+        ThemeImageCache.shared.removeAll()
     }
 
     /// Creates an immutable snapshot of render-relevant settings.
