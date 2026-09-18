@@ -354,6 +354,10 @@ public nonisolated struct Taigi_Engine_DeriveNotone: Sendable {
 /// whitespace `[ \t\n\x0B\f\r-]+`), diacritics stripped. Returns "" when
 /// fewer than 2 syllables. Whitespace canonical = ASCII only (matches
 /// Android JVM `Regex("[\\s-]+")` semantics; preserves NBSP as non-delimiter).
+/// LEGACY: this is the stored `abbrev` column's face (first letter). The
+/// index / search-key abbreviation face — one leading spelling unit per
+/// syllable, `ph` / `tsh` whole (§46) — is what `DeriveCustomSearchKeys`
+/// emits; no query reads the legacy column.
 public nonisolated struct Taigi_Engine_DeriveAbbrev: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for

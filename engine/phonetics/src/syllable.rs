@@ -382,61 +382,6 @@ pub fn nasal_oo_alias_spelling(syllable: &str) -> Option<String> {
         .then(|| syllable.replace(NASAL_OO_CANONICAL_SPELLING, NASAL_OO_ALIAS_SPELLING))
 }
 
-/// `true` when a TL/POJ FST key body is an **acronym** key surface — one
-/// initial per syllable, no vowel (`sb` for 心愛/sim-ài's all-consonant
-/// abbrev, `hs` for 戶外/hōo-guā). The TL/POJ analogue of
-/// [`crate::is_tps_initial_only`]; used by the continuous partial-prefix
-/// path to keep `tl_abbrev` / `poj_abbrev` acronym surfaces from consuming
-/// the hydrate budget ahead of single-char readings (e.g. typing `s` must
-/// still surface 是/sī, not only `sa` + 2-syllable phrases).
-///
-/// Detected as: every char is an ASCII consonant **and** the body does NOT
-/// segment into a sequence of valid syllables. Both conjuncts matter:
-///
-/// - The ASCII-consonant gate keeps full keys whose body carries a vowel
-///   (`si`/`se`/`su`, fused multi-syllable `simai` for 心愛) AND any
-///   non-ASCII vowel material (a dialectal `sṳ`, where `ṳ` is not an ASCII
-///   consonant) — none of those are ever flagged.
-/// - The `!`[`splits_into_syllables`] gate keeps every all-consonant body
-///   that IS a real reading: syllabic-nasal single syllables (`m`/`ng`/
-///   `mng`/`ngh`) and fused all-nasal multi-syllable compounds
-///   (`tngtng`=撞撞/tn̄g-tn̄g, `ngng`=向向, `hmhhmh`=含含, `sngtng`=損斷,
-///   `mngkng`=問卷). A `tl_abbrev` acronym (`tt`, `sb`, `hs`, `mk`) does
-///   not segment (`t`/`s` alone is not a syllable) → flagged.
-///
-/// Deliberately conservative (mirrors [`crate::is_tps_initial_only`]): a
-/// vowel-initial second syllable produces a vowel-carrying abbrev (心愛's
-/// `tl_abbrev` is `sa`, 需要/su-iàu's is `si`) that this does NOT flag.
-/// Fully separating the abbrev family needs an FST family tag (out of
-/// scope for this engine-only fix); the record-level guard
-/// `lexicon::continuous::matches_continuous_toneless_prefix_key` still
-/// validates every surviving rowid, so the residual is a budget
-/// imperfection, not a correctness leak.
-pub fn is_roman_acronym_key(body: &str) -> bool {
-    !body.is_empty()
-        && body
-            .chars()
-            .all(|c| c.is_ascii_alphabetic() && !matches!(c, 'a' | 'e' | 'i' | 'o' | 'u'))
-        && !splits_into_syllables(body)
-}
-
-/// `true` when `body` can be fully partitioned, left to right, into a
-/// sequence of valid syllables (tries every split point, recursing on the
-/// tail — backtracks if a split dead-ends). Used by [`is_roman_acronym_key`]
-/// to tell a fused all-consonant multi-syllable reading (`tngtng` →
-/// `tng`+`tng`) from an acronym (`tt` → no split). Bodies are short FST key
-/// bodies, so the scan + bounded recursion is cheap. `end` ranges over byte
-/// indices guarded by `is_char_boundary`, so `&body[..end]` never panics on
-/// non-ASCII input.
-fn splits_into_syllables(body: &str) -> bool {
-    if body.is_empty() {
-        return true;
-    }
-    (1..=body.len())
-        .filter(|&end| body.is_char_boundary(end))
-        .any(|end| is_valid_syllable(&body[..end]) && splits_into_syllables(&body[end..]))
-}
-
 /// Canonicalize one POJ-shaped syllable token into its **POJ ASCII** form
 /// (no POJ→TL spelling fold), returning `(canonical_toneless, tone_digit)`
 /// on phonotactic success.
@@ -739,61 +684,6 @@ mod tests {
             "the per-syllable list keeps the fold",
         );
     }
-
-    #[test]
-    fn is_roman_acronym_key_flags_abbrev_keeps_full_and_nasal() {
-        // All-consonant, non-segmentable acronym bodies (one initial per
-        // syllable) → flagged. `sb`=心愛/sim-ài, `hs`=戶外/hōo-guā,
-        // `tt`=撞撞's abbrev, `mk`=問卷's abbrev, `sgkh`=多音節縮寫.
-        for body in ["sb", "hs", "tt", "mk", "sgkh", "klm", "tsk"] {
-            assert!(is_roman_acronym_key(body), "{body:?} should be acronym");
-        }
-        // Fused all-nasal multi-syllable readings (all-consonant but
-        // segment into valid syllables) → kept. `tngtng`=撞撞/tn̄g-tn̄g,
-        // `ngng`=向向, `hmhhmh`=含含, `sngtng`=損斷, `mngkng`=問卷,
-        // `pngpng`=幫幫.
-        for body in ["tngtng", "ngng", "hmhhmh", "sngtng", "mngkng", "pngpng"] {
-            assert!(
-                !is_roman_acronym_key(body),
-                "{body:?} fused all-nasal multi-syllable reading must NOT be flagged"
-            );
-        }
-        // Full single-syllable keys (vowel-carrying) → kept.
-        for body in ["si", "sa", "se", "su", "so", "tsit", "gua"] {
-            assert!(
-                !is_roman_acronym_key(body),
-                "{body:?} full single-syllable must NOT be flagged"
-            );
-        }
-        // Fused multi-syllable notone keys (vowel-carrying) → kept.
-        for body in ["simai", "hoogua", "taigi"] {
-            assert!(
-                !is_roman_acronym_key(body),
-                "{body:?} fused multi-syllable notone must NOT be flagged"
-            );
-        }
-        // Syllabic-nasal single syllables (all-consonant BUT valid) → kept.
-        for body in ["m", "ng", "mng", "ngh", "mh"] {
-            assert!(
-                !is_roman_acronym_key(body),
-                "{body:?} syllabic-nasal single syllable must NOT be flagged"
-            );
-        }
-        // Non-ASCII vowel material (dialectal `sṳ`) → kept (ṳ is not an
-        // ASCII consonant, so the all-consonant gate rejects it).
-        assert!(
-            !is_roman_acronym_key("sṳ"),
-            "sṳ (dialectal vowel) must NOT be flagged"
-        );
-        // Empty body → not an acronym.
-        assert!(!is_roman_acronym_key(""));
-    }
-
-    // MARK: - canonicalize_poj_syllable / normalize_to_poj. SOURCE:
-    // dictionary.csv poj_num samples — POJ rows like `chit8`, `goa2`,
-    // `toa7`, `che1` must stay POJ-shaped in the inventory (not folded
-    // to TL `tsit`, `gua`, `tua`, `tse`). Non-ASCII POJ `peⁿ5` / `so͘3`
-    // collapse to ASCII `penn` / `soo` per encoding-only rules.
 
     #[test]
     fn normalize_to_poj_encoding_only() {

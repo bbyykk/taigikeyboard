@@ -216,32 +216,6 @@ pub fn is_tps_initial(ch: char) -> bool {
     ZHUYIN_INITIALS.iter().any(|(_, tps)| tps.starts_with(ch))
 }
 
-/// True when `body` is non-empty and every char is a TPS initial glyph —
-/// the shape of a `tps_abbrev` acronym key (one leading consonant per
-/// syllable, e.g. `ㄍㄅ` for `ka-pi`, `ㄐㄅ` for a `tsi-p…` word since
-/// [`tps_abbrev_from_tl`] keeps only the leading glyph `ㄐ`). A full
-/// syllabic reading always carries a vowel / medial (家 → `ㄍㄚ`) or a
-/// coda / syllabic-nasal glyph (毋 → `ㆬ`), none of which are initials, so
-/// a real reading is never flagged.
-///
-/// Used by the continuous partial-prefix path to drop acronym key
-/// surfaces *before* the hydrate cap: Bopomofo orders all initials
-/// (consonants `U+3105..U+3119`) ahead of all vowels (`U+311A+`), so the
-/// `tps_abbrev` keys byte-sort in front of every full-reading key and
-/// would otherwise consume the whole budget, starving single-char
-/// readings out of the candidate pool.
-///
-/// Deliberately conservative: a **vowel-initial** word's abbrev (e.g.
-/// `ㄚㄅ` for an `a-…` first syllable) starts with a vowel glyph and is
-/// NOT flagged here. Fully separating the `tps_abbrev` family from the
-/// continuous lookup needs an FST family tag (out of scope for this
-/// engine-only fix). The record-level guard
-/// `lexicon::continuous::matches_continuous_tps_toneless_prefix_key`
-/// still validates every surviving rowid.
-pub fn is_tps_initial_only(body: &str) -> bool {
-    !body.is_empty() && body.chars().all(is_tps_initial)
-}
-
 /// Standalone TPS tone marks: `\u{02c6}` ˆ tone-9, `\u{02c7}` ˇ tone-6,
 /// `\u{02ca}` ́ tone-5, `\u{02cb}` ̀ tone-2, `\u{02d9}` ˙ encode-safe
 /// tone-8 dot, `\u{02ea}` ˪ tone-3, `\u{02eb}` ˫ tone-7, `\u{0307}`
@@ -942,31 +916,6 @@ mod tests {
         for c in ['ㄍ', 'ㆷ', 'ㆵ', '\u{02cb}', ' '] {
             assert!(!is_tps_vowel_material(c), "{c} must be rejected");
         }
-    }
-
-    #[test]
-    fn is_tps_initial_only_flags_abbrev_shapes_keeps_full_readings() {
-        // tps_abbrev acronym shapes — every glyph is an initial.
-        for body in ["ㄍ", "ㄍㄅ", "ㄍㄅㄐ", "ㄉㄎ", "ㆠㄍ"] {
-            assert!(is_tps_initial_only(body), "{body:?} should be initial-only");
-        }
-        // Full readings always carry a vowel / medial …
-        for body in ["ㄍㄚ", "ㄍㆦ", "ㄍㄠ", "ㄐㄧ", "ㄐㄧㄠ"] {
-            assert!(
-                !is_tps_initial_only(body),
-                "{body:?} (full reading) must NOT be initial-only"
-            );
-        }
-        // … or a coda / syllabic-nasal final glyph (毋 ㆬ, 黃 ㆭ, n-coda ㄣ),
-        // which are NOT initials → never flagged.
-        for body in ["ㆬ", "ㆭ", "ㄣ", "ㄍㄢ", "ㄍㄤ"] {
-            assert!(
-                !is_tps_initial_only(body),
-                "{body:?} (carries coda/nasal nucleus) must NOT be initial-only"
-            );
-        }
-        // Empty body is never an abbrev.
-        assert!(!is_tps_initial_only(""));
     }
 
     /// `canonicalize_tps_syllable` splits a trailing tone mark off a

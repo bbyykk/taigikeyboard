@@ -87,8 +87,7 @@ impl PrefixIndex {
     }
 
     /// Prefix lookup whose hydration budget (`cap`) is spent on the
-    /// **shortest matched keys first**, with optional per-key exclusion via
-    /// `skip(matched_key)`. Returns at most `cap` rowids.
+    /// **shortest matched keys first**. Returns at most `cap` rowids.
     ///
     /// Motivation: the wire format is `key || 0xFF || rowid_le_4`, and the
     /// `0xFF` separator is greater than any UTF-8 byte, so a short exact key
@@ -105,17 +104,12 @@ impl PrefixIndex {
     /// order is still decided by the caller's `SortKey` (recency / score /
     /// frequency). Length just decides which rowids enter the pool.
     ///
-    /// `skip` is evaluated per distinct `matched_key` (e.g. to drop TPS
-    /// acronym / abbrev key surfaces) so excluded keys never consume a
-    /// bucket slot; see [`Self::collect_shortest_first`] for the walk.
-    /// `lookup_prefix` is unchanged so normal `search` keeps its byte-order
-    /// acronym matching.
-    pub fn lookup_prefix_shortest_first(
-        &self,
-        prefix: &str,
-        cap: usize,
-        skip: impl FnMut(&str) -> bool,
-    ) -> Vec<u32> {
+    /// The abbreviation (acronym) keys live in their own `*-abbrev:` family
+    /// (`create_fst.py`), so a `tl:` / `poj:` / `tps:` range only ever
+    /// holds phonetic readings — no per-key exclusion is needed to keep the
+    /// short single-syllable keys from being starved out of the cap. See
+    /// [`Self::collect_shortest_first`] for the walk.
+    pub fn lookup_prefix_shortest_first(&self, prefix: &str, cap: usize) -> Vec<u32> {
         if prefix.is_empty() || cap == 0 {
             return Vec::new();
         }
@@ -130,7 +124,6 @@ impl PrefixIndex {
             prefix.len(),
             cap,
             fst::automaton::AlwaysMatch,
-            skip,
             |matched_key, rowid| buckets.entry(matched_key.len()).or_default().push(rowid),
         );
         buckets.into_values().flatten().take(cap).collect()
@@ -161,24 +154,18 @@ impl PrefixIndex {
     /// before `tl:ta`), which is why the stop check sits after the band,
     /// never inside it.
     ///
-    /// `skip` must be a pure predicate of the key: it is evaluated once per
-    /// **distinct** key, not per entry — the rowids of one key are
-    /// consecutive in the stream, and the TL / POJ acronym predicate
-    /// backtracks through syllable splits, so calling it per rowid
-    /// dominated the old scan. A skipped key's remaining rowids are not
-    /// streamed either: the walk re-seeks to the key's lex sibling (every
-    /// extension of the key byte-sorts BEFORE `key || 0xFF`, so nothing
-    /// under the key is left behind) — acronym keys such as `tl:ts` carry
-    /// thousands of rowids each and were ~80 % of the entries a
-    /// single-initial band streamed. A non-UTF-8 key (never produced by
-    /// the build pipeline) is dropped the same way.
+    /// The key is decoded once per **distinct** key, not per entry — the
+    /// rowids of one key are consecutive in the stream. A non-UTF-8 key
+    /// (never produced by the build pipeline) is dropped with its rowids:
+    /// the walk re-seeks to the key's lex sibling (every extension of the
+    /// key byte-sorts BEFORE `key || 0xFF`, so nothing under the key is
+    /// left behind).
     fn collect_shortest_first<A: Automaton>(
         &self,
         range_prefix: &[u8],
         min_key_len: usize,
         cap: usize,
         filter: A,
-        mut skip: impl FnMut(&str) -> bool,
         mut on_hit: impl FnMut(&str, u32),
     ) {
         let hi = next_lex_sibling(range_prefix);
@@ -209,11 +196,11 @@ impl PrefixIndex {
                     };
                     if key_bytes != last_key.as_bytes() {
                         match std::str::from_utf8(key_bytes) {
-                            Ok(key) if !skip(key) => {
+                            Ok(key) => {
                                 last_key.clear();
                                 last_key.push_str(key);
                             }
-                            _ => {
+                            Err(_) => {
                                 // The key starts with the non-empty UTF-8
                                 // `range_prefix`, so it is never all 0xFF
                                 // and the sibling always exists.
@@ -306,14 +293,12 @@ impl PrefixIndex {
         &self,
         prefix_key: &str,
         cap: usize,
-        skip: impl FnMut(&str) -> bool,
     ) -> Vec<(String, u32)> {
         if prefix_key.is_empty() || cap == 0 {
             return Vec::new();
         }
         // No unambiguous fast path here: the matched-key contract requires
-        // the STORED key per hit (record guards + abbrev-face checks run on
-        // it), and the pattern walk over an unambiguous prefix is already
+        // the STORED key per hit (record guards run on it), and the pattern walk over an unambiguous prefix is already
         // pruned to the literal branch by `can_match` — same traversal cost
         // as the narrow range (Codex confirm 2026-08-19 finding 2).
         let pattern = crate::tps_pattern::TpsKeyPattern::new(
@@ -333,7 +318,6 @@ impl PrefixIndex {
             prefix_key.len(),
             cap,
             &pattern,
-            skip,
             |matched_key, rowid| {
                 // Substitutions can only occur inside the typed prefix; the
                 // charwise zip stops at the shorter side, so the shared
@@ -428,9 +412,7 @@ fn split_wire_entry(entry: &[u8]) -> Option<(&[u8], u32)> {
 /// increments) before the walk falls back to the unbounded range. A perf
 /// heuristic only — the result is the same for any ascending ceilings.
 /// Two bytes = two roman letters, enough for every 500-rowid production
-/// roman prefix to fill its cap in one walk; a wider first band admits
-/// the 3-letter acronym keys too and triples the `skip` calls. A
-/// Bopomofo glyph is three bytes, so a TPS walk needs the +4 band — the
+/// roman prefix to fill its cap in one walk. A Bopomofo glyph is three bytes, so a TPS walk needs the +4 band — the
 /// empty +2 pass costs microseconds. Later ceilings double so a sparse
 /// prefix reaches the unbounded walk in a handful of cheap passes.
 const BAND_CEILING_EXTRA_BYTES: [usize; 5] = [2, 4, 8, 16, 32];

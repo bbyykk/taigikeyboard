@@ -1359,6 +1359,44 @@ pub(crate) fn build_partial_prefix_key(
     Some(((0u32, raw.len() as u32), key))
 }
 
+/// Whole-buffer abbreviation query key (`tl-abbrev:ss`, `tps-abbrev:ㄙㄒ`)
+/// for [`lexicon::fetch_abbrev_candidates`], or `None` when the buffer
+/// cannot be an abbreviation — `behavioral-invariants.md` §46.
+///
+/// An abbreviation is one leading spelling unit per syllable (one glyph in
+/// TPS, one to three letters in TL / POJ), so the buffer must be ≥ 2
+/// glyphs of letter material only: TL / POJ ASCII letters (vowels included —
+/// a zero-initial syllable abbreviates to its first vowel, 紅嬰仔 `aea`),
+/// TPS initial / vowel glyphs (`is_tps_char`, no tone mark). A digit, tone
+/// mark, hyphen or space disqualifies the buffer, so no [`TonePin`] or
+/// barrier ever applies to this path. English has no abbreviation family.
+/// Whether the buffer IS an abbreviation is decided by the index, not by
+/// shape: the `*-abbrev:` family holds nothing else, and a buffer that is
+/// also a reading (`ai` 愛 / 阿姨) simply gets both — the syllabic block
+/// first, the abbreviation block after it.
+///
+/// Runs every keystroke; the per-char screen rejects before allocating.
+pub(crate) fn abbrev_query_key(raw: &str, mode: InputMode) -> Option<String> {
+    if raw.chars().count() < 2 {
+        return None;
+    }
+    let shaped = match mode {
+        InputMode::Tl | InputMode::Poj => raw.chars().all(|c| c.is_ascii_alphabetic()),
+        InputMode::Tps => raw
+            .chars()
+            .all(|c| phonetics::is_tps_char(c) && !phonetics::is_tps_tone_mark(c)),
+        InputMode::English => false,
+    };
+    shaped.then(|| {
+        format!(
+            "{}{}:{}",
+            mode_key_prefix(mode),
+            lexicon::key_normalizer::ABBREV_FAMILY_SUFFIX,
+            raw.to_ascii_lowercase()
+        )
+    })
+}
+
 #[cfg(test)]
 mod tests {
     //! Unit tests for the pure shadow pipeline. Dispatch-level integration
@@ -2734,5 +2772,52 @@ mod tests {
             None,
             "TL mode must NOT see `poj:`-only entries"
         );
+    }
+
+    // `abbrev_query_key` — the whole-buffer abbreviation gate.
+    #[test]
+    fn abbrev_query_key_accepts_letter_only_buffers_of_two_or_more() {
+        // trace: consonant acronyms, vowel-initial abbreviations (紅嬰仔
+        // `aea`) and plain readings (`ai`, `tai`) all pass — the index
+        // decides which of them are abbreviations.
+        for raw in [
+            "ss", "tk", "mk", "ngs", "ts", "SS", "Tk", "aea", "iii", "ai", "tai",
+        ] {
+            assert_eq!(
+                abbrev_query_key(raw, InputMode::Tl).as_deref(),
+                Some(format!("tl-abbrev:{}", raw.to_lowercase()).as_str()),
+                "{raw}"
+            );
+        }
+        assert_eq!(
+            abbrev_query_key("chp", InputMode::Poj).as_deref(),
+            Some("poj-abbrev:chp")
+        );
+    }
+
+    #[test]
+    fn abbrev_query_key_rejects_short_digit_and_separated_buffers() {
+        // trace: one glyph; a digit / hyphen / space; English mode.
+        for raw in ["s", "", "ss2", "s-s", "s s", "tai5"] {
+            assert_eq!(abbrev_query_key(raw, InputMode::Tl), None, "{raw:?}");
+        }
+        assert_eq!(abbrev_query_key("ss", InputMode::English), None);
+    }
+
+    #[test]
+    fn abbrev_query_key_tps_glyphs_without_tone_marks() {
+        // trace: ㄙ + ㄒ initials, ㄤ + ㆤ + ㄚ vowels (紅嬰仔) both pass.
+        assert_eq!(
+            abbrev_query_key("ㄙㄒ", InputMode::Tps).as_deref(),
+            Some("tps-abbrev:ㄙㄒ")
+        );
+        assert_eq!(
+            abbrev_query_key("ㄤㆤㄚ", InputMode::Tps).as_deref(),
+            Some("tps-abbrev:ㄤㆤㄚ")
+        );
+        // A tone mark, a space, a lone glyph or Latin letters disqualify.
+        for raw in ["ㄙㄒˊ", "ㄙ ㄒ", "ㄙ", "ㄙs"] {
+            assert_eq!(abbrev_query_key(raw, InputMode::Tps), None, "{raw:?}");
+        }
     }
 }

@@ -104,6 +104,10 @@ message DeriveNotone { string roman = 1; }
 // whitespace `[ \t\n\x0B\f\r-]+`), diacritics stripped. Returns "" when
 // fewer than 2 syllables. Whitespace canonical = ASCII only (matches
 // Android JVM `Regex("[\\s-]+")` semantics; preserves NBSP as non-delimiter).
+// LEGACY: this is the stored `abbrev` column's face (first letter). The
+// index / search-key abbreviation face — one leading spelling unit per
+// syllable, `ph` / `tsh` whole (§46) — is what `DeriveCustomSearchKeys`
+// emits; no query reads the legacy column.
 message DeriveAbbrev { string roman = 1; }
 
 // `DeriveCustomSearchKeys` — WRITE side (v3.6.1 R3). From a stored

@@ -89,6 +89,17 @@ pub const COVERAGE_KIND_FULL: u8 = 0;
 /// dimension; see `docs/engine/continuous-candidate-display.md` §15.5.
 pub const COVERAGE_KIND_PARTIAL_PREFIX: u8 = 1;
 
+/// `RawCandidate.coverage_kind` ordinal for whole-buffer abbreviation hits
+/// ([`fetch_abbrev_candidates`]): the typed buffer is an acronym-shaped
+/// string (`ss`, `tk`, `ㄙㄒ`) and the record's per-syllable-initial face
+/// (`tl_abbrev` / `poj_abbrev` / `tps_abbrev`) equals it. Ranks strictly
+/// below [`COVERAGE_KIND_PARTIAL_PREFIX`] in [`SortKey`]: an acronym-shaped
+/// buffer that is also a valid onset (`ts`, `kh`) is mid-syllable at least
+/// as often as it is an abbreviation, so the single-syllable partial hits
+/// the user was reaching for keep their positions and the abbreviated
+/// words trail them.
+pub const COVERAGE_KIND_ABBREV: u8 = 2;
+
 /// Worst-case rowid hydration budget per partial-prefix lookup.
 /// Single-char prefixes (`tl:k`, `tl:t`) match hundreds of FST entries;
 /// this caps `dict.record(rowid)` calls so per-keystroke work stays
@@ -734,6 +745,14 @@ fn merge_custom_dedupe_sort(
         ));
     }
     dedupe_by_roman_hanji_span(&mut out);
+    sort_by_sort_key(out, raw_len)
+}
+
+/// The eight-dimension [`SortKey`] sort every continuous fetch ends with.
+/// `stable_idx` is the pre-sort element position (see
+/// [`merge_custom_dedupe_sort`] for why it is stamped via `enumerate()`
+/// rather than inside the key extractor).
+fn sort_by_sort_key(out: Vec<RawCandidate>, raw_len: u32) -> Vec<RawCandidate> {
     let mut indexed: Vec<(SortKey, RawCandidate)> = out
         .into_iter()
         .enumerate()
@@ -972,46 +991,24 @@ pub fn fetch_partial_prefix_candidates_unbounded(
         // bucketing is a hydration-budget policy only; the visible order is
         // still the downstream `SortKey` (recency / score / frequency).
         //
-        // The three phonetic modes (TPS/TL/POJ; English has no FST family)
-        // additionally drop acronym `*_abbrev` key surfaces: their
-        // short keys interleave with the single-syllable full keys in the
-        // shortest length bucket (TPS: Bopomofo orders all initials ahead of
-        // all vowels; TL/POJ: a 2-syllable acronym like `tl:sb` is the same
-        // byte length as the full single-syllable `tl:si` and sorts between
-        // `tl:sa` and `tl:si`), so they would otherwise win the
-        // shortest-first budget and starve the single-char readings out of
-        // the cap (user-reported: typing `s` surfaced only 沙 + 2-syllable
-        // phrases, never 是/sī). `is_tps_initial_only` / `is_roman_acronym_key`
-        // are conservative; the record-level `matches_continuous_*_toneless_prefix_key`
-        // guard below still validates every surviving rowid.
+        // Acronym `*_abbrev` keys live in their own `*-abbrev:` family
+        // (`create_fst.py`; `fetch_abbrev_candidates` is their only reader),
+        // so this range holds phonetic readings only and the shortest bucket
+        // is the single-syllable keys — no per-key exclusion (the pre-tag
+        // `skip_abbrev` heuristic) is needed to keep 是/sī from being starved
+        // by a wall of `tl:sb`-style acronym keys.
         // §35 — the TPS partial hydration resolves through the same
         // ambiguity pattern as the exact paths (single lookup authority):
         // bare `ㄇ` lists ㆬ… words alongside ㄇ… words. The matched key
         // travels with each rowid so the record guard below validates what
         // the pattern actually hit, not the literal prefix (Codex
         // post-impl 2026-08-19 BLOCK 1). TL/POJ keep the plain lookup.
-        let skip_abbrev = |key: &str| match ctx.mode {
-            phonetics::InputMode::Tps => {
-                phonetics::is_tps_initial_only(key.strip_prefix("tps:").unwrap_or(key))
-            }
-            phonetics::InputMode::Tl | phonetics::InputMode::Poj => {
-                phonetics::is_roman_acronym_key(
-                    key.strip_prefix("tl:")
-                        .or_else(|| key.strip_prefix("poj:"))
-                        .unwrap_or(key),
-                )
-            }
-            _ => false,
-        };
         let hits: Vec<(String, u32)> = if fst_key.starts_with("tps:") {
-            ctx.prefix_index.lookup_prefix_shortest_first_tps_readings(
-                fst_key,
-                PARTIAL_PREFIX_HYDRATE_CAP,
-                skip_abbrev,
-            )
+            ctx.prefix_index
+                .lookup_prefix_shortest_first_tps_readings(fst_key, PARTIAL_PREFIX_HYDRATE_CAP)
         } else {
             ctx.prefix_index
-                .lookup_prefix_shortest_first(fst_key, PARTIAL_PREFIX_HYDRATE_CAP, skip_abbrev)
+                .lookup_prefix_shortest_first(fst_key, PARTIAL_PREFIX_HYDRATE_CAP)
                 .into_iter()
                 .map(|rowid| (fst_key.to_string(), rowid))
                 .collect()
@@ -1040,19 +1037,6 @@ pub fn fetch_partial_prefix_candidates_unbounded(
             // matched form; the literal prefix would reject it.
             if !matches_continuous_toneless_prefix_key(&matched_key, &record.tl) {
                 continue;
-            }
-            // §35 abbrev-face guard, TPS pattern hits only: expanding the
-            // typed prefix can pull in a `tps_abbrev` KEY the literal range
-            // never reached (`tps:ㆬㄒ` under typed `tps:ㄇ`), and when the
-            // first syllable is a single glyph the acronym happens to be a
-            // byte-prefix of the toneless, so the prefix guard above passes
-            // it. Reject a hit whose matched body IS the record's acronym
-            // face — unless acronym == toneless (single-syllable words like
-            // 毋 `ㆬ`, where the "acronym" is the real reading).
-            if let Some(matched_body) = matched_key.strip_prefix("tps:") {
-                if is_tps_acronym_face_hit(matched_body, &record.tl) {
-                    continue;
-                }
             }
             // Tone pin: a strict-prefix extension is only eligible when
             // the syllables typed so far carry the typed tones (§17) / the
@@ -1458,25 +1442,6 @@ fn tps_face_starts_with((primary, variant): &(String, Option<String>), body: &st
     primary.starts_with(body) || variant.as_deref().is_some_and(|v| v.starts_with(body))
 }
 
-/// §35 abbrev-face guard for the TPS partial-prefix path: true when
-/// `matched_body` is one of the record's ACRONYM faces (primary
-/// `tps_abbrev`, or its C-3a or→er dialect variant — both are in the
-/// FST) and is NOT also one of its toneless faces. Pattern expansion can
-/// reach acronym keys the literal prefix range never scanned
-/// (`tps:ㆬㄒ` under typed `tps:ㄇ`), and a single-glyph first syllable
-/// makes the acronym a byte-prefix of the toneless, so the prefix guard
-/// alone passes it. The toneless exemption checks BOTH faces too: a
-/// variant-notone word (or-á — notone `ㄜㄚ` / variant `ㄛㄚ`, whose
-/// acronym faces coincide with them) must keep its legitimate variant
-/// hit (Codex confirms 2026-08-19).
-fn is_tps_acronym_face_hit(matched_body: &str, record_tl: &str) -> bool {
-    let abbrev_faces = with_tps_or_variant(phonetics::tps_abbrev_from_tl(record_tl));
-    if !tps_face_eq(&abbrev_faces, matched_body) {
-        return false;
-    }
-    !tps_face_eq(&tps_toneless_faces(record_tl), matched_body)
-}
-
 /// Select the toneless-key guard by FST key family. Production span-local
 /// and walker paths both route through here so a `poj:` key cannot hit the
 /// TL guard (which would always reject a POJ body) or vice versa; `tps:`
@@ -1491,6 +1456,64 @@ fn matches_continuous_toneless_key(key: &str, record_tl: &str) -> bool {
     } else {
         matches_continuous_tl_toneless_key(key, record_tl)
     }
+}
+
+/// Whole-buffer abbreviation lookup — every dictionary row indexed under
+/// `fst_key` in the abbreviation family (`tl-abbrev:ss` → 鎖匙 `só-sî`,
+/// `tps-abbrev:ㄙㄒ` → 鎖匙; `create_fst.py` emits one `*-abbrev:` key per
+/// ≥ 2-syllable row, `dictionary/common/abbrev.py`). `behavioral-invariants.md`
+/// §46.
+///
+/// The family tag is the authority: a `*-abbrev:` key can only be an
+/// abbreviation face, so no per-record face check is needed (build-time
+/// parity `tests/roman_num_face_parity.rs` / `tests/tps_abbrev_parity.rs`
+/// pins the column the key came from). The phonetic families never hold
+/// an abbreviation key, which is what lets the span-local / walker /
+/// partial-prefix fetches stay acronym-free without any heuristic. Caller
+/// gate: `composing::shadow::abbrev_query_key` (letters / glyphs only —
+/// no digit, tone mark or separator, so no [`TonePin`] or barrier can
+/// apply).
+///
+/// Per row: source `filter`, then [`record_to_candidate`] with
+/// [`COVERAGE_KIND_ABBREV`] at `consumed_span = (0, raw_len)`;
+/// `syllable_count` stays the record's (鎖匙 = 2). Sorted by the same
+/// [`SortKey`]; **not truncated** — the caller excludes rows already on
+/// screen first, then applies [`PARTIAL_PREFIX_OUTPUT_CAP`] (the Step 4b
+/// lesson, Codex PR #351). Custom entries are not merged here; the fetch
+/// that ran before already merged them for the same buffer. Hydration is
+/// uncapped: `tl-abbrev:tt` resolves ~8.5k rowids and a rank-blind cap in
+/// rowid order would drop the frequent words the sort exists to surface.
+pub fn fetch_abbrev_candidates(
+    fst_key: &str,
+    raw_len: u32,
+    ctx: &ContinuousFetchCtx<'_>,
+) -> Vec<RawCandidate> {
+    let filter = Filter::from_enabled_bitmask(ctx.enabled_sources_bitmask);
+    let rowids = ctx.prefix_index.lookup_exact(fst_key);
+    let mut out: Vec<RawCandidate> = Vec::with_capacity(rowids.len());
+    for rowid in rowids {
+        let Some(record) = ctx.dict.record(rowid) else {
+            continue;
+        };
+        if !DictionaryReader::passes_filter(record.bitmask, record.kautian_subtag, &filter) {
+            continue;
+        }
+        let effective = DictionaryReader::effective_source_bitmask(
+            record.bitmask,
+            record.kautian_subtag,
+            &filter,
+        );
+        out.push(record_to_candidate(
+            record,
+            effective,
+            (0, raw_len),
+            ctx.freq_map,
+            ctx.now_ms,
+            COVERAGE_KIND_ABBREV,
+        ));
+    }
+    dedupe_by_roman_hanji_span(&mut out);
+    sort_by_sort_key(out, raw_len)
 }
 
 /// Prefix-aware analog of [`matches_continuous_toneless_key`] for the
@@ -3112,40 +3135,6 @@ mod dispatcher_tests {
         // (`normalize_input(tsia̍h) → tsiah` ≠ "chiah").
         assert!(dispatch("poj:chiah", "tsia̍h"));
         assert!(!dispatch("tl:chiah", "tsia̍h"));
-    }
-}
-
-#[cfg(test)]
-mod abbrev_face_guard_tests {
-    use super::is_tps_acronym_face_hit;
-
-    // trace: 毋是 m̄-sī — abbrev face ㆬㄒ (per-syllable initials), toneless
-    // ㆬㄒㄧ; a matched ㆬㄒ is an acronym-only face → rejected.
-    #[test]
-    fn rejects_a_pure_acronym_face() {
-        assert!(is_tps_acronym_face_hit("ㆬㄒ", "m̄-sī"));
-    }
-
-    // trace: 毋 m̄ — single syllable, acronym == toneless == ㆬ → exempt.
-    #[test]
-    fn exempts_a_single_syllable_word_whose_acronym_is_its_reading() {
-        assert!(!is_tps_acronym_face_hit("ㆬ", "m̄"));
-    }
-
-    // trace: or-á — notone ㄜㄚ, or→er variant ㄛㄚ; acronym faces coincide
-    // with both toneless faces, so BOTH hits are legitimate readings and
-    // neither may be rejected (Codex confirm 2026-08-19: a primary-only
-    // exemption killed the variant hit; 5 production rows have this shape).
-    #[test]
-    fn exempts_both_toneless_faces_of_a_variant_notone_word() {
-        assert!(!is_tps_acronym_face_hit("ㄜㄚ", "or-á"));
-        assert!(!is_tps_acronym_face_hit("ㄛㄚ", "or-á"));
-    }
-
-    // trace: a full toneless body that is not an acronym face at all.
-    #[test]
-    fn ignores_non_acronym_bodies() {
-        assert!(!is_tps_acronym_face_hit("ㆬㄒㄧ", "m̄-sī"));
     }
 }
 

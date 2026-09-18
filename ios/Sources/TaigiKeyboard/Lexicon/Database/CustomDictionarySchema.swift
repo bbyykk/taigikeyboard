@@ -26,7 +26,11 @@ enum CustomDictionarySchema {
     /// Bump when `CustomDictionaryDerivation` logic changes or new derived
     /// columns are added — `CustomDictionaryMigrator` re-runs ALTER + backfill
     /// against any DB whose `PRAGMA user_version` is below this value.
-    static let schemaVersion = 3
+    /// v4 (2026-09-18): the search-key abbreviation face became the leading
+    /// spelling unit per syllable (`ph` / `th` / `kh` / `tsh` whole,
+    /// `behavioral-invariants.md` §46); the side table is re-derived, the
+    /// legacy `abbrev` column keeps its first-letter face.
+    static let schemaVersion = 4
 
     /// Derived column names backed by `CustomDictionaryDerivation`.
     /// Single source of truth for the `ALTER TABLE` migrator.

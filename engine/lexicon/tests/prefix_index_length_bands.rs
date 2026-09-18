@@ -6,21 +6,21 @@
 //! "every surviving entry, ordered shortest key first (byte order within
 //! a length), truncated to `cap`" no matter where the band edges fall.
 //!
-//! Fixture keys are deliberately NOT real readings — `skip` is supplied
-//! per test, so the phonetic predicates never run here.
+//! Fixture keys are deliberately NOT real readings — the walk has no
+//! phonetic knowledge; the abbreviation keys live in their own family so
+//! no per-key exclusion exists any more.
 
 use std::collections::BTreeMap;
 
 mod common;
 use common::{build_wire_index, wire_entry};
 
-/// Full-scan oracle: every fixture rowid under `prefix` whose key is not
-/// skipped, bucketed by key byte length, wire byte order within a bucket,
-/// truncated to `cap`.
-fn oracle(keys: &[(&str, u32)], prefix: &str, cap: usize, skip: impl Fn(&str) -> bool) -> Vec<u32> {
+/// Full-scan oracle: every fixture rowid under `prefix`, bucketed by key
+/// byte length, wire byte order within a bucket, truncated to `cap`.
+fn oracle(keys: &[(&str, u32)], prefix: &str, cap: usize) -> Vec<u32> {
     let mut wires: Vec<(Vec<u8>, usize, u32)> = keys
         .iter()
-        .filter(|(key, _)| key.starts_with(prefix) && !skip(key))
+        .filter(|(key, _)| key.starts_with(prefix))
         .map(|(key, rowid)| (wire_entry(key, *rowid), key.len(), *rowid))
         .collect();
     wires.sort();
@@ -39,13 +39,10 @@ fn oracle(keys: &[(&str, u32)], prefix: &str, cap: usize, skip: impl Fn(&str) ->
 fn cap_one_returns_shortest_key_even_when_a_longer_key_streams_first() {
     let keys = [("tl:taa", 1), ("tl:ta", 2)];
     let idx = build_wire_index("byte-vs-length", &keys);
+    assert_eq!(idx.lookup_prefix_shortest_first("tl:t", 1), vec![2]);
     assert_eq!(
-        idx.lookup_prefix_shortest_first("tl:t", 1, |_| false),
-        vec![2]
-    );
-    assert_eq!(
-        idx.lookup_prefix_shortest_first("tl:t", 1, |_| false),
-        oracle(&keys, "tl:t", 1, |_| false)
+        idx.lookup_prefix_shortest_first("tl:t", 1),
+        oracle(&keys, "tl:t", 1)
     );
 }
 
@@ -67,8 +64,8 @@ fn cap_filled_across_two_bands_matches_full_scan_oracle() {
     ];
     let idx = build_wire_index("two-bands", &keys);
     let cap = 3;
-    let got = idx.lookup_prefix_shortest_first("tl:t", cap, |_| false);
-    assert_eq!(got, oracle(&keys, "tl:t", cap, |_| false));
+    let got = idx.lookup_prefix_shortest_first("tl:t", cap);
+    assert_eq!(got, oracle(&keys, "tl:t", cap));
     assert_eq!(got, vec![10, 12, 21]);
 }
 
@@ -81,17 +78,13 @@ fn total_below_cap_reaches_unbounded_band_without_duplicates() {
     let long_key = format!("tl:t{long_body}");
     let keys = [("tl:ta", 1), ("tl:tai", 2), (long_key.as_str(), 3)];
     let idx = build_wire_index("unbounded", &keys);
-    assert_eq!(
-        idx.lookup_prefix_shortest_first("tl:t", 100, |_| false),
-        vec![1, 2, 3]
-    );
+    assert_eq!(idx.lookup_prefix_shortest_first("tl:t", 100), vec![1, 2, 3]);
 }
 
-/// `skip` runs once per distinct key, not per rowid, and rowids whose
-/// little-endian bytes contain `0xFF` or sort differently from their
-/// numeric value decode intact in byte order.
+/// Rowids whose little-endian bytes contain `0xFF` or sort differently
+/// from their numeric value decode intact, in byte order.
 #[test]
-fn skip_runs_once_per_key_and_rowid_bytes_decode_in_byte_order() {
+fn rowid_bytes_decode_in_byte_order() {
     // Byte order of the rowid tail: 256 = `00 01 00 00` < 255 = `FF 00 00
     // 00` < u32::MAX = `FF FF FF FF`.
     let keys = [
@@ -101,38 +94,10 @@ fn skip_runs_once_per_key_and_rowid_bytes_decode_in_byte_order() {
         ("tl:tb", 7),
         ("tl:tb", 8),
     ];
-    let idx = build_wire_index("skip-memo", &keys);
-    let mut seen: Vec<String> = Vec::new();
-    let got = idx.lookup_prefix_shortest_first("tl:t", 100, |key| {
-        seen.push(key.to_string());
-        key == "tl:tb"
-    });
-    assert_eq!(got, vec![256, 255, u32::MAX]);
-    assert_eq!(seen, vec!["tl:ta".to_string(), "tl:tb".to_string()]);
-}
-
-/// A skipped key's remaining rowids are not streamed (the walk re-seeks
-/// to the key's lex sibling) — but its extensions in the same band, the
-/// sibling key after it, and its longer extensions in a later band must
-/// all still be collected.
-#[test]
-fn skipped_key_reseek_keeps_extensions_and_following_keys() {
-    let keys = [
-        ("tl:tsi", 1),
-        ("tl:ts", 2),
-        ("tl:ts", 3),
-        ("tl:tt", 4),
-        ("tl:tsiah", 5),
-    ];
-    let idx = build_wire_index("reseek", &keys);
-    let mut seen: Vec<String> = Vec::new();
-    let got = idx.lookup_prefix_shortest_first("tl:t", 100, |key| {
-        seen.push(key.to_string());
-        key == "tl:ts"
-    });
-    assert_eq!(got, oracle(&keys, "tl:t", 100, |key| key == "tl:ts"));
-    assert_eq!(got, vec![4, 1, 5]);
-    assert_eq!(seen, vec!["tl:tsi", "tl:ts", "tl:tt", "tl:tsiah"]);
+    let idx = build_wire_index("rowid-bytes", &keys);
+    let got = idx.lookup_prefix_shortest_first("tl:t", 100);
+    assert_eq!(got, vec![256, 255, u32::MAX, 7, 8]);
+    assert_eq!(got, oracle(&keys, "tl:t", 100));
 }
 
 /// TPS variant: the substitution-count tiebreak inside one key length
@@ -144,9 +109,9 @@ fn skipped_key_reseek_keeps_extensions_and_following_keys() {
 fn tps_substitution_tiebreak_survives_band_walk() {
     let keys = [("tps:ㄇㄧ", 1), ("tps:ㆬㄧ", 2), ("tps:ㆬㄧㄚ", 3)];
     let idx = build_wire_index("tps-subst", &keys);
-    let hits = idx.lookup_prefix_shortest_first_tps_readings("tps:ㆬ", 1, |_| false);
+    let hits = idx.lookup_prefix_shortest_first_tps_readings("tps:ㆬ", 1);
     assert_eq!(hits, vec![("tps:ㆬㄧ".to_string(), 2)]);
-    let hits = idx.lookup_prefix_shortest_first_tps_readings("tps:ㆬ", 3, |_| false);
+    let hits = idx.lookup_prefix_shortest_first_tps_readings("tps:ㆬ", 3);
     assert_eq!(
         hits,
         vec![

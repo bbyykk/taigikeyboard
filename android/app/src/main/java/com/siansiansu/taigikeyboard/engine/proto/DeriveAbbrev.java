@@ -11,6 +11,10 @@ package com.siansiansu.taigikeyboard.engine.proto;
  * whitespace `[ &#92;t&#92;n&#92;x0B&#92;f&#92;r-]+`), diacritics stripped. Returns "" when
  * fewer than 2 syllables. Whitespace canonical = ASCII only (matches
  * Android JVM `Regex("[&#92;&#92;s-]+")` semantics; preserves NBSP as non-delimiter).
+ * LEGACY: this is the stored `abbrev` column's face (first letter). The
+ * index / search-key abbreviation face — one leading spelling unit per
+ * syllable, `ph` / `tsh` whole (§46) — is what `DeriveCustomSearchKeys`
+ * emits; no query reads the legacy column.
  * </pre>
  *
  * Protobuf type {@code taigi.engine.DeriveAbbrev}
@@ -160,6 +164,10 @@ public  final class DeriveAbbrev extends
    * whitespace `[ &#92;t&#92;n&#92;x0B&#92;f&#92;r-]+`), diacritics stripped. Returns "" when
    * fewer than 2 syllables. Whitespace canonical = ASCII only (matches
    * Android JVM `Regex("[&#92;&#92;s-]+")` semantics; preserves NBSP as non-delimiter).
+   * LEGACY: this is the stored `abbrev` column's face (first letter). The
+   * index / search-key abbreviation face — one leading spelling unit per
+   * syllable, `ph` / `tsh` whole (§46) — is what `DeriveCustomSearchKeys`
+   * emits; no query reads the legacy column.
    * </pre>
    *
    * Protobuf type {@code taigi.engine.DeriveAbbrev}

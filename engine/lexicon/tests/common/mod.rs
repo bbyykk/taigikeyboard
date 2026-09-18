@@ -227,3 +227,32 @@ pub fn build_wire_index(name: &str, entries: &[(&str, u32)]) -> lexicon::prefix_
     builder.finish().expect("finish");
     lexicon::prefix_index::PrefixIndex::open(&path).expect("open index")
 }
+
+/// A [`ContinuousFetchCtx`] with every source on, no user frequency, no
+/// custom entries and no tone pin — the neutral shape most lexicon tests
+/// start from; mutate the fields a test cares about after.
+pub fn neutral_ctx<'a>(
+    prefix_index: &'a lexicon::prefix_index::PrefixIndex,
+    dict: &'a lexicon::dictionary_reader::DictionaryReader,
+    freq_map: &'a ranking::FrequencyMap,
+    mode: InputMode,
+) -> ContinuousFetchCtx<'a> {
+    ContinuousFetchCtx {
+        enabled_sources_bitmask: u32::MAX,
+        freq_map,
+        now_ms: 0,
+        custom: &[],
+        prefix_index,
+        dict,
+        mode,
+        tone_pin: lexicon::TonePin::None,
+    }
+}
+
+/// The hanji of `candidates` in order (roman-only rows dropped).
+pub fn hanji_of(candidates: &[lexicon::RawCandidate]) -> Vec<&str> {
+    candidates
+        .iter()
+        .filter_map(|c| c.hanji.as_deref())
+        .collect()
+}

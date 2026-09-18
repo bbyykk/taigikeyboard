@@ -184,13 +184,17 @@ The fst is built offline by the Rust binary `engine/build-helpers/fst-builder` (
 
 ### 3.2 Key prefixes
 
-Logical keys (the `key_bytes` part before the separator) carry one of three semantic prefixes (UTF-8 ASCII):
+Logical keys (the `key_bytes` part before the separator) carry one of these semantic prefixes (UTF-8 ASCII):
 
 | Prefix | Indexed against | Example logical key |
 |---|---|---|
-| `tl:` | TL numeric, TL no-tone, TL abbreviation | `tl:hoo2boo5`, `tl:hooboo`, `tl:hb` |
-| `poj:` | POJ numeric, POJ no-tone, POJ abbreviation | `poj:ho2bo5`, `poj:hobo`, `poj:hb` |
+| `tl:` | TL numeric, TL no-tone | `tl:hoo2boo5`, `tl:hooboo` |
+| `poj:` | POJ numeric, POJ no-tone | `poj:ho2bo5`, `poj:hobo` |
+| `tps:` | TPS with tone marks, TPS no-tone (+ er↔or variant) | `tps:ㄏㆦ˫ㄅㆦˊ`, `tps:ㄏㆦㄅㆦ` |
+| `tl-abbrev:` / `poj-abbrev:` / `tps-abbrev:` | the per-syllable abbreviation face of the row (`tl_abbrev` / `poj_abbrev` / `tps_abbrev` + variant) | `tl-abbrev:hb`, `poj-abbrev:hb`, `tps-abbrev:ㄏㄅ` |
 | `hanzi:` | hanzi (for reverse lookup, prefix search only) | `hanzi:好` |
+
+The abbreviation face has its own family per romanization (`behavioral-invariants.md` §46, 2026-09-18) so a prefix scan over a phonetic family never meets an acronym key: the continuous-input hydration needs no acronym heuristics, `lexicon::fetch_abbrev_candidates` reads the abbreviation family alone, and Tab3 `lexicon::search` unions both families to keep acronym search. `lexicon::key_normalizer::abbrev_family_key` derives the twin key.
 
 **Invariant**: the prefix is added by `lexicon::key_normalizer::build` based on `(KeyType, KeyMode)` at the engine seam. Callers (platform classifiers, `lexicon::search`) MUST NOT prepend the prefix themselves.
 
@@ -382,11 +386,11 @@ The build pipeline must:
 
 1. Sort `association.bin` keys by raw UTF-8 byte order ascending.
 2. Sort each association key's entries by `count` DESC.
-3. Emit fst via `engine/build-helpers/fst-builder` — keys carry the prefix (`tl:` / `poj:` / `hanzi:`) and the value packs rowid in the low 32 bits.
+3. Emit fst via `engine/build-helpers/fst-builder` — keys carry the family prefix (`tl:` / `poj:` / `tps:` / `*-abbrev:` / `hanzi:`) and the value packs rowid in the low 32 bits.
 4. Use bit positions exactly per §4.
 5. Set magic bytes per §1, §2.
 6. Use version `3` for `dictionary.bin` (v2 added per-record `syllable_count`; v3 added per-record `kautian_subtag`) and version `1` for `association.bin`.
-7. Include all six trie key forms (TL num/no-tone/abbrev, POJ num/no-tone/abbrev) plus `hanzi:` keys for reverse lookup.
+7. Include every key form (TL / POJ / TPS num + no-tone under the phonetic family, each abbreviation under its `*-abbrev:` family) plus `hanzi:` keys for reverse lookup.
 
 ---
 

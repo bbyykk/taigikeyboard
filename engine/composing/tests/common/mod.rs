@@ -136,7 +136,9 @@ pub fn fst_entry(family: &[u8], body: &str, rowid: u32) -> Vec<u8> {
 
 /// `dictionary.fst` with the toneless `tl:` family, the `poj:` family
 /// (derived per row via `derive_poj_notone`) and the `tps:` family plus its
-/// er↔or variant — the same chain as `create_fst.py`.
+/// er↔or variant, and for multi-syllable rows the `<family>-abbrev:` acronym
+/// key — the same chain as `create_fst.py`. Only the whole-buffer
+/// abbreviation lookup (§46) reads the acronym family.
 pub fn build_dictionary_fst(rows: &[Row]) -> PathBuf {
     let mut entries: Vec<Vec<u8>> = Vec::with_capacity(rows.len());
     for (idx, row) in rows.iter().enumerate() {
@@ -151,6 +153,17 @@ pub fn build_dictionary_fst(rows: &[Row]) -> PathBuf {
             let tps_notone_var = phonetics::tps_notone_or_variant(&tps_notone);
             if !tps_notone_var.is_empty() {
                 entries.push(fst_entry(b"tps:", &tps_notone_var, rowid));
+            }
+        }
+        // `extract_abbrev` / `extract_tps_abbrev` are "" for one syllable;
+        // the acronym face goes to the family's own `*-abbrev:` range (§46).
+        for (family, abbrev) in [
+            (&b"tl-abbrev:"[..], phonetics::derive_abbrev(row.tl)),
+            (&b"poj-abbrev:"[..], phonetics::poj_abbrev_from_tl(row.tl)),
+            (&b"tps-abbrev:"[..], phonetics::tps_abbrev_from_tl(row.tl)),
+        ] {
+            if !abbrev.is_empty() {
+                entries.push(fst_entry(family, &abbrev, rowid));
             }
         }
     }

@@ -111,7 +111,7 @@ fn prefix_readings_surface_both_nasal_families_shortest_first() {
             ("tps:ㄎㄚ", 99),   // unrelated — must not hydrate
         ],
     );
-    let hits = index.lookup_prefix_shortest_first_tps_readings("tps:ㄇ", 10, |_| false);
+    let hits = index.lookup_prefix_shortest_first_tps_readings("tps:ㄇ", 10);
     // trace: lengths — ㆬ=1 glyph < the 3-glyph words; among equal length,
     // 名 ㄇㄧㄚ subst 0 first; then ㆬㄊㄤ before ㆬㄒㄧ (both subst 1,
     // byte order: ㄊ U+310A < ㄒ U+3112). Each rowid carries its MATCHED
@@ -129,27 +129,17 @@ fn prefix_readings_surface_both_nasal_families_shortest_first() {
 }
 
 #[test]
-fn prefix_readings_respect_the_skip_closure() {
-    let index = build_wire_index("tps-readings", &[("tps:ㆬ", 20), ("tps:ㄇㄧㄚ", 11)]);
-    let hits =
-        index.lookup_prefix_shortest_first_tps_readings("tps:ㄇ", 10, |key| key == "tps:ㆬ");
-    assert_eq!(hits, vec![("tps:ㄇㄧㄚ".to_string(), 11)]);
-}
-
-#[test]
-fn prefix_readings_can_reach_an_acronym_key_the_literal_range_cannot() {
-    // Documented hazard behind the abbrev-face guard in
-    // `fetch_partial_prefix_candidates`: expanding bare ㄇ pulls in the
-    // acronym key `tps:ㆬㄒ` (毋是's per-syllable initials), which the
-    // literal `tps:ㄇ` range never scans. The lookup layer surfaces it —
-    // the record-level guard (matched body == the record's acronym face,
-    // acronym != toneless) is what rejects it downstream.
-    let index = build_wire_index("tps-readings", &[("tps:ㆬㄒ", 30), ("tps:ㆬㄒㄧ", 21)]);
-    let hits = index.lookup_prefix_shortest_first_tps_readings("tps:ㄇ", 10, |_| false);
-    assert_eq!(
-        hits,
-        vec![("tps:ㆬㄒ".to_string(), 30), ("tps:ㆬㄒㄧ".to_string(), 21),],
+fn prefix_readings_never_meet_an_abbreviation_key() {
+    // 毋是's abbreviation face ㆬㄒ is indexed under `tps-abbrev:` (§46),
+    // not `tps:`, so expanding bare ㄇ reaches only the reading ㆬㄒㄧ. This
+    // is what retired the abbrev-face guard the partial-prefix path used to
+    // need — the family split is the guarantee now.
+    let index = build_wire_index(
+        "tps-readings",
+        &[("tps-abbrev:ㆬㄒ", 30), ("tps:ㆬㄒㄧ", 21)],
     );
+    let hits = index.lookup_prefix_shortest_first_tps_readings("tps:ㄇ", 10);
+    assert_eq!(hits, vec![("tps:ㆬㄒㄧ".to_string(), 21)]);
 }
 
 #[test]
@@ -157,7 +147,7 @@ fn unambiguous_prefix_returns_the_stored_matched_key() {
     // No family glyph in the prefix: matched keys are still the STORED
     // keys, not the query prefix — the record guards depend on it.
     let index = build_wire_index("tps-readings", &[("tps:ㄚㄒㄧ", 40), ("tps:ㄚ", 41)]);
-    let hits = index.lookup_prefix_shortest_first_tps_readings("tps:ㄚ", 10, |_| false);
+    let hits = index.lookup_prefix_shortest_first_tps_readings("tps:ㄚ", 10);
     assert_eq!(
         hits,
         vec![("tps:ㄚ".to_string(), 41), ("tps:ㄚㄒㄧ".to_string(), 40),],
