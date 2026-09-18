@@ -38,11 +38,9 @@ final class HardwareKeyIntentTests: XCTestCase {
         XCTAssertEqual(HardwareKeyIntent.intent(for: key("。", code: .keyboardPeriod), isComposing: false), .input("。"))
     }
 
-    func testSpace_isSpace_withoutABar_andTheAlternateScriptWithOne() {
-        let space = key(" ", code: .keyboardSpacebar)
-        XCTAssertEqual(HardwareKeyIntent.intent(for: space, isComposing: true), .space)
-        XCTAssertEqual(HardwareKeyIntent.intent(for: space, isComposing: false), .space)
-        XCTAssertEqual(HardwareKeyIntent.intent(for: space, isComposing: true, isShowingCandidates: true), .commitAlternateScript)
+    func testSpace_isSpace_inBothStates() {
+        XCTAssertEqual(HardwareKeyIntent.intent(for: key(" ", code: .keyboardSpacebar), isComposing: true), .space)
+        XCTAssertEqual(HardwareKeyIntent.intent(for: key(" ", code: .keyboardSpacebar), isComposing: false), .space)
     }
 
     // MARK: - Fixed tier
@@ -107,56 +105,16 @@ final class HardwareKeyIntentTests: XCTestCase {
             let press = key(character)
             XCTAssertEqual(
                 HardwareKeyIntent.intent(for: press, isComposing: true, isShowingCandidates: true),
-                .selectCandidateSlot(slot, flip: false),
+                .selectCandidateSlot(slot),
             )
             // With no bar the same key is what it types.
             XCTAssertEqual(HardwareKeyIntent.intent(for: press, isComposing: true), .input(character))
         }
     }
 
-    func testShiftedSlotKey_flipsItsSlot_andIsTheCapitalWithNoBar() {
+    func testShiftedSlotKey_typesTheCapital() {
         let shifted = key("Q", ignoringModifiers: "q", code: .keyboardQ, modifiers: .shift)
-        XCTAssertEqual(HardwareKeyIntent.intent(for: shifted, isComposing: true, isShowingCandidates: true), .selectCandidateSlot(0, flip: true))
-        XCTAssertEqual(HardwareKeyIntent.intent(for: shifted, isComposing: true), .input("Q"))
-        // `⇧;` types `:`; the key code still says which key was pressed.
-        let colon = key(":", ignoringModifiers: ":", code: .keyboardSemicolon, modifiers: .shift)
-        XCTAssertEqual(HardwareKeyIntent.intent(for: colon, isComposing: true, isShowingCandidates: true), .selectCandidateSlot(8, flip: true))
-    }
-
-    // MARK: - User bindings and shortcuts
-
-    func testTheShortcuts_fireWhereverTheCompositionStands() {
-        let backtick = key("`", code: .keyboardGraveAccentAndTilde)
-        XCTAssertEqual(HardwareKeyIntent.intent(for: backtick, isComposing: false), .shortcut(.toggleTranslateSwapped))
-        XCTAssertEqual(HardwareKeyIntent.intent(for: backtick, isComposing: true, isShowingCandidates: true), .shortcut(.toggleTranslateSwapped))
-        let ctrlCmdC = key("\u{3}", ignoringModifiers: "c", code: .keyboardC, modifiers: [.control, .command])
-        XCTAssertEqual(HardwareKeyIntent.intent(for: ctrlCmdC, isComposing: false), .shortcut(.toggleRomanization))
-        XCTAssertEqual(HardwareKeyIntent.intent(for: ctrlCmdC, isComposing: true), .shortcut(.toggleRomanization))
-    }
-
-    func testARecordedChord_reachesItsAction_andAnUnrecordedModifierStillFallsToTheHost() throws {
-        let optionReturn = try HardwareKeyChord.make(key: "\r", modifiers: .alternate).get()
-        let bindings = HardwareKeyBindings(composing: [.pageForward: optionReturn])
-        let press = key("\r", code: .keyboardReturnOrEnter, modifiers: .alternate)
-        XCTAssertEqual(
-            HardwareKeyIntent.intent(for: press, isComposing: true, isShowingCandidates: true, bindings: bindings),
-            .navigate(.pageForward),
-        )
-        // The default table has nothing on ⌥Return, so it is the host's.
-        XCTAssertEqual(HardwareKeyIntent.intent(for: press, isComposing: true, isShowingCandidates: true), .commitThenPassThrough)
-        // A cleared row: `]` types a bracket even with the bar up.
-        let cleared = HardwareKeyBindings(composing: [.pageForward: nil])
-        XCTAssertEqual(
-            HardwareKeyIntent.intent(for: key("]", code: .keyboardCloseBracket), isComposing: true, isShowingCandidates: true, bindings: cleared),
-            .input("]"),
-        )
-    }
-
-    func testAnUnboundReturn_stillEndsTheComposition() throws {
-        // ⇧Return moved onto paging; Return stays on confirm; bare Return
-        // with no bar up is not a confirm, and falls to the fixed rule.
-        let enter = key("\r", code: .keyboardReturnOrEnter)
-        XCTAssertEqual(HardwareKeyIntent.intent(for: enter, isComposing: true), .commitLiteral)
+        XCTAssertEqual(HardwareKeyIntent.intent(for: shifted, isComposing: true, isShowingCandidates: true), .input("Q"))
     }
 
     func testBrackets_pageWhileTheBarIsUp_andTypeOtherwise() {
@@ -186,16 +144,12 @@ final class HardwareKeyIntentTests: XCTestCase {
 
     func testCapsLockAndKeypad_doNotMakeAChord() {
         let capsQ = key("Q", ignoringModifiers: "Q", code: .keyboardQ, modifiers: .alphaShift)
-        XCTAssertEqual(HardwareKeyIntent.intent(for: capsQ, isComposing: true, isShowingCandidates: true), .selectCandidateSlot(0, flip: false))
+        XCTAssertEqual(HardwareKeyIntent.intent(for: capsQ, isComposing: true, isShowingCandidates: true), .selectCandidateSlot(0))
         let keypadFive = key("5", code: .keypad5, modifiers: .numericPad)
         XCTAssertEqual(HardwareKeyIntent.intent(for: keypadFive, isComposing: true), .input("5"))
     }
 
     func testNamedKeys_areTheHosts_afterTheCompositionEnds() {
-        // Whatever string UIKit reports for a named key, the position decides.
-        let leftNamed = key(UIKeyCommand.inputLeftArrow, code: .keyboardLeftArrow)
-        XCTAssertEqual(HardwareKeyIntent.intent(for: leftNamed, isComposing: true), .commitThenPassThrough)
-        XCTAssertEqual(HardwareKeyIntent.intent(for: leftNamed, isComposing: true, isShowingCandidates: true), .navigate(.previous))
         let f5 = key("\u{F708}", code: .keyboardF5)
         XCTAssertEqual(HardwareKeyIntent.intent(for: f5, isComposing: true, isShowingCandidates: true), .commitThenPassThrough)
         XCTAssertEqual(HardwareKeyIntent.intent(for: f5, isComposing: false), .passThrough)

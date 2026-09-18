@@ -166,7 +166,6 @@ extension KeyboardViewController {
         lastCandidateDisplayMode = state.keyboardContext.candidateDisplayMode
         // Left nil so the first syncSettings() applies the collapse once.
         lastIsHardwareKeyboardCompact = nil
-        hardwareKeyBindings = keyboardSettings.hardwareKeyBindings
     }
 
     /// Called at initial setup and from syncSettings() when input mode changes.
@@ -263,10 +262,6 @@ extension KeyboardViewController {
             lastCandidateDisplayMode = currentCandidateDisplayMode
             state.keyboardContext.notifyDisplayChange()
         }
-
-        // The 快速齒 pane writes chords one row at a time; each write lands
-        // here and re-resolves the whole contract.
-        hardwareKeyBindings = keyboardSettings.hardwareKeyBindings
 
         // The 外接齒盤 collapse toggle lands here from the host app.
         let currentHardwareKeyboardCompact = keyboardSettings.isHardwareKeyboardCompact

@@ -28,15 +28,6 @@ final class HardwareKeyboardState {
     /// collapse state into KeyboardKit at once rather than on the next key.
     var onChange: (() -> Void)?
 
-    /// Bumped by the 拍開符號選單 shortcut; `TaigiKeyboardView` toggles the
-    /// symbol overlay on each change. A counter rather than a flag, so two
-    /// presses in a row are two toggles.
-    private(set) var symbolPickerToggles = 0
-
-    func requestSymbolPickerToggle() {
-        symbolPickerToggles += 1
-    }
-
     // `nonisolated(unsafe)`: read once more from `deinit`, which is nonisolated;
     // both are set in `init` and never written again.
     nonisolated(unsafe) private let notificationCenter: NotificationCenter

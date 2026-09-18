@@ -254,10 +254,6 @@ struct TaigiKeyboardView: View {
                 panels.closeAll()
             }
         }
-        .onChange(of: hardwareKeyboard?.symbolPickerToggles ?? 0) { _, _ in
-            // The 拍開符號選單 shortcut, the same toggle as the toolbar button.
-            toggleSymbolPanel()
-        }
         .onChange(of: composingManager.isComposing) { _, isComposing in
             guard isComposing else { return }
             if panels.isSymbolExpanded {
@@ -269,16 +265,6 @@ struct TaigiKeyboardView: View {
         }
     }
 
-
-    /// Opens the symbol overlay, or closes it when it is the open one.
-    private func toggleSymbolPanel() {
-        let wasOpen = panels.isSymbolExpanded
-        panels.closeAll()
-        expandState.collapse()
-        if !wasOpen {
-            panels.isSymbolExpanded = true
-        }
-    }
 
     // MARK: - Candidate Bar
 
@@ -316,7 +302,14 @@ struct TaigiKeyboardView: View {
                     panels.isLayoutExpanded = true
                 }
             },
-            onSymbolTap: toggleSymbolPanel,
+            onSymbolTap: {
+                let wasOpen = panels.isSymbolExpanded
+                panels.closeAll()
+                expandState.collapse()
+                if !wasOpen {
+                    panels.isSymbolExpanded = true
+                }
+            },
             onDismissKeyboard: { [unowned services] in
                 panels.closeAll()
                 services.actionHandler.handle(.dismissKeyboard)

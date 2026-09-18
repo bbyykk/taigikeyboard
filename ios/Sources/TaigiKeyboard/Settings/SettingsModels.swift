@@ -119,15 +119,6 @@ public enum CandidateDisplayMode: String, CaseIterable, Codable {
         stored && showsHanji
     }
 
-    /// The mode after this one, wrapping — what the cycle shortcut steps to.
-    // CROSS-PLATFORM INVARIANT — mirrors macos `CandidateDisplayMode.next`
-    // (`macos/Sources/TaigiInputMethodCore/Settings/EngineSettings.swift`).
-    var next: CandidateDisplayMode {
-        let all = Self.allCases
-        let index = all.firstIndex(of: self) ?? all.startIndex
-        return all[(index + 1) % all.count]
-    }
-
     // Resolved at the call site via the environment store (same reactive
     // pattern as `FontType.displayNameKey`).
     var displayNameKey: StringKey {

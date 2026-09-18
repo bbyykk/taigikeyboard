@@ -24,7 +24,7 @@ kautian subcollections (腔調 + 姓名附錄 toggles + 語音差異 詞級擴�
 
 ### iPad external keyboard — hardware-key composing in the iOS extension (USER-scoped 2026-09-18)
 
-**Status**: PR1 MERGED `1634eceb` (#77, 2026-09-18). PR2 in progress (branch `feat/ipad-hardware-shortcuts`). PR3 not started. Dogfood S47 / S48 pending (USER 2026-09-18 「最後再 dogfood」).
+**Status**: PR1 in progress (branch `feat/ipad-hardware-keyboard`). PR2 / PR3 not started.
 USER 2026-09-18: 「for ios, design and implement iPad 外接鍵盤, 鍵盤佈局, 設定、快速齒、外觀等等選單參考 macOS 實作」.
 
 **Why**: the keyboard extension has no hardware-key path at all (`grep pressesBegan ios/` = 0 hits, 2026-09-18). With a Magic Keyboard attached a letter reaches the host through the `UIResponder.insertText` override (`KeyboardExtension/KeyboardViewController.swift:298`) and never composes. macOS already owns the whole key contract (`macos/.../Controller/ComposingKeyIntent.swift`, `ComposingAction.swift`, `ComposingKeyBindings.swift`, `Settings/ShortcutSettingsView.swift`); iPad mirrors it.
@@ -49,15 +49,15 @@ iOS deviation, deliberate: idle Backspace / letters / punctuation route through 
 
 | PR | Scope | Status |
 |---|---|---|
-| PR1 | classifier + dispatcher + slot keys/labels + navigation + compact bar + setting toggle + S47 | MERGED #77 |
-| PR2 | 快速齒 pane on iOS (Settings › 鍵盤 › 快速齒, iPad): the seven `HardwareComposingAction` rows + the four switches that apply on iOS (`HardwareShortcutAction`: toggleRomanization ⌃⌘C, cycleCandidateDisplayMode ⌃⌘H, toggleTranslateSwapped `` ` ``, showSymbolPicker ⌃⌘,), recorder = an invisible first responder's `pressesBegan` (`HardwareKeyCaptureView`), storage `composingShortcut.<raw>` / `hardwareShortcut.<raw>` in the App Group with the desktop's `"<d/c/o/s>\|<hex>"` chord encoding (`HardwareKeyChord`); `HardwareKeyBindings` resolves duplicates (stored beats default, last writer wins, always-bound pool restored, a chord on both rosters fires the shortcut); Space with the bar up = `commitAlternateScript`, ⇧slot = the same aimed at a slot (`ActionHandler.handleAlternateScript` → `alternateCommit`, the twin of macOS `CandidateDocumentText.resolvedAlternate`) | in progress |
+| PR1 | classifier + dispatcher + slot keys/labels + navigation + compact bar + setting toggle + S47 | in progress |
+| PR2 | 快速齒 pane on iOS: the seven `ComposingAction` rows + global actions that apply on iOS (toggleRomanization ⌃⌘C, cycleCandidateDisplayMode ⌃⌘H, toggleTranslateSwapped `` ` ``, showSymbolPicker ⌃⌘,), recorder via `pressesBegan`, same `composingShortcut.<raw>` encoding; `commitAlternateScript` on Space + ⇧slot (alternate-script commit primitive ported from `CandidateDocumentText.alternateText`) | not started |
 | PR3 | TPS hardware mapping (QWERTY → bopomofo via the TPS `TaigiLayouts` table), ⌥← / ⌥→ caret (`MoveCaret` bridge), compact-bar appearance review | not started |
 
 **Rejected**: `UIKeyCommand` table (swallows keys before `UIKeyInput`, and cannot express "only while composing"); `keyCommands` for slot keys (same); Telex scheme on iOS (iOS has no `ToneInputScheme`; digits stay tones, letters pick).
 
-**Decided under auto mode (2026-09-18)**: the iOS global roster carries the four switches only; `openLastSettingsPane` (an extension cannot open its host app without a URL round-trip) and `showTelexGuide` (no Telex scheme on iOS) are left out. Idle Return / unbound Return mid-composition fall to the fixed rule (newline / commit as typed) so the key that sends is never swallowed.
+**Open, USER-decided when PR2 opens**: whether the global shortcut roster on iOS also carries `openLastSettingsPane` (⌃⌘S — an extension cannot open its host app without a URL round-trip).
 
-**Dogfood**: S47 (PR1), S48 (PR2).
+**Dogfood**: S47.
 
 ---
 
