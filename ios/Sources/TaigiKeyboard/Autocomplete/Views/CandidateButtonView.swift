@@ -17,9 +17,6 @@ struct CandidateButtonView: View {
     /// The top-ranked candidate (engine ranker index 0) — fills the keycap
     /// background as a visual hint.
     let isFirstCandidate: Bool
-    /// The hardware slot key that picks this cell (`q`…`;`), drawn as a
-    /// caption while an external keyboard is attached; nil otherwise.
-    var shortcutLabel: String? = nil
     let onTap: (AutocompleteSuggestion) -> Void
 
     @State private var isPressed = false
@@ -75,14 +72,6 @@ struct CandidateButtonView: View {
         style.itemStyle.cornerRadius ?? 8
     }
 
-    private var titleText: some View {
-        Text(displayTitle)
-            .font(KeyboardFonts.globalFont(size: theme.primaryFontSize))
-            .fontWeight(.regular)
-            .foregroundColor(theme.primaryTextColor)
-            .lineLimit(1)
-    }
-
     var body: some View {
         Button(action: {
             onTap(CandidateCellHelper.suggestionToHandle(
@@ -93,16 +82,11 @@ struct CandidateButtonView: View {
             ))
         }) {
             VStack(alignment: .center, spacing: 0) {
-                if let shortcutLabel {
-                    HStack(alignment: .firstTextBaseline, spacing: 3) {
-                        Text(shortcutLabel)
-                            .font(KeyboardFonts.globalFont(size: theme.secondaryFontSize))
-                            .foregroundColor(theme.secondaryTextColor)
-                        titleText
-                    }
-                } else {
-                    titleText
-                }
+                Text(displayTitle)
+                    .font(KeyboardFonts.globalFont(size: theme.primaryFontSize))
+                    .fontWeight(.regular)
+                    .foregroundColor(theme.primaryTextColor)
+                    .lineLimit(1)
 
                 if let subtitle = renderedSubtitle {
                     Text(subtitle)

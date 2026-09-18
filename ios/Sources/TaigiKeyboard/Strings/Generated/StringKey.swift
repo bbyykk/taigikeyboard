@@ -214,8 +214,6 @@ enum StringKey: String {
     case settingsDiagnosticShare = "i18n_settings_diagnosticShare"
     case settingsDiagnosticEmail = "i18n_settings_diagnosticEmail"
     case settingsOpenApp = "i18n_settings_openApp"
-    case settingsHardwareKeyboardCompact = "i18n_settings_hardwareKeyboardCompact"
-    case settingsHardwareKeyboardCompactInfo = "i18n_settings_hardwareKeyboardCompactInfo"
     case symbolFullWidth = "i18n_symbol_fullWidth"
     case symbolHalfWidth = "i18n_symbol_halfWidth"
     case symbolHiragana = "i18n_symbol_hiragana"

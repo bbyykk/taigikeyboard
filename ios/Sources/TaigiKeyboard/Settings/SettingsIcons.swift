@@ -11,7 +11,6 @@ enum SettingsIcons {
     static let autoSpace = "space"
     static let toolbar = "menubar.rectangle"
     static let globeKey = "globe"
-    static let hardwareKeyboard = "keyboard"
     static let soundFeedback = "speaker.wave.2"
     static let vibrationFeedback = "iphone.radiowaves.left.and.right"
 }

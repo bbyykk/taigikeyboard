@@ -36,8 +36,6 @@ protocol KeyboardEnvironment: AnyObject {
     // Global setting, not per-theme: read directly by call sites with no per-render snapshot.
     var fontType: FontType { get }
     var keyboardLayoutType: KeyboardLayoutType { get }
-    /// Whether the key rows hide while an external keyboard is attached.
-    var isHardwareKeyboardCompact: Bool { get }
 
     /// App Group `UserDefaults` used as the notification filter for
     /// `UserDefaults.didChangeNotification`. The controller observes changes
