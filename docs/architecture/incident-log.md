@@ -49,6 +49,8 @@ One entry per incident: what went wrong, the USER's words where they set the rul
 
 - **v3.5.8 連續輸入 plan** — drafted a `nextword` integration assuming it fetches bigram predictions; `engine/nextword/src/api.rs:42-84` showed it only filters / scores what the platform feeds. One read flipped direction and reasoning.
 
+- **2026-09-18 iPad external keyboard (PRs #77 / #78 / #80 / #83, reverted)** — three PRs built hardware-key composing on `UIInputViewController.pressesBegan`, with "iPadOS delivers `pressesBegan` to the extension" listed only as an unverified dogfood assumption. Real-iPad dogfood: hardware keys reach the host as plain ASCII; the extension never receives `UIPress` events (iPadOS routes them to the host app's responder chain only — the same limit every third-party keyboard has, e.g. PTT iOS 2023-07-24「ipad不接受第三方輸入法在鍵盤上已經被詬病了很久」). USER: 「為什麼一開始planning的階段沒有跟我說不能做？」 / 「ios不支援第三方輸入法做外接鍵盤,revert外接鍵盤相關的功能」. A platform-capability assumption that the whole plan rests on gets a 20-line spike PR on device BEFORE the plan, not a dogfood row after it.
+
 ## Maps to `.claude/rules/phonetics.md`
 
 ### Authoritative-source-only (CLAUDE.md Core Principle #3)
