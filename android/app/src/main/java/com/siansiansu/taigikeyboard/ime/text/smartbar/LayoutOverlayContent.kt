@@ -46,6 +46,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.siansiansu.taigikeyboard.ime.core.themeBackground
 import com.siansiansu.taigikeyboard.R
 import com.siansiansu.taigikeyboard.i18n.generated.L10n
 import com.siansiansu.taigikeyboard.i18n.generated.StringKey
@@ -118,7 +119,7 @@ fun LayoutOverlayContent(
         modifier =
             modifier
                 .fillMaxSize()
-                .keyboardOverlayBackdrop(appearance.gradientStops, appearance.solidBackground, topInsetPx)
+                .themeBackground(appearance.background, appearance.solidBackground, topInsetPx)
                 .verticalScroll(rememberScrollState())
                 .padding(top = 10.dp, bottom = 4.dp),
     ) {

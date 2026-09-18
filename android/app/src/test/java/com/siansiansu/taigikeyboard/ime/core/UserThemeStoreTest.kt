@@ -17,9 +17,11 @@ class UserThemeStoreTest {
         fun store(): UserThemeStore = UserThemeStore(read = { json }, write = { json = it })
     }
 
+    // A fully seeded theme (what the editor saves), with a blue solid background so it
+    // differs from the seed and survives load()'s seeding untouched.
     private fun theme(name: String = "T", shadow: Float = 0f): UserTheme {
-        val colors = KeyboardColorSettings(backgroundColor = 0xFF0000FF.toInt())
-        val appearance = ThemeAppearance.DEFAULT.copy(colors = colors, keyShadowIntensity = shadow)
+        val colors = UserThemeSeed.colors.copy(background = ThemeBackground.Solid(0xFF0000FF.toInt()))
+        val appearance = ThemeAppearance.USER_THEME_SEED.copy(colors = colors, keyShadowIntensity = shadow)
         return UserTheme(UUID.randomUUID().toString(), name, appearance, createdAt = 0L, updatedAt = 0L)
     }
 
@@ -82,7 +84,7 @@ class UserThemeStoreTest {
     fun addAndLoad_fullAppearance_roundTrips() {
         val store = MemoryStore().store()
         val appearance = ThemeAppearance(
-            colors = KeyboardColorSettings(backgroundColor = 0xFF00FF00.toInt()),
+            colors = UserThemeSeed.colors.copy(background = ThemeBackground.Solid(0xFF00FF00.toInt())),
             keyShadowIntensity = 0.4f,
             keyHeightScale = 1.1f,
             keyFontSizeScale = 0.9f,
@@ -93,5 +95,26 @@ class UserThemeStoreTest {
         val t = UserTheme(UUID.randomUUID().toString(), "Full", appearance, createdAt = 0L, updatedAt = 0L)
         assertTrue(store.add(t))
         assertEquals(listOf(t), store.load())
+    }
+
+    // A theme saved with null roles (before the seed existed) decodes with every null role
+    // filled from UserThemeSeed and the set roles untouched -> the theme no longer follows
+    // light / dark (USER 2026-09-19); nothing is written back. Mirrors iOS
+    // testLoad_seedsNilRoles_keepsSetRoles (Android seeds in UserTheme.fromJson, so every
+    // read path — store, PrefHelper.loadUserThemes, observeUserThemes — is covered).
+    @Test
+    fun load_seedsNullRoles_keepsSetRoles() {
+        val partial = ThemeAppearance.DEFAULT.copy(colors = KeyboardColorSettings(keyTextColor = 0xFF112233.toInt()))
+        val t = UserTheme(UUID.randomUUID().toString(), "Partial", partial, createdAt = 0L, updatedAt = 0L)
+        val memory = MemoryStore().apply { json = UserTheme.encodeList(listOf(t)) }
+
+        val loaded = memory.store().load().single()
+
+        assertEquals(0xFF112233.toInt(), loaded.appearance.colors.keyTextColor)
+        assertEquals(UserThemeSeed.BACKGROUND, loaded.appearance.colors.background)
+        assertEquals(UserThemeSeed.NORMAL_KEY_FILL, loaded.appearance.colors.normalKeyFillColor)
+        assertEquals(UserThemeSeed.SPECIAL_KEY_FILL, loaded.appearance.colors.specialKeyFillColor)
+        assertEquals(UserThemeSeed.CANDIDATE_TEXT, loaded.appearance.colors.candidateTextColor)
+        assertEquals("load never writes back", UserTheme.encodeList(listOf(t)), memory.json)
     }
 }

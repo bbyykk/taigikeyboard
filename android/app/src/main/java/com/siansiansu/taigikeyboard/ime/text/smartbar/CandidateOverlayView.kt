@@ -16,6 +16,7 @@ import com.siansiansu.taigikeyboard.R
 import com.siansiansu.taigikeyboard.i18n.DisplayLanguage
 import com.siansiansu.taigikeyboard.i18n.ProvideDisplayLanguage
 import com.siansiansu.taigikeyboard.ime.core.CompositionRoot
+import com.siansiansu.taigikeyboard.ime.core.ThemeBackground
 import com.siansiansu.taigikeyboard.ime.core.PrefHelper
 import com.siansiansu.taigikeyboard.ime.core.TaigiKeyboard
 import com.siansiansu.taigikeyboard.ime.core.logging.debug
@@ -51,10 +52,10 @@ class CandidateOverlayView : FrameLayout {
     private val fullWidthPunctuationState = mutableStateOf(false)
     private val candidateDisplayModeState = mutableStateOf(CandidateDisplayMode.SIDE_BY_SIDE)
 
-    // Resolved theme background gradient stops (ARGB), or null for a flat/default theme.
+    // Resolved theme background (solid / gradient), or null for the adaptive default.
     // Set on show() from the theme SmartbarManager already resolved, so the overlay
-    // paints the gradient backdrop instead of the flat `?smartbar_bgColor` chrome.
-    private val backgroundGradientState = mutableStateOf<List<Int>?>(null)
+    // paints the theme surface instead of the flat `?smartbar_bgColor` chrome.
+    private val backgroundState = mutableStateOf<ThemeBackground?>(null)
 
     // Resolved theme candidateTextColor (ARGB), or null for the adaptive default theme.
     // A light-only theme sets it so overlay text/control glyphs stay dark over the light
@@ -124,7 +125,7 @@ class CandidateOverlayView : FrameLayout {
                         isFullWidthPunctuation = isFullWidthPunctuation,
                         candidateDisplayMode = candidateDisplayMode,
                         resetKey = resetKey,
-                        backgroundGradient = backgroundGradientState.value,
+                        background = backgroundState.value,
                         candidateTextColor = candidateTextColorState.value,
                         onSuggestionSelected = { word, index -> onSuggestionSelected?.invoke(word, index) },
                         onCollapse = {
@@ -149,13 +150,13 @@ class CandidateOverlayView : FrameLayout {
      * Show overlay.
      * @param suggestions candidate list
      * @param keyboardHeight total keyboard height (overlay covers the full keyboard incl. smartbar)
-     * @param backgroundGradient resolved theme gradient stops (ARGB), or null for a flat theme
+     * @param background the resolved theme background, or null for the adaptive default
      * @param candidateTextColor resolved theme candidate text color (ARGB), or null for the adaptive default
      */
     fun show(
         suggestions: List<TaigiWord>,
         keyboardHeight: Int,
-        backgroundGradient: List<Int>?,
+        background: ThemeBackground?,
         candidateTextColor: Int?,
     ) {
         if (isShowing) return
@@ -165,7 +166,7 @@ class CandidateOverlayView : FrameLayout {
         translateSwappedState.value = smartbarManager.getCachedIsTranslateSwapped()
         fullWidthPunctuationState.value = smartbarManager.getCachedIsFullWidthPunctuation()
         candidateDisplayModeState.value = prefs.candidateDisplayMode
-        backgroundGradientState.value = backgroundGradient
+        backgroundState.value = background
         candidateTextColorState.value = candidateTextColor
 
         if (keyboardHeight > 0) {

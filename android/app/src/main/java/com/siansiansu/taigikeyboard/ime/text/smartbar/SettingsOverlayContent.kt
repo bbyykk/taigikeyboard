@@ -35,6 +35,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
+import com.siansiansu.taigikeyboard.ime.core.themeBackground
 import com.siansiansu.taigikeyboard.R
 import com.siansiansu.taigikeyboard.i18n.generated.L10n
 import com.siansiansu.taigikeyboard.i18n.stringRes
@@ -111,7 +112,7 @@ fun SettingsOverlayContent(
         modifier =
             Modifier
                 .fillMaxSize()
-                .keyboardOverlayBackdrop(appearance.gradientStops, appearance.solidBackground, topInsetPx)
+                .themeBackground(appearance.background, appearance.solidBackground, topInsetPx)
                 .verticalScroll(rememberScrollState())
                 .padding(top = 4.dp, bottom = 8.dp),
     ) {

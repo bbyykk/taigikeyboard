@@ -25,12 +25,16 @@ import androidx.compose.ui.unit.dp
 import com.siansiansu.taigikeyboard.i18n.generated.L10n
 import com.siansiansu.taigikeyboard.ui.theme.AppStyle
 
+/**
+ * A labeled color swatch row. The reset icon shows while [onReset] is non-null (the caller
+ * passes null when the value already equals its default, or when the row has no default).
+ */
 @Composable
 fun ColorRow(
     label: String,
-    color: Int?,
+    color: Int,
     onColorClick: () -> Unit,
-    onReset: () -> Unit,
+    onReset: (() -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -53,16 +57,12 @@ fun ColorRow(
                 Modifier
                     .size(32.dp)
                     .clip(CircleShape)
-                    .background(
-                        if (color != null) Color(color) else Color.LightGray,
-                    ).border(
-                        width = if (color != null) 1.dp else 2.dp,
-                        color = if (color != null) Color.Gray else Color.DarkGray,
-                        shape = CircleShape,
-                    ).clickable(onClick = onColorClick),
+                    .background(Color(color))
+                    .border(width = 1.dp, color = Color.Gray, shape = CircleShape)
+                    .clickable(onClick = onColorClick),
         )
 
-        if (color != null) {
+        if (onReset != null) {
             Spacer(Modifier.width(4.dp))
             Icon(
                 imageVector = Icons.Default.Refresh,

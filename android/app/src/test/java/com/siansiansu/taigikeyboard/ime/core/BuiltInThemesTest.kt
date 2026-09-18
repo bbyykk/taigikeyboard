@@ -120,7 +120,7 @@ class BuiltInThemesTest {
     @Test
     fun keyStyleFamilies_framedGradientStillCarriesGradient() {
         for (id in listOf("framedPink", "cleanPink")) {
-            assertTrue("$id must keep the gradient", BuiltInThemes.theme(id)!!.colors(isDark = false).hasBackgroundGradient)
+            assertNotNull("$id must keep the gradient", BuiltInThemes.theme(id)!!.colors(isDark = false).backgroundGradient)
         }
     }
 
@@ -129,8 +129,7 @@ class BuiltInThemesTest {
     fun keyStyleFamilies_defaultVariantsAdaptiveWithTransparentKeys() {
         for (id in listOf("framedDefault", "cleanDefault")) {
             val colors = BuiltInThemes.theme(id)!!.colors(isDark = false)
-            assertNull("$id keeps adaptive background", colors.backgroundColor)
-            assertFalse("$id is the adaptive 預設, no gradient", colors.hasBackgroundGradient)
+            assertNull("$id keeps adaptive background", colors.background)
             assertNull("$id keeps adaptive text", colors.keyTextColor)
             assertEquals("$id keys are transparent", 0, colors.normalKeyFillColor)
         }
@@ -141,8 +140,8 @@ class BuiltInThemesTest {
     fun standardGradientThemes_carryGradient() {
         for (id in listOf("standardPink", "standardGold", "standardBlue", "standardGreen", "standardPurple")) {
             val theme = BuiltInThemes.theme(id)!!
-            assertTrue("$id light must carry a gradient", theme.colors(false).hasBackgroundGradient)
-            assertTrue("$id dark must carry a gradient", theme.colors(true).hasBackgroundGradient)
+            assertNotNull("$id light must carry a gradient", theme.colors(false).backgroundGradient)
+            assertNotNull("$id dark must carry a gradient", theme.colors(true).backgroundGradient)
         }
     }
 
@@ -170,9 +169,9 @@ class BuiltInThemesTest {
             assertNotNull("$id must define the dark variant", theme.dark)
             val colors = theme.colors(isDark = true)
             assertEquals("$id light request falls back to the dark variant", colors, theme.colors(isDark = false))
-            assertTrue("$id must carry the Catppuccin gradient", colors.hasBackgroundGradient)
-            assertEquals("$id gradient top = Mocha Base", 0xFF1E1E2E.toInt(), colors.backgroundGradient!!.stops.first())
-            assertEquals("$id gradient bottom = Mocha Mantle", 0xFF181825.toInt(), colors.backgroundGradient!!.stops.last())
+            assertNotNull("$id must carry the Catppuccin gradient", colors.backgroundGradient)
+            assertEquals("$id gradient top = Mocha Base", 0xFF1E1E2E.toInt(), colors.backgroundGradient?.stops?.first())
+            assertEquals("$id gradient bottom = Mocha Mantle", 0xFF181825.toInt(), colors.backgroundGradient?.stops?.last())
             assertEquals("$id key text = Mocha Text", 0xFFCDD6F4.toInt(), colors.keyTextColor)
             assertEquals("$id candidate text = Mocha Text", 0xFFCDD6F4.toInt(), colors.candidateTextColor)
         }
@@ -190,7 +189,7 @@ class BuiltInThemesTest {
 
     @Test
     fun colorsForScheme_darkOnlyFallsBackToDark() {
-        val dark = KeyboardColorSettings(backgroundColor = 0xFF112233.toInt())
+        val dark = KeyboardColorSettings(background = ThemeBackground.Solid(0xFF112233.toInt()))
         val theme = BuiltInTheme("test_dark_only", StringKey.THEME_PALETTE_DEFAULT, light = null, dark = dark)
         assertEquals(dark, theme.colors(isDark = false))
         assertEquals(dark, theme.colors(isDark = true))
@@ -198,7 +197,7 @@ class BuiltInThemesTest {
 
     @Test
     fun colorsForScheme_lightOnlyFallsBackToLight() {
-        val light = KeyboardColorSettings(backgroundColor = 0xFFAABBCC.toInt())
+        val light = KeyboardColorSettings(background = ThemeBackground.Solid(0xFFAABBCC.toInt()))
         val theme = BuiltInTheme("test_light_only", StringKey.THEME_PALETTE_DEFAULT, light = light, dark = null)
         assertEquals(light, theme.colors(isDark = true))
         assertEquals(light, theme.colors(isDark = false))
@@ -206,8 +205,8 @@ class BuiltInThemesTest {
 
     @Test
     fun colorsForScheme_picksRequestedVariant() {
-        val light = KeyboardColorSettings(backgroundColor = 0xFF111111.toInt())
-        val dark = KeyboardColorSettings(backgroundColor = 0xFF222222.toInt())
+        val light = KeyboardColorSettings(background = ThemeBackground.Solid(0xFF111111.toInt()))
+        val dark = KeyboardColorSettings(background = ThemeBackground.Solid(0xFF222222.toInt()))
         val theme = BuiltInTheme("test_both", StringKey.THEME_PALETTE_DEFAULT, light = light, dark = dark)
         assertEquals(light, theme.colors(isDark = false))
         assertEquals(dark, theme.colors(isDark = true))
@@ -219,14 +218,14 @@ class BuiltInThemesTest {
         // Function keys forced to the same fill as letter keys; light fill = opaque white.
         assertEquals(colors.normalKeyFillColor, colors.specialKeyFillColor)
         assertEquals(0xFFFFFFFF.toInt(), colors.normalKeyFillColor)
-        // The gradient owns the background; the candidate bar is transparent over it.
-        assertNull(colors.backgroundColor)
-        assertNull(colors.candidateBackgroundColor)
+        // The gradient owns the whole surface (no solid colour beside it).
+        assertNotNull(colors.backgroundGradient)
     }
 
     @Test
     fun standardBlue_gradientStopsAreExpectedArgb_light() {
-        val gradient = BuiltInThemes.theme("standardBlue")!!.colors(isDark = false).backgroundGradient!!
-        assertEquals(listOf(0xFFBFD2EA.toInt(), 0xFFDCE2EC.toInt()), gradient.stops)
+        val gradient = BuiltInThemes.theme("standardBlue")!!.colors(isDark = false).backgroundGradient
+        assertEquals(listOf(0xFFBFD2EA.toInt(), 0xFFDCE2EC.toInt()), gradient?.stops)
+        assertEquals("built-in gradients stay vertical", ThemeGradient.DEFAULT_ANGLE, gradient?.angle)
     }
 }

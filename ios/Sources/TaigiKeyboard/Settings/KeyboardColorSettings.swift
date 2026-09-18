@@ -61,7 +61,7 @@ struct CodableColor: Codable, Equatable {
 /// every `ThemeGradient` a render site sees is renderable. Decode is
 /// forward-compatible: an `angle` absent from old JSON reads as `defaultAngle`.
 // CROSS-PLATFORM INVARIANT — mirrors android .../ime/core/KeyboardColorSettings.kt ThemeGradient
-// (stops + angle, same degree convention and unit-point math; Android mirror lands in PR B).
+// (stops + angle, same degree convention and unit-point math).
 struct ThemeGradient: Codable, Equatable {
     /// Vertical top→bottom, the direction every built-in gradient theme uses.
     static let defaultAngle: Double = 180
@@ -135,7 +135,7 @@ extension LinearGradient {
 ///
 /// JSON: `{"type":"solid","color":{…}}` / `{"type":"gradient","stops":[…],"angle":180}`.
 // CROSS-PLATFORM INVARIANT — mirrors android .../ime/core/KeyboardColorSettings.kt ThemeBackground
-// (same `type` discriminator and field names; Android mirror lands in PR B).
+// (same `type` discriminator and field names; Android stores the colour as an ARGB int).
 enum ThemeBackground: Codable, Equatable {
     case solid(CodableColor)
     case gradient(ThemeGradient)
@@ -291,8 +291,8 @@ extension KeyboardColorSettings: Codable {
 /// carries a `nil` (scheme-following) role and renders identically in light and
 /// dark mode (USER 2026-09-19). Background is the light keyboard grey; the special
 /// key fill is KeyboardKit's light dark-button grey.
-// CROSS-PLATFORM INVARIANT — mirrors android .../ime/core/KeyboardColorSettings.kt USER_THEME_SEED
-// (Android mirror lands in PR B). Drift = a new custom theme starts from different colors per platform.
+// CROSS-PLATFORM INVARIANT — mirrors android .../ime/core/KeyboardColorSettings.kt UserThemeSeed
+// Drift = a new custom theme starts from different colors per platform.
 enum UserThemeSeed {
     static let solidColor = CodableColor(hex: 0xD4D5DD)
     static let background = ThemeBackground.solid(solidColor)

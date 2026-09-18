@@ -238,7 +238,6 @@
     <string name="i18n_theme_paletteGreen">Jade</string>
     <string name="i18n_theme_palettePurple">Wisteria</string>
     <string name="i18n_theme_paletteCatppuccin">Catppuccin</string>
-    <string name="i18n_theme_keyboardSection">Keyboard Surface</string>
     <string name="i18n_theme_backgroundSection">Background</string>
     <string name="i18n_theme_backgroundTypeSolid">Solid</string>
     <string name="i18n_theme_backgroundTypeGradient">Gradient</string>
@@ -252,7 +251,6 @@
     <string name="i18n_theme_colorNormalKeyFill">Normal Key Fill</string>
     <string name="i18n_theme_colorSpecialKeyFill">Special Key Fill</string>
     <string name="i18n_theme_colorCandidateText">Candidate Text</string>
-    <string name="i18n_theme_colorCandidateBackground">Candidate Background</string>
     <string name="i18n_theme_keyHeight">Keyboard Height</string>
     <string name="i18n_theme_keyFontSize">Key Font Size</string>
     <string name="i18n_theme_candidateTextSize">Candidate Text Size</string>

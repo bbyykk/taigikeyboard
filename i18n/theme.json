@@ -66,11 +66,6 @@
       "scope": { "platforms": ["android", "ios"], "surfaces": ["host"] },
       "values": { "hanji": "暗眠山貓", "tailo": "Àm-bîn-suann-niau", "poj": "Àm-bîn-soaⁿ-niau", "en": "Catppuccin", "ja": "キャットプチン" }
     },
-    "keyboardSection": {
-      "comment": "Theme editor section header: the keyboard-surface group (background color + key height). Android-only until its editor re-order lands (PR B); iOS uses backgroundSection since 2026-09-19.",
-      "scope": { "platforms": ["android"], "surfaces": ["host"] },
-      "values": { "hanji": "齒盤介面", "tailo": "Khí-puânn kài-bīn", "poj": "Khí-pôaⁿ kài-bīn", "en": "Keyboard Surface", "ja": "キーボード面" }
-    },
     "backgroundSection": {
       "comment": "Theme editor section header: the background group (type picker + its rows). One surface for the keyboard and the candidate bar.",
       "scope": { "platforms": ["android", "ios"], "surfaces": ["host"] },
@@ -135,11 +130,6 @@
       "comment": "Theme editor color-row label: the candidate text color.",
       "scope": { "platforms": ["android", "ios"], "surfaces": ["host"] },
       "values": { "hanji": "候選詞文字", "tailo": "Hāu-suán sû bûn-jī", "poj": "Hāu-soán sû bûn-jī", "en": "Candidate Text", "ja": "候補の文字" }
-    },
-    "colorCandidateBackground": {
-      "comment": "Theme editor color-row label: the candidate-bar background color. Android-only until the candidate bar merges into the keyboard surface there (PR B); iOS dropped it 2026-09-19.",
-      "scope": { "platforms": ["android"], "surfaces": ["host"] },
-      "values": { "hanji": "候選詞背景", "tailo": "Hāu-suán sû puē-kíng", "poj": "Hāu-soán sû pōe-kéng", "en": "Candidate Background", "ja": "候補の背景" }
     },
     "keyHeight": {
       "comment": "Theme editor slider label: keyboard height scale.",

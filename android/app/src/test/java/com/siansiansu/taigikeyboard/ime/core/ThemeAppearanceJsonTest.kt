@@ -14,7 +14,7 @@ class ThemeAppearanceJsonTest {
     @Test
     fun jsonRoundTrip_fullAppearance() {
         val appearance = ThemeAppearance(
-            colors = KeyboardColorSettings(backgroundColor = 0xFF00FF00.toInt()),
+            colors = KeyboardColorSettings(background = ThemeBackground.Solid(0xFF00FF00.toInt())),
             keyShadowIntensity = 0.25f,
             keyHeightScale = 1.1f,
             keyFontSizeScale = 0.9f,
