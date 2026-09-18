@@ -75,6 +75,20 @@ public final class TaigiInputController: IMKInputController {
     @MainActor
     private(set) var isSymbolPickerOpen = false
 
+    /// Whether the open picker put its placeholder into the client
+    /// (`presentSymbolPicker`) — it does not over a selection — so
+    /// `dismissSymbolPicker` clears exactly what was written and never an
+    /// empty region the client did not have.
+    @MainActor
+    private var isSymbolPickerPlaceholderMarked = false
+
+    /// What the picker marks in the document while it is up: one space,
+    /// underlined like a composition (vChewing `getAttributedStringPlaceholder`).
+    /// A space rather than a zero-width character: what the client shows is
+    /// what the user is picking over, and a zero-width leftover would be
+    /// invisible.
+    private static let symbolPickerPlaceholder = " "
+
     /// The chord on the picker row, read at activation rather than per key:
     /// the registry read decodes JSON out of `UserDefaults`, and every
     /// keystroke would otherwise pay it before the composing contract ran.
@@ -247,6 +261,9 @@ public final class TaigiInputController: IMKInputController {
             // up by the outgoing session would be picked from by this one.
             controller.symbolPickerPresenter.hideForHandover()
             controller.isSymbolPickerOpen = false
+            // Dropped, not cleared: activation makes no client call, and the
+            // deactivation IMK sends first already cleared it (`endSession`).
+            controller.isSymbolPickerPlaceholderMarked = false
             controller.symbolPickerShortcut = KeyboardShortcuts.getShortcut(for: .showSymbolPicker)
             // Whatever space a previous focus left armed was measured against
             // a document this activation may no longer be looking at.
@@ -1066,7 +1083,7 @@ public final class TaigiInputController: IMKInputController {
             }
             guard !manager.isComposing else { return }
         }
-        presentSymbolPicker(in: client, bindings: bindings)
+        presentSymbolPicker(in: client, executing: executor, bindings: bindings)
     }
 
     /// Shows the whole table anchored to the caret — one list, in file
@@ -1074,15 +1091,51 @@ public final class TaigiInputController: IMKInputController {
     /// category to choose first 「會造成使用者的體驗中斷」) — and records the
     /// picker as open.
     ///
-    /// The caret is asked for with no marked text: the composition is over
-    /// by the time the picker opens, and index 0 is the insertion point a
-    /// client answers for. A list that did not reach the screen — no caret,
-    /// no display for it — leaves nothing behind: a picker recorded as open
-    /// over a window nobody can see would go on swallowing the slot keys.
+    /// The list goes up over a PLACEHOLDER marked region — one underlined
+    /// space, the caret after it — and not over a bare insertion point, even
+    /// though the composition is over by the time the picker opens. A host
+    /// that is not a Cocoa text view reads "no marked text" as "no input
+    /// method at work": Chromium (Chrome, and every Electron app) forwards
+    /// the real key event to the page unless marked text was present around
+    /// the input method's turn, so with nothing marked the arrows walked the
+    /// list AND moved the page's caret, and Return picked the symbol AND
+    /// submitted the message (USER report 2026-09-18, 「揤↑↓←→了後拍字的位會
+    /// 家己走去，而且揤「Enter」拍袂出來」). vChewing keeps the same
+    /// placeholder for the same list — `.ofSymbolTable` with nothing typed
+    /// (`IMEStateParsed4Darwin.swift:256-266`, `InputSession_HandleStates.swift:58-64`:
+    /// 「避免 inline display 為空導致 IMK 誤判 composition 已結束、將 keyboard
+    /// event 洩漏給客體應用」).
+    ///
+    /// Not over a selection: marked text replaces the selection the way
+    /// typing does (`NSTextInputClient.setMarkedText`), and clearing it on
+    /// Escape would not bring the selected text back. A selection is what
+    /// the pick replaces, so the list opens over it with nothing marked —
+    /// the one case that keeps the bare anchor. A client that cannot say
+    /// what is selected is read as a caret, as the auto-space swap reads it.
+    ///
+    /// The placeholder goes in first, so the caret walk reads its rectangle
+    /// — index 0 of the marked region, which is what a client answers a line
+    /// height for. A list that did not reach the screen — no caret, no
+    /// display for it — leaves nothing behind, the placeholder included: a
+    /// picker recorded as open over a window nobody can see would go on
+    /// swallowing the slot keys.
     @MainActor
-    private func presentSymbolPicker(in client: IMKTextInput, bindings: ComposingKeyBindings) {
+    private func presentSymbolPicker(
+        in client: IMKTextInput,
+        executing executor: ComposingEffectExecutor,
+        bindings: ComposingKeyBindings,
+    ) {
         isSymbolPickerOpen = true
-        guard let table = symbolTable, let caretRect = caretRect(in: client, markedTextLength: 0) else {
+        let selection = client.selectedRange()
+        var markedTextLength = 0
+        if selection.location == NSNotFound || selection.length == 0 {
+            isSymbolPickerPlaceholderMarked = true
+            markedTextLength = Self.symbolPickerPlaceholder.utf16.count
+            executor.execute(.updatePreedit(Self.symbolPickerPlaceholder, caretUTF16: markedTextLength))
+        }
+        guard let table = symbolTable,
+              let caretRect = caretRect(in: client, markedTextLength: markedTextLength)
+        else {
             dismissSymbolPicker()
             return
         }
@@ -1167,10 +1220,26 @@ public final class TaigiInputController: IMKInputController {
         manager.noteCharacterTypedOutsideComposition(symbol)
     }
 
+    /// Takes the list down and its placeholder with it — from `lastClient`,
+    /// the client this session marks (`inputControllerWillClose` clears a
+    /// leftover region through the same reference). Cleared BEFORE anything
+    /// the picker's key then writes: a pick inserts over a document with no
+    /// marked region, exactly as it did before the placeholder existed, so
+    /// the auto-space swap's `selectedRange()` and absolute `replacementRange`
+    /// still measure committed text — with a marked region up, IMK reads a
+    /// replacement range from the start of the marked text instead. Only
+    /// what went in comes out, so a host never gets an empty region it did
+    /// not have (McBopomofo #346); the flag drops before the write, so a
+    /// client callback that re-enters here finds nothing left to clear.
     @MainActor
     private func dismissSymbolPicker() {
         isSymbolPickerOpen = false
         symbolPickerPresenter.hide(ownedBy: sessionToken)
+        guard isSymbolPickerPlaceholderMarked else { return }
+        isSymbolPickerPlaceholderMarked = false
+        if let client = lastClient {
+            ClientEffectExecutor(client: client).execute(.clearPreeditWithoutCommit)
+        }
     }
 
     // MARK: - Full-width punctuation

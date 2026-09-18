@@ -26,12 +26,19 @@ final class RecordingTextInputClient: NSObject, IMKTextInput {
 
     /// The document text `attributedSubstring(from:)` slices out of. Nil — the
     /// default — answers nil for every range, like a client that cannot serve
-    /// substring queries at all. When set, every `insertText` is applied to it
-    /// and moves `selectedRangeToReturn` past the inserted text, the way a real
-    /// client's document and caret follow the edits — so a multi-step case
-    /// (commit → auto space → swap → swap again) verifies each step against
-    /// the state the previous one produced rather than against its fixture.
+    /// substring queries at all. When set, every `insertText` and
+    /// `setMarkedText` is applied to it and moves `selectedRangeToReturn` the
+    /// way a real client's document and caret follow the edits — so a
+    /// multi-step case (commit → auto space → swap → swap again, or mark a
+    /// placeholder → clear it → swap) verifies each step against the state
+    /// the previous one produced rather than against its fixture.
     var documentTextForReads: String?
+
+    /// Where the marked text sits in `documentTextForReads`, while there is
+    /// one. Marked text goes in over the selection (or the previous marked
+    /// region), as the real client does, and an at-caret `insertText`
+    /// replaces it (`IMKInputSession.h:63-74`).
+    private(set) var markedRangeInDocument: NSRange?
 
     /// The replacement range of each `insertText`, in write order — how a case
     /// tells an at-caret insert from a rewrite of committed text.
@@ -90,6 +97,32 @@ final class RecordingTextInputClient: NSObject, IMKTextInput {
         let target: NSRange
         if replacementRange.location != NSNotFound, NSMaxRange(replacementRange) <= documentText.length {
             target = replacementRange
+        } else if let marked = markedRangeInDocument {
+            target = marked
+        } else if selectedRangeToReturn.location != NSNotFound,
+                  NSMaxRange(selectedRangeToReturn) <= documentText.length
+        {
+            target = selectedRangeToReturn
+        } else {
+            return
+        }
+        markedRangeInDocument = nil
+        documentTextForReads = documentText.replacingCharacters(in: target, with: text)
+        selectedRangeToReturn = NSRange(
+            location: target.location + (text as NSString).length,
+            length: 0,
+        )
+    }
+
+    /// Applies a marked-text write to the simulated document: the text
+    /// replaces the marked region if there is one, else the selection; an
+    /// empty write removes the region and leaves the caret where it began.
+    private func simulateMarkedText(_ text: String, selectionRange: NSRange) {
+        guard let document = documentTextForReads else { return }
+        let documentText = document as NSString
+        let target: NSRange
+        if let marked = markedRangeInDocument {
+            target = marked
         } else if selectedRangeToReturn.location != NSNotFound,
                   NSMaxRange(selectedRangeToReturn) <= documentText.length
         {
@@ -98,16 +131,15 @@ final class RecordingTextInputClient: NSObject, IMKTextInput {
             return
         }
         documentTextForReads = documentText.replacingCharacters(in: target, with: text)
-        selectedRangeToReturn = NSRange(
-            location: target.location + (text as NSString).length,
-            length: 0,
-        )
+        let length = (text as NSString).length
+        markedRangeInDocument = length > 0 ? NSRange(location: target.location, length: length) : nil
+        selectedRangeToReturn = NSRange(location: target.location + min(selectionRange.location, length), length: 0)
     }
 
     func setMarkedText(_ string: Any!, selectionRange: NSRange, replacementRange _: NSRange) {
-        writes.append(
-            .setMarkedText(Self.plainText(string), selectionLocation: selectionRange.location),
-        )
+        let text = Self.plainText(string)
+        writes.append(.setMarkedText(text, selectionLocation: selectionRange.location))
+        simulateMarkedText(text, selectionRange: selectionRange)
         lastMarkedTextAttributes = (string as? NSAttributedString)
             .flatMap { $0.length > 0 ? $0.attributes(at: 0, effectiveRange: nil) : [:] } ?? [:]
     }
