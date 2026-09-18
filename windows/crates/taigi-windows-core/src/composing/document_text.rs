@@ -221,7 +221,10 @@ mod tests {
             assert_eq!(cell.annotation, None);
             assert_eq!(alternate_text(&c, &settings), None);
         }
+        // Spelled out: the fresh default is hanji-first, and this is the
+        // pair the document derives under roman-only, not the default.
         let derived = EngineSettings {
+            is_translate_swapped: false,
             candidate_display_mode: CandidateDisplayMode::RomanOnly,
             ..EngineSettings::default()
         };

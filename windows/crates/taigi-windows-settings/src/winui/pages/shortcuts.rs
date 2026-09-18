@@ -8,6 +8,7 @@
 //! is the tier's. Last writer wins across both registries
 //! (`ShortcutConflicts`), and the loser's row visibly empties.
 
+use super::reset_row;
 use crate::winui::cards;
 use crate::winui::window::{Message, RecorderTarget, ResetScope, SettingsWindow};
 use taigi_windows_core::candidates::HorizontalPageLayout;
@@ -91,14 +92,7 @@ pub fn view(
         // Both registries at once, and no conflict pass afterwards: the
         // shipped defaults hold no chord in common
         // (`ShortcutSettingsView.swift` `restoreDefaults`).
-        cards::section_gap(),
-        cards::action_row(
-            strings.resolve(StringKey::ThemeEditorResetAll),
-            strings.resolve(StringKey::SettingsReset),
-            false,
-            true,
-            context.callback(|()| Message::Reset(ResetScope::Shortcuts)),
-        ),
+        reset_row(strings, ResetScope::Shortcuts, context),
     ))
 }
 

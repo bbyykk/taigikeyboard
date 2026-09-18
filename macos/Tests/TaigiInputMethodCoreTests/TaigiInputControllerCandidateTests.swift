@@ -955,11 +955,12 @@ final class TaigiInputControllerCandidateTests: XCTestCase {
     /// main actor before re-reading, so the re-render is one turn away.
     func testChangingTheDisplayMode_refetchesTheOpenBarInPlace() async throws {
         let key = SettingsStore.Keys.candidateDisplayMode.name
-        // Both keys start from "never touched" and go back to whatever they
-        // held — `withSetting` is synchronous, and this case has to await.
-        for name in [key, SettingsStore.Keys.isTranslateSwapped.name] {
-            clearSettingRestoredAtTeardown(name)
-        }
+        // The mode starts from "never touched" and the swap roman-first — so
+        // a 並排 cell's `text` IS the romanization the assertions compare —
+        // and both go back to whatever they held: `withSetting` is
+        // synchronous, and this case has to await.
+        clearSettingRestoredAtTeardown(key)
+        setSettingRestoredAtTeardown(SettingsStore.Keys.isTranslateSwapped.name, to: false)
         let session = try composedSession()
         let before = try XCTUnwrap(session.presenter.shownContent).cells
         XCTAssertTrue(before.contains { $0.annotation != nil }, "side by side shows both scripts")
@@ -1005,9 +1006,10 @@ final class TaigiInputControllerCandidateTests: XCTestCase {
     /// becomes two adjacent one-script cells, the bar stays up.
     func testCycleCandidateDisplayShortcut_refetchesTheOpenBar() async throws {
         let key = SettingsStore.Keys.candidateDisplayMode.name
-        for name in [key, SettingsStore.Keys.isTranslateSwapped.name] {
-            clearSettingRestoredAtTeardown(name)
-        }
+        // Roman-first like the case above: the leading cell's `text` is the
+        // romanization `assertRomanizationFollowsHanji` looks for.
+        clearSettingRestoredAtTeardown(key)
+        setSettingRestoredAtTeardown(SettingsStore.Keys.isTranslateSwapped.name, to: false)
         let session = try composedSession()
         let before = try XCTUnwrap(session.presenter.shownContent).cells
         XCTAssertTrue(before.contains { $0.annotation != nil }, "side by side shows both scripts")

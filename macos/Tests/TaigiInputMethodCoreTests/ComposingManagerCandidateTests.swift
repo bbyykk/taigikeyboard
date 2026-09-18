@@ -13,8 +13,14 @@ final class ComposingManagerCandidateTests: XCTestCase {
         InstalledLexicon.installOnce()
     }
 
+    /// The stub's own settings — roman-first, unlike the shipped default —
+    /// so a case that renders a candidate's text renders it the way the
+    /// manager it drives was told to.
+    private let settings = StubEngineSettingsProvider()
+
     private func makeManager() throws -> ComposingManager {
         try TestFixtures.makeComposingManager(
+            settingsProvider: settings,
             startingGeneration: TestFixtures.generationCounter.next(),
         )
     }
@@ -102,7 +108,7 @@ final class ComposingManagerCandidateTests: XCTestCase {
         XCTAssertFalse(manager.isComposing)
         XCTAssertEqual(
             executor.committedTexts,
-            [CandidateDocumentText.text(for: candidate, settings: .defaults)],
+            [CandidateDocumentText.text(for: candidate, settings: settings.current)],
             "one document mutation, carrying the rendering the settings asked for — "
                 + "asserting only the count would pass with the canonical key sent by mistake",
         )
@@ -183,7 +189,7 @@ final class ComposingManagerCandidateTests: XCTestCase {
         let executor = RecordingEffectExecutor()
         composeTaigi(manager, executing: executor)
         let candidate = try XCTUnwrap(partialCandidate(from: manager))
-        let nailedText = CandidateDocumentText.text(for: candidate, settings: .defaults)
+        let nailedText = CandidateDocumentText.text(for: candidate, settings: settings.current)
         executor.clearEffects()
 
         _ = manager.commitCandidate(candidate, executing: executor)

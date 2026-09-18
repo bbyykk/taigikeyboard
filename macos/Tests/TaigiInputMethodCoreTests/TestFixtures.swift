@@ -435,13 +435,16 @@ extension XCTestCase {
         try body()
     }
 
-    /// Clears `key` in `UserDefaults.standard` and puts it back at teardown —
-    /// including "held nothing", which a bare `removeObject` would turn into a
-    /// value a later case never chose. The teardown-scoped counterpart to
-    /// `withSetting`, for cases that have to `await` and so cannot run inside
-    /// its synchronous body.
-    @MainActor
-    func clearSettingRestoredAtTeardown(_ key: String) {
+    /// Sets `key` in `UserDefaults.standard` to `value` (nil clears it) and
+    /// puts it back at teardown — including "held nothing", which a bare
+    /// `removeObject` would turn into a value a later case never chose. The
+    /// teardown-scoped counterpart to `withSetting`, for cases that have to
+    /// `await` and so cannot run inside its synchronous body, and for a
+    /// suite's `setUp` — which is why it is not main-actor-bound like the
+    /// helpers around it: `setUp` is nonisolated, and nothing here needs the
+    /// actor (`UserDefaults` is thread-safe; the teardown block runs where
+    /// XCTest runs it).
+    nonisolated func setSettingRestoredAtTeardown(_ key: String, to value: Any?) {
         let saved = UserDefaults.standard.object(forKey: key)
         addTeardownBlock {
             if let saved {
@@ -450,7 +453,15 @@ extension XCTestCase {
                 UserDefaults.standard.removeObject(forKey: key)
             }
         }
-        UserDefaults.standard.removeObject(forKey: key)
+        if let value {
+            UserDefaults.standard.set(value, forKey: key)
+        } else {
+            UserDefaults.standard.removeObject(forKey: key)
+        }
+    }
+
+    nonisolated func clearSettingRestoredAtTeardown(_ key: String) {
+        setSettingRestoredAtTeardown(key, to: nil)
     }
 
     /// The 候選詞顯示 mode, written to the `.standard` domain the shared

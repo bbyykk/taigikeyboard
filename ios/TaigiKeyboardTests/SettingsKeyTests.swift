@@ -126,7 +126,8 @@ final class SettingsKeyTests: XCTestCase {
         XCTAssertEqual(settings.fontType, .system)
         XCTAssertTrue(settings.isDoubleTapOOEnabled)
         XCTAssertTrue(settings.isDoubleTapNNEnabled)
-        XCTAssertFalse(settings.isTranslateSwapped)
+        // Hanji-first out of the box (USER 2026-09-18), on every platform.
+        XCTAssertTrue(settings.isTranslateSwapped)
         XCTAssertFalse(settings.isOutputBothScripts)
         XCTAssertTrue(settings.isMoeDictEnabled)
         XCTAssertFalse(settings.isITaigiDictEnabled)
@@ -250,7 +251,7 @@ final class SettingsKeyTests: XCTestCase {
         XCTAssertEqual(settings.displayLanguage, DisplayLanguage.defaultTag)
         XCTAssertTrue(settings.isDoubleTapOOEnabled)
         XCTAssertTrue(settings.isDoubleTapNNEnabled)
-        XCTAssertFalse(settings.isTranslateSwapped)
+        XCTAssertTrue(settings.isTranslateSwapped, "reset lands on the hanji-first default")
         XCTAssertFalse(settings.isOutputBothScripts)
         XCTAssertFalse(settings.isAutoSpaceEnabled)
         XCTAssertTrue(settings.isLiteralRomanCandidateEnabled)

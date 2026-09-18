@@ -553,6 +553,24 @@ final class SettingsStore: EngineSettingsProvider, @unchecked Sendable {
         )
     }
 
+    /// Puts every setting the 一般 pane owns back to shipped state — the
+    /// romanization, the tone keys, the output script, the display language
+    /// and the three switches. Removed rather than written, like
+    /// `resetAppearanceSettings`, and spelled out like `resetDictionarySources`.
+    /// The update bookkeeping and the remembered pane are not settings of the
+    /// user's and are left alone.
+    func resetGeneralSettings() {
+        removeStoredValues(
+            Keys.inputMode.name,
+            Keys.toneInputScheme.name,
+            Keys.isTranslateSwapped.name,
+            Keys.displayLanguage.name,
+            Keys.isAutoSpaceEnabled.name,
+            Keys.isCandidateWindowEnabled.name,
+            Keys.isLiteralRomanCandidateEnabled.name,
+        )
+    }
+
     /// Puts every toggle the 辭典管理 pane owns back to shipped state, the
     /// master sources and the 腔口 subcollections alike.
     ///
@@ -659,7 +677,8 @@ final class SettingsStore: EngineSettingsProvider, @unchecked Sendable {
     /// engine composes under: `current` derives the effective pair from them
     /// and `candidateDisplayMode`. A gate that read these directly would apply
     /// a swap the romanization-only display has switched off, which is why the
-    /// only callers are the writers — the shortcut toggle and the tests.
+    /// only callers are the writers — the shortcut toggle, the 一般 pane's
+    /// 輸出 picker (through `@AppStorage` on the same key) and the tests.
     var storedIsTranslateSwapped: Bool {
         get { bool(Keys.isTranslateSwapped) }
         set { userDefaults.set(newValue, forKey: Keys.isTranslateSwapped.name) }

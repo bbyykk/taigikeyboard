@@ -43,7 +43,8 @@ final class FullWidthPunctuationControllerTests: XCTestCase {
     }
 
     func testRomanFirstMode_passesPunctuationThrough() throws {
-        let session = try makeSession()
+        // Opted into: the shipped default is hanji-first (2026-09-18).
+        let session = try makeSession(configure: { $0.storedIsTranslateSwapped = false })
 
         let handled = try session.controller.handle(
             TestFixtures.keyDownEvent(characters: ","), client: session.client,
@@ -162,7 +163,10 @@ final class FullWidthPunctuationControllerTests: XCTestCase {
         // The auto-space contract of this site is pinned by
         // `AutoSpaceControllerTests`; here only the character itself matters,
         // and auto-space (OFF by default) is turned on to reach that site.
-        let session = try composedSession(configure: { $0.isAutoSpaceEnabled = true })
+        let session = try composedSession(configure: {
+            $0.isAutoSpaceEnabled = true
+            $0.storedIsTranslateSwapped = false
+        })
 
         _ = try session.controller.handle(TestFixtures.keyDownEvent(characters: "?"), client: session.client)
 

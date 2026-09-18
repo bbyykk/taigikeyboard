@@ -76,6 +76,16 @@
       "scope": { "platforms": ["android", "ios"], "surfaces": ["host", "extension"] },
       "values": { "hanji": "括號標註", "tailo": "Kuat-hō phiau-tsù", "poj": "Koat-hō phiau-chù", "en": "Annotate in Brackets", "ja": "括弧で併記" }
     },
+    "outputScriptHanji": {
+      "comment": "Picker value (default): commit writes the Hanji; the romanization is the subtitle.",
+      "scope": { "platforms": ["macos", "windows"], "surfaces": ["host"] },
+      "values": { "hanji": "漢字", "tailo": "Hàn-jī", "poj": "Hàn-jī", "en": "Hanji", "ja": "漢字" }
+    },
+    "outputScriptRoman": {
+      "comment": "Picker value: commit writes the romanization; the Hanji is the subtitle.",
+      "scope": { "platforms": ["macos", "windows"], "surfaces": ["host"] },
+      "values": { "hanji": "羅馬字", "tailo": "Lô-má-jī", "poj": "Lô-má-jī", "en": "Romanization", "ja": "ローマ字" }
+    },
     "candidateWindow": {
       "comment": "Toggle label on the desktop General pane: show the candidate window at all. Off = no window, Space / Enter write the typed romanization (S33).",
       "scope": { "platforms": ["macos", "windows"], "surfaces": ["host"] },

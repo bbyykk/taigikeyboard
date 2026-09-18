@@ -13,7 +13,7 @@
 //!   with the key contract (`crate::keys`), whose types they are keyed on.
 //!
 //! Defaults for engine-facing keys are NOT literals here: they are read from
-//! `EngineSettings::default()`, the domain model's own statement of what a
+//! `EngineSettings::DEFAULT`, the domain model's own statement of what a
 //! fresh install types with, so the cross-platform alignment has one home.
 
 use super::choices::{
@@ -26,51 +26,7 @@ use super::engine_settings::{
 };
 use crate::strings::DisplayLanguage;
 
-const fn engine_defaults() -> EngineSettings {
-    // `Default::default` is not const; spell the same values out once, and pin
-    // them equal to the runtime default in `tests` below.
-    EngineSettings {
-        input_mode: InputMode::Tl,
-        is_translate_swapped: false,
-        is_output_both_scripts: false,
-        is_full_width_punctuation: false,
-        candidate_display_mode: CandidateDisplayMode::SideBySide,
-        is_literal_roman_candidate_enabled: true,
-        is_frequency_recording_enabled: true,
-        is_association_recording_enabled: true,
-        is_custom_dict_enabled: true,
-        dictionary_sources: DictionarySourceToggles {
-            kautian: true,
-            taigitv: true,
-            itaigi: false,
-            sitbut: false,
-            taihoa: false,
-            taijit: false,
-            kungge: true,
-            stti: true,
-            khpoo: true,
-            variant: false,
-            khiin: false,
-            lkk: true,
-            dev: true,
-            kautian_subcollections: super::engine_settings::KautianSubcollections {
-                accent_lukang: true,
-                accent_sansia: true,
-                accent_taipak: true,
-                accent_gilan: true,
-                accent_tainan: true,
-                accent_kaohsiung: true,
-                accent_kinmen: true,
-                accent_makung: true,
-                accent_sintik: true,
-                accent_taichung: true,
-                name_appendix: true,
-            },
-        },
-    }
-}
-
-const ENGINE_DEFAULTS: EngineSettings = engine_defaults();
+const ENGINE_DEFAULTS: EngineSettings = EngineSettings::DEFAULT;
 
 pub const INPUT_MODE: SettingsKey<InputMode> =
     SettingsKey::new("inputMode", ENGINE_DEFAULTS.input_mode);
@@ -257,6 +213,19 @@ const _: () = assert!(IS_CANDIDATE_WINDOW_ENABLED.default);
 /// user cleared the row, which is why the two cannot be collapsed.
 pub const CLEARED_COMPOSING_CHORD: &str = "";
 
+/// The keys the 一般 pane's reset removes — every setting the pane draws,
+/// same shape as `DICTIONARY_SOURCE_KEYS`. Not the update bookkeeping, not
+/// the remembered pane (`SettingsStore.swift resetGeneralSettings`).
+pub const GENERAL_KEYS: [&str; 7] = [
+    INPUT_MODE.name,
+    TONE_INPUT_SCHEME.name,
+    IS_TRANSLATE_SWAPPED.name,
+    DISPLAY_LANGUAGE.name,
+    IS_AUTO_SPACE_ENABLED.name,
+    IS_CANDIDATE_WINDOW_ENABLED.name,
+    IS_LITERAL_ROMAN_CANDIDATE_ENABLED.name,
+];
+
 /// The keys the 外觀 pane's reset removes (`SettingsStore.swift:457-465`).
 pub const APPEARANCE_KEYS: [&str; 5] = [
     APPEARANCE_MODE.name,
@@ -300,13 +269,6 @@ mod tests {
     use super::*;
 
     #[test]
-    fn const_defaults_equal_the_runtime_default() {
-        // The const copy exists only because `Default::default` is not const;
-        // this is what keeps the two from drifting.
-        assert_eq!(ENGINE_DEFAULTS, EngineSettings::default());
-    }
-
-    #[test]
     fn key_names_are_the_ios_spellings() {
         // trace: SettingsStore.swift:42-137 — `khiin` has no `Enabled` suffix,
         // `moeDictEnabled` is the kautian toggle.
@@ -323,13 +285,14 @@ mod tests {
 
     #[test]
     fn reset_rosters_have_no_duplicates() {
-        let mut appearance = APPEARANCE_KEYS.to_vec();
-        appearance.sort_unstable();
-        appearance.dedup();
-        assert_eq!(appearance.len(), APPEARANCE_KEYS.len());
-        let mut sources = DICTIONARY_SOURCE_KEYS.to_vec();
-        sources.sort_unstable();
-        sources.dedup();
-        assert_eq!(sources.len(), DICTIONARY_SOURCE_KEYS.len());
+        fn assert_no_duplicates(roster: &[&str]) {
+            let mut sorted = roster.to_vec();
+            sorted.sort_unstable();
+            sorted.dedup();
+            assert_eq!(sorted.len(), roster.len());
+        }
+        assert_no_duplicates(&GENERAL_KEYS);
+        assert_no_duplicates(&APPEARANCE_KEYS);
+        assert_no_duplicates(&DICTIONARY_SOURCE_KEYS);
     }
 }

@@ -54,8 +54,8 @@ pub enum CandidateDisplayMode {
 
 impl CandidateDisplayMode {
     /// Whether the cell shows any hanji — `false` only for `RomanOnly`.
-    pub fn shows_hanji(self) -> bool {
-        self != Self::RomanOnly
+    pub const fn shows_hanji(self) -> bool {
+        !matches!(self, Self::RomanOnly)
     }
 
     /// Whether the swap shortcut writes the stored swap — exactly where hanji
@@ -76,8 +76,8 @@ impl CandidateDisplayMode {
     /// CROSS-PLATFORM INVARIANT — mirrors macOS `EngineSettings.swift`
     /// `CandidateDisplayMode.effectiveTranslateSwapped`, iOS
     /// `SettingsModels.swift`, Android `CandidateDisplayMode.kt`.
-    pub fn effective_translate_swapped(self, stored: bool) -> bool {
-        self == Self::Combined || (stored && self.shows_hanji())
+    pub const fn effective_translate_swapped(self, stored: bool) -> bool {
+        matches!(self, Self::Combined) || (stored && self.shows_hanji())
     }
 
     /// Effective 括號標註 for a stored flag — off only where there is no hanji
@@ -91,7 +91,7 @@ impl CandidateDisplayMode {
     /// candidate projection above, which `Combined` forces on while the swap
     /// shortcut still picks the width. Mirrored on macOS / iOS / Android
     /// beside `effective_output_both_scripts`.
-    pub fn effective_full_width_punctuation(self, stored: bool) -> bool {
+    pub const fn effective_full_width_punctuation(self, stored: bool) -> bool {
         stored && self.shows_hanji()
     }
 
@@ -187,22 +187,37 @@ pub struct EngineSettings {
     pub dictionary_sources: DictionarySourceToggles,
 }
 
-impl Default for EngineSettings {
+impl EngineSettings {
     /// What a fresh install types with. Every value matches the iOS, Android
     /// and macOS default for the same setting (`EngineSettings.swift:79-88`).
-    fn default() -> Self {
+    /// A `const` so the settings keys (`keys.rs`) can read their defaults
+    /// from it rather than restate them.
+    ///
+    /// Hanji-first (USER 2026-09-18): the stored swap is on, and the two
+    /// effective fields are DERIVED from it under side-by-side the way
+    /// `SettingsDocument::engine_settings` derives them, so the snapshot
+    /// cannot say one thing about the swap and another about the width.
+    pub const DEFAULT: Self = {
+        const STORED_SWAP: bool = true;
+        const MODE: CandidateDisplayMode = CandidateDisplayMode::SideBySide;
         Self {
             input_mode: InputMode::Tl,
-            is_translate_swapped: false,
+            is_translate_swapped: MODE.effective_translate_swapped(STORED_SWAP),
             is_output_both_scripts: false,
-            is_full_width_punctuation: false,
-            candidate_display_mode: CandidateDisplayMode::SideBySide,
+            is_full_width_punctuation: MODE.effective_full_width_punctuation(STORED_SWAP),
+            candidate_display_mode: MODE,
             is_literal_roman_candidate_enabled: true,
             is_frequency_recording_enabled: true,
             is_association_recording_enabled: true,
             is_custom_dict_enabled: true,
-            dictionary_sources: DictionarySourceToggles::default(),
+            dictionary_sources: DictionarySourceToggles::DEFAULT,
         }
+    };
+}
+
+impl Default for EngineSettings {
+    fn default() -> Self {
+        Self::DEFAULT
     }
 }
 
@@ -242,26 +257,30 @@ pub struct DictionarySourceToggles {
     pub kautian_subcollections: KautianSubcollections,
 }
 
-impl Default for DictionarySourceToggles {
+impl DictionarySourceToggles {
     /// CROSS-PLATFORM INVARIANT — mirrors `ios/.../SharedSettings.swift:53-66`
     /// and `macos/.../DictionarySourceToggles.swift:99-114`.
+    pub const DEFAULT: Self = Self {
+        kautian: true,
+        taigitv: true,
+        itaigi: false,
+        sitbut: false,
+        taihoa: false,
+        taijit: false,
+        kungge: true,
+        stti: true,
+        khpoo: true,
+        variant: false,
+        khiin: false,
+        lkk: true,
+        dev: true,
+        kautian_subcollections: KautianSubcollections::DEFAULT,
+    };
+}
+
+impl Default for DictionarySourceToggles {
     fn default() -> Self {
-        Self {
-            kautian: true,
-            taigitv: true,
-            itaigi: false,
-            sitbut: false,
-            taihoa: false,
-            taijit: false,
-            kungge: true,
-            stti: true,
-            khpoo: true,
-            variant: false,
-            khiin: false,
-            lkk: true,
-            dev: true,
-            kautian_subcollections: KautianSubcollections::default(),
-        }
+        Self::DEFAULT
     }
 }
 
@@ -283,23 +302,27 @@ pub struct KautianSubcollections {
     pub name_appendix: bool,
 }
 
-impl Default for KautianSubcollections {
+impl KautianSubcollections {
     /// CROSS-PLATFORM INVARIANT — every subcollection defaults ON
     /// (`ios/.../SharedSettings.swift:74-84`).
+    pub const DEFAULT: Self = Self {
+        accent_lukang: true,
+        accent_sansia: true,
+        accent_taipak: true,
+        accent_gilan: true,
+        accent_tainan: true,
+        accent_kaohsiung: true,
+        accent_kinmen: true,
+        accent_makung: true,
+        accent_sintik: true,
+        accent_taichung: true,
+        name_appendix: true,
+    };
+}
+
+impl Default for KautianSubcollections {
     fn default() -> Self {
-        Self {
-            accent_lukang: true,
-            accent_sansia: true,
-            accent_taipak: true,
-            accent_gilan: true,
-            accent_tainan: true,
-            accent_kaohsiung: true,
-            accent_kinmen: true,
-            accent_makung: true,
-            accent_sintik: true,
-            accent_taichung: true,
-            name_appendix: true,
-        }
+        Self::DEFAULT
     }
 }
 

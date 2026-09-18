@@ -483,24 +483,24 @@ fn commit_candidate_consuming_the_whole_buffer_writes_the_document_and_ends() {
     assert_eq!(outcome, CandidateCommitOutcome::Finalized);
     assert_eq!(
         committed.as_deref(),
-        Some("tâi-gí"),
-        "roman-first output writes the romanization"
+        Some("台語"),
+        "hanji-first out of the box (USER 2026-09-18): a commit writes the hanji"
     );
     assert!(!rig.manager.is_composing());
-    assert_eq!(rig.recorder.committed(), ["tâi-gí"]);
+    assert_eq!(rig.recorder.committed(), ["台語"]);
 }
 
 #[test]
-fn commit_candidate_swapped_output_writes_the_hanji_and_alternate_writes_the_other() {
+fn commit_candidate_roman_output_writes_the_romanization_and_alternate_writes_the_other() {
     let _lock = engine_lock();
     let mut rig = rig();
     rig.settings
-        .edit(|doc| doc.set_bool(&keys::IS_TRANSLATE_SWAPPED, true));
+        .edit(|doc| doc.set_bool(&keys::IS_TRANSLATE_SWAPPED, false));
     rig.type_text("taigi");
     let taigi = rig.candidate("台語");
     let (outcome, committed) = rig.commit(&taigi, CandidateScript::Primary);
     assert_eq!(outcome, CandidateCommitOutcome::Finalized);
-    assert_eq!(committed.as_deref(), Some("台語"));
+    assert_eq!(committed.as_deref(), Some("tâi-gí"));
 
     rig.type_text("taigi");
     let taigi = rig.candidate("台語");
@@ -508,7 +508,7 @@ fn commit_candidate_swapped_output_writes_the_hanji_and_alternate_writes_the_oth
     assert_eq!(outcome, CandidateCommitOutcome::Finalized);
     assert_eq!(
         committed.as_deref(),
-        Some("tâi-gí"),
+        Some("台語"),
         "Space writes the other script"
     );
 }
@@ -581,14 +581,10 @@ fn commit_candidate_consuming_part_of_the_buffer_nails_it_and_keeps_composing() 
         "gi",
         "the mirror holds only the pending tail"
     );
-    assert!(
-        rig.manager.display_text().starts_with("tâi"),
-        "{}",
-        rig.manager.display_text()
-    );
-    assert!(
-        rig.manager.display_text().len() > 3,
-        "the display holds the nailed prefix too"
+    assert_eq!(
+        rig.manager.display_text(),
+        "台gi",
+        "the nailed prefix shows in the committed script (hanji-first), the pending tail after it"
     );
 }
 
@@ -668,7 +664,7 @@ fn enter_on_a_fresh_bar_commits_the_dictionary_word_when_the_literal_row_is_off(
     );
     let (outcome, committed) = rig.commit(&candidates[0], CandidateScript::Primary);
     assert_eq!(outcome, CandidateCommitOutcome::Finalized);
-    assert_eq!(committed.as_deref(), Some(candidates[0].roman.as_str()));
+    assert_eq!(committed.as_deref(), candidates[0].hanji.as_deref());
     assert_ne!(
         committed.as_deref(),
         Some("taigi"),

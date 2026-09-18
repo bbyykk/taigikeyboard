@@ -36,6 +36,45 @@ final class SettingsStoreTests: XCTestCase {
         XCTAssertEqual(makeStore().current, EngineSettings.defaults)
     }
 
+    /// Hanji-first out of the box (USER 2026-09-18): with nothing stored a
+    /// commit writes the hanji, and the punctuation width derived from the
+    /// swap under 並排 follows it.
+    func testCurrent_withNothingStored_isHanjiFirst() {
+        let current = makeStore().current
+        XCTAssertTrue(current.isTranslateSwapped)
+        XCTAssertTrue(current.isFullWidthPunctuation)
+        XCTAssertNil(userDefaults.object(forKey: SettingsStore.Keys.isTranslateSwapped.name))
+    }
+
+    /// The 一般 pane's reset button: every row the pane draws goes back, and
+    /// nothing the pane does not draw — 外觀's keys, the update bookkeeping —
+    /// moves. Removed, not written, like the other resets.
+    func testResetGeneralSettings_putsEveryRowBackAndLeavesTheRestAlone() {
+        let store = makeStore()
+        userDefaults.set(InputMode.poj.rawValue, forKey: SettingsStore.Keys.inputMode.name)
+        userDefaults.set(ToneInputScheme.telex.rawValue, forKey: SettingsStore.Keys.toneInputScheme.name)
+        userDefaults.set(false, forKey: SettingsStore.Keys.isTranslateSwapped.name)
+        userDefaults.set("en", forKey: SettingsStore.Keys.displayLanguage.name)
+        userDefaults.set(true, forKey: SettingsStore.Keys.isAutoSpaceEnabled.name)
+        userDefaults.set(false, forKey: SettingsStore.Keys.isCandidateWindowEnabled.name)
+        userDefaults.set(false, forKey: SettingsStore.Keys.isLiteralRomanCandidateEnabled.name)
+        userDefaults.set(CandidateLayout.horizontal.rawValue, forKey: SettingsStore.Keys.candidateLayout.name)
+        userDefaults.set("1.0.0", forKey: SettingsStore.Keys.updateLastNotifiedVersion.name)
+
+        store.resetGeneralSettings()
+
+        XCTAssertEqual(store.inputMode, SettingsStore.Keys.inputMode.defaultValue)
+        XCTAssertEqual(store.composingKeyBindings.toneScheme, SettingsStore.Keys.toneInputScheme.defaultValue)
+        XCTAssertTrue(store.storedIsTranslateSwapped, "back to hanji-first")
+        XCTAssertNil(userDefaults.object(forKey: SettingsStore.Keys.isTranslateSwapped.name), "removed, not written")
+        XCTAssertEqual(store.displayLanguage, SettingsStore.Keys.displayLanguage.defaultValue)
+        XCTAssertEqual(store.isAutoSpaceEnabled, SettingsStore.Keys.isAutoSpaceEnabled.defaultValue)
+        XCTAssertEqual(store.isCandidateWindowEnabled, SettingsStore.Keys.isCandidateWindowEnabled.defaultValue)
+        XCTAssertTrue(store.current.isLiteralRomanCandidateEnabled)
+        XCTAssertEqual(store.candidateLayout, .horizontal, "外觀's key")
+        XCTAssertEqual(store.updateLastNotifiedVersion, "1.0.0", "bookkeeping")
+    }
+
     func testCurrent_readsEveryStoredValue() {
         userDefaults.set(InputMode.poj.rawValue, forKey: SettingsStore.Keys.inputMode.name)
         userDefaults.set(true, forKey: SettingsStore.Keys.isTranslateSwapped.name)

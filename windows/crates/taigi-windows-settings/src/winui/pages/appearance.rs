@@ -9,8 +9,7 @@
 //! Settings itself uses for "Choose your mode" — and, since 2026-09-02, what
 //! the Mac draws too.
 
-use super::choice_row;
-use crate::winui::cards;
+use super::{choice_row, reset_row};
 use crate::winui::window::{Message, ResetScope, SettingsWindow};
 use taigi_windows_core::settings::{
     keys, AppearanceMode, CandidateDisplayMode, CandidateLayout, CandidateTextSizeChoice,
@@ -31,6 +30,7 @@ pub fn view(
             strings.resolve(StringKey::DesktopAppearanceTab),
             AppearanceMode::ALL,
             document.choice(&keys::APPEARANCE_MODE),
+            true,
             |mode: AppearanceMode| strings.resolve(mode.label_key()).to_owned(),
             |mode| Message::set_choice(mode, &keys::APPEARANCE_MODE),
             context,
@@ -39,6 +39,7 @@ pub fn view(
             strings.resolve(StringKey::DesktopCandidateWindowLayout),
             CandidateLayout::ALL,
             document.choice(&keys::CANDIDATE_LAYOUT),
+            true,
             |choice: CandidateLayout| strings.resolve(choice.label_key()).to_owned(),
             |choice| Message::set_choice(choice, &keys::CANDIDATE_LAYOUT),
             context,
@@ -48,6 +49,7 @@ pub fn view(
             strings.resolve(StringKey::SettingsCandidateDisplayMode),
             CandidateDisplayMode::ALL,
             document.choice(&keys::CANDIDATE_DISPLAY_MODE),
+            true,
             |choice: CandidateDisplayMode| strings.resolve(choice.label_key()).to_owned(),
             |choice| Message::set_choice(choice, &keys::CANDIDATE_DISPLAY_MODE),
             context,
@@ -58,6 +60,7 @@ pub fn view(
             strings.resolve(StringKey::DesktopCandidateWindowSize),
             CandidateWindowSizeChoice::ALL,
             document.choice(&keys::CANDIDATE_WINDOW_SIZE),
+            true,
             |choice: CandidateWindowSizeChoice| strings.resolve(choice.label_key()).to_owned(),
             |choice| Message::set_choice(choice, &keys::CANDIDATE_WINDOW_SIZE),
             context,
@@ -66,18 +69,11 @@ pub fn view(
             strings.resolve(StringKey::ThemeCandidateTextSize),
             CandidateTextSizeChoice::ALL,
             document.choice(&keys::CANDIDATE_TEXT_SIZE),
+            true,
             |choice: CandidateTextSizeChoice| strings.resolve(choice.label_key()).to_owned(),
             |choice| Message::set_choice(choice, &keys::CANDIDATE_TEXT_SIZE),
             context,
         ),
-        // Its own section, at the end: it acts on every row above it.
-        cards::section_gap(),
-        cards::action_row(
-            strings.resolve(StringKey::ThemeEditorResetAll),
-            strings.resolve(StringKey::SettingsReset),
-            false,
-            true,
-            context.callback(|()| Message::Reset(ResetScope::Appearance)),
-        ),
+        reset_row(strings, ResetScope::Appearance, context),
     ))
 }
