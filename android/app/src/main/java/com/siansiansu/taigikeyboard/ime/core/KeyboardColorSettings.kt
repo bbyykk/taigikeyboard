@@ -5,6 +5,7 @@ package com.siansiansu.taigikeyboard.ime.core
 import org.json.JSONArray
 import org.json.JSONObject
 import kotlin.math.abs
+import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.max
 import kotlin.math.sin
@@ -39,12 +40,10 @@ data class ThemeGradient(
      * axis presets run edge to edge (180° = top-centre -> bottom-centre).
      */
     fun unitPoints(): Pair<UnitPoint, UnitPoint> {
-        val radians = Math.toRadians(angle.toDouble())
-        val dx = sin(radians)
-        val dy = -cos(radians)
+        val (dx, dy) = direction(angle)
         val magnitude = max(abs(dx), abs(dy))
-        val halfX = (dx / magnitude / 2).toFloat()
-        val halfY = (dy / magnitude / 2).toFloat()
+        val halfX = dx / magnitude / 2
+        val halfY = dy / magnitude / 2
         return UnitPoint(0.5f - halfX, 0.5f - halfY) to UnitPoint(0.5f + halfX, 0.5f + halfY)
     }
 
@@ -52,6 +51,27 @@ data class ThemeGradient(
         /** Vertical top->bottom, the direction every built-in gradient theme uses. */
         const val DEFAULT_ANGLE = 180f
         const val MINIMUM_STOPS = 2
+
+        /**
+         * Spacing of the eight preset directions (↑ → ↓ ← and the diagonals) the editor's
+         * preview drag snaps onto. Mirrors iOS ThemeGradient.presetStep.
+         */
+        const val PRESET_STEP = 45f
+
+        /**
+         * The unit direction vector of [degrees] in screen coordinates (y down): `0` -> (0, -1),
+         * `90` -> (1, 0). Shared by [unitPoints] and the editor's direction overlay.
+         */
+        fun direction(degrees: Float): SurfaceVector {
+            val radians = Math.toRadians(degrees.toDouble())
+            return SurfaceVector(sin(radians).toFloat(), -cos(radians).toFloat())
+        }
+
+        /**
+         * Inverse of [direction]: the angle of a screen-space vector, in `-180..180` (callers
+         * wrap it into `0 until 360` as they see fit).
+         */
+        fun degrees(dx: Float, dy: Float): Float = Math.toDegrees(atan2(dx.toDouble(), -dy.toDouble())).toFloat()
 
         /** How far the end stop is lifted toward white in [seeded]. */
         private const val SEED_LIGHTEN_FACTOR = 0.45
@@ -71,6 +91,9 @@ data class ThemeGradient(
         }
     }
 }
+
+/** A direction in surface space (x right, y down). */
+data class SurfaceVector(val dx: Float, val dy: Float)
 
 /** A rectangle in surface pixels (top-left origin). */
 data class SurfaceRect(val left: Float, val top: Float, val width: Float, val height: Float)

@@ -4394,7 +4394,7 @@
       }
     },
     "i18n_theme_gradientDirection": {
-      "comment": "Gradient direction. Android: theme editor row label above the eight arrow presets. iOS: VoiceOver label of the drag pointer over the preview (no visible row).",
+      "comment": "Gradient direction: the VoiceOver / TalkBack label of the drag pointer over the theme editor preview (no visible row on either platform).",
       "extractionState": "manual",
       "localizations": {
         "en": {
