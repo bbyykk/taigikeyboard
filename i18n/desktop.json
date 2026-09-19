@@ -847,11 +847,11 @@
         ]
       },
       "values": {
-        "hanji": "迒模式輸出",
-        "tailo": "Hānn bôo-sik su-tshut",
-        "poj": "Hānn bô͘-sek su-chhut",
-        "en": "Cross-Mode Output",
-        "ja": "モード横断出力"
+        "hanji": "輸出另外一種文字",
+        "tailo": "Su-tshut līng-guā tsi̍t tsióng bûn-jī",
+        "poj": "Su-chhut lēng-gōa chi̍t chióng bûn-jī",
+        "en": "Output the Other Script",
+        "ja": "もう一方の文字で出力"
       }
     },
     "shortcutUnbound": {
