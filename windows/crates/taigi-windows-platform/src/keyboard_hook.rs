@@ -9,14 +9,10 @@
 //! the delivery closure — and every path that is not a press the recorder
 //! wants falls through to `CallNextHookEx`.
 //!
-//! Two rules the callback owes the window it hides keys from:
-//!
-//! * a key it swallows on the way DOWN is swallowed again on the way UP,
-//!   so XAML never sees a lone key-up (WinUI invokes a focused `Button` on
-//!   the key-UP of Space — a released recording would fire it);
-//! * Tab is reported but NOT swallowed. `evaluate_press` answers Tab with
-//!   `PassThrough`: recording ends AND the key goes on to walk the form,
-//!   which it cannot do if the hook ate it.
+//! One rule the callback owes the window it hides keys from: a key it
+//! swallows on the way DOWN is swallowed again on the way UP, so XAML never
+//! sees a lone key-up (WinUI invokes a focused `Button` on the key-UP of
+//! Space — a released recording would fire it).
 //!
 //! The decisions live in [`Recording`], which knows nothing of Win32 and
 //! is tested on the macOS host; the `#[cfg(windows)]` half below is the
@@ -121,23 +117,12 @@ impl Recording {
 
     /// `delivery` is what the window did with the press, or `None` for a
     /// key that carries no press (a modifier) or a window that is gone.
-    /// `is_pass_through_key` is Tab, the one key reported but not hidden.
-    fn on_key_down(
-        &mut self,
-        virtual_key: u16,
-        delivery: Option<Delivery>,
-        is_pass_through_key: bool,
-    ) -> Decision {
+    fn on_key_down(&mut self, virtual_key: u16, delivery: Option<Delivery>) -> Decision {
         // A repeat of a key already hidden stays hidden, whatever the
         // delivery says: letting the repeats through mid-hold would type
         // into the form.
         let is_held = self.swallowed.contains(virtual_key);
         if !delivery.is_some_and(Delivery::is_wanted) && !is_held {
-            return Decision::PassThrough;
-        }
-        if is_pass_through_key {
-            // Never remembered as hidden, so its key-up goes to the
-            // window too.
             return Decision::PassThrough;
         }
         self.swallowed.press(virtual_key);
@@ -313,7 +298,6 @@ unsafe extern "system" fn hook_proc(
 /// thread-local's borrow across the delivery closure or across Win32.
 #[cfg(windows)]
 fn handle(virtual_key: u16, message: HookMessage) -> bool {
-    use windows::Win32::UI::Input::KeyboardAndMouse::VK_TAB;
     let decision = if message.is_key_up {
         with_state(|state| state.recording.on_key_up(virtual_key))
     } else {
@@ -325,11 +309,7 @@ fn handle(virtual_key: u16, message: HookMessage) -> bool {
             message.is_repeat,
         )
         .and_then(|press| with_deliver(|deliver| deliver(press)));
-        with_state(|state| {
-            state
-                .recording
-                .on_key_down(virtual_key, delivery, virtual_key == VK_TAB.0)
-        })
+        with_state(|state| state.recording.on_key_down(virtual_key, delivery))
     };
     match decision.unwrap_or(Decision::PassThrough) {
         Decision::PassThrough => false,
@@ -406,12 +386,11 @@ impl HookMessage {
 mod tests {
     use super::*;
 
-    /// Not Tab: every test key below is an ordinary one.
     const A: u16 = 0x41;
     const B: u16 = 0x42;
 
     fn down(recording: &mut Recording, key: u16, delivery: Delivery) -> Decision {
-        recording.on_key_down(key, Some(delivery), false)
+        recording.on_key_down(key, Some(delivery))
     }
 
     #[test]
@@ -478,7 +457,7 @@ mod tests {
         down(&mut recording, A, Delivery::Accepted);
         assert!(!recording.stop());
         assert_eq!(
-            recording.on_key_down(A, None, false),
+            recording.on_key_down(A, None),
             Decision::Swallow,
             "a repeat mid-hold cannot reach the window"
         );
@@ -514,23 +493,6 @@ mod tests {
             Decision::PassThrough
         );
         assert_eq!(recording.on_key_up(B), Decision::PassThrough);
-    }
-
-    #[test]
-    fn tab_is_reported_but_reaches_the_form_and_so_does_its_release() {
-        // trace: `evaluate_press` answers a bare Tab with `PassThrough` —
-        // recording ends AND the focus moves on, which it cannot do if the
-        // hook ate the key.
-        let mut recording = Recording::listening();
-        assert_eq!(
-            recording.on_key_down(A, Some(Delivery::Accepted), true),
-            Decision::PassThrough
-        );
-        assert_eq!(
-            recording.on_key_up(A),
-            Decision::PassThrough,
-            "never remembered as hidden, so the up goes too"
-        );
     }
 
     #[test]

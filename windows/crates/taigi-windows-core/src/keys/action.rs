@@ -60,9 +60,12 @@ impl ComposingAction {
         ],
     ];
 
-    /// Actions that must always be reachable: between them the only two ways
-    /// to end a composition into the document.
-    pub const ALWAYS_BOUND: [ComposingAction; 2] = [Self::ConfirmHighlighted, Self::CommitLiteral];
+    /// Actions whose row, when empty, is refilled from the pair's shipped
+    /// defaults: the two ways to end a composition into the document.
+    /// Refilled only with a default no other composing row holds
+    /// (`ComposingKeyBindings::restore_unbound`).
+    pub const REFILLED_FROM_DEFAULT: [ComposingAction; 2] =
+        [Self::ConfirmHighlighted, Self::CommitLiteral];
 
     /// The persisted raw name (`ComposingAction.rawValue`).
     pub fn raw(self) -> &'static str {

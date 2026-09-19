@@ -266,11 +266,10 @@ final class ComposingKeyBindingsTests: XCTestCase {
         XCTAssertNil(bindings.chord(for: .pageForward), "the earlier row gives the chord up")
     }
 
-    /// Between them these two are the only way to end a composition into the
-    /// document. A roster where both went missing would leave a user with a
-    /// composition they can only cancel.
+    /// Clearing one of the two commit rows gives it its default back — the
+    /// key is free, so nothing is lost by refilling it.
     func testAnAlwaysBoundAction_getsItsDefaultBackWhenCleared() throws {
-        for action in ComposingAction.alwaysBound {
+        for action in ComposingAction.refilledFromDefault {
             let bindings = ComposingKeyBindings(chords: [action: nil])
 
             XCTAssertEqual(
@@ -281,24 +280,57 @@ final class ComposingKeyBindingsTests: XCTestCase {
         }
     }
 
-    /// Restoring one must not leave its default on two rows.
-    func testRestoringAnAlwaysBoundAction_takesItsChordBack() throws {
+    /// The reported failure (USER 2026-09-19): Enter recorded on 迒模式輸出 was
+    /// handed straight back to 確定齒. The emptied commit row takes the pair's
+    /// OTHER default if that one is free, and stays empty when it is not.
+    func testARowRecordedOntoACommitDefault_keepsIt() throws {
+        // trace: alternate=Return (recorded) > confirm=Return (default) →
+        // confirm emptied; pool {Return, ⇧Return}; Return held by alternate,
+        // ⇧Return held by literal → confirm stays empty.
         let bindings = try ComposingKeyBindings(chords: [
             .confirmHighlighted: nil,
-            .pageForward: chord("\r"),
+            .commitAlternateScript: chord("\r"),
         ])
 
-        XCTAssertEqual(bindings.chord(for: .confirmHighlighted), try chord("\r"))
-        XCTAssertNil(bindings.chord(for: .pageForward))
+        XCTAssertEqual(bindings.chord(for: .commitAlternateScript), try chord("\r"))
+        XCTAssertNil(bindings.chord(for: .confirmHighlighted), "the last recording wins")
+        XCTAssertEqual(bindings.chord(for: .commitLiteral), try chord("\r", .shift))
+
+        // trace: literal cleared by the user, nextCandidate=⇧Return (recorded);
+        // Return is free → literal takes Return.
+        let refilled = try ComposingKeyBindings(chords: [
+            .commitLiteral: nil,
+            .nextCandidate: chord("\r", .shift),
+            .confirmHighlighted: chord("]"),
+        ])
+
+        XCTAssertEqual(refilled.chord(for: .nextCandidate), try chord("\r", .shift))
+        XCTAssertEqual(refilled.chord(for: .commitLiteral), try chord("\r"), "the free default is taken")
+
+        // trace: both defaults recorded on ordinary rows → both commit rows
+        // cleared by the pane, nothing free → both stay empty.
+        let bothTaken = try ComposingKeyBindings(chords: [
+            .confirmHighlighted: nil,
+            .commitLiteral: nil,
+            .pageForward: chord("\r"),
+            .pageBackward: chord("\r", .shift),
+        ])
+
+        XCTAssertNil(bothTaken.chord(for: .confirmHighlighted))
+        XCTAssertNil(bothTaken.chord(for: .commitLiteral))
+        XCTAssertEqual(bothTaken.chord(for: .pageForward), try chord("\r"))
+        XCTAssertEqual(bothTaken.chord(for: .pageBackward), try chord("\r", .shift))
     }
 
-    /// The regression this resolver was rewritten for: filling one always-bound
-    /// row by taking a chord back must not empty the other one. Every
-    /// arrangement of the two rows over their two chords, plus every way a
-    /// third row can be holding one of them.
-    func testTheAlwaysBoundActions_areNeverBothLeftUnbound() throws {
+    /// Every arrangement of the two commit rows over their two chords, plus
+    /// every way a third row can be holding one of them: the resolver never
+    /// puts one chord on two rows, never takes a recorded chord off the third
+    /// row, and refills a commit row whenever one of the pair's defaults is
+    /// free.
+    func testTheAlwaysBoundActions_areRefilledOnlyFromFreeDefaults() throws {
         let candidates: [ComposingKeyChord?] = try [nil, chord("\r"), chord("\r", .shift), chord("]")]
-        let others = ComposingAction.allCases.filter { !ComposingAction.alwaysBound.contains($0) }
+        let others = ComposingAction.allCases.filter { !ComposingAction.refilledFromDefault.contains($0) }
+        let pool = ComposingAction.refilledFromDefault.map(\.defaultChord)
 
         for confirm in candidates {
             for literal in candidates {
@@ -309,22 +341,22 @@ final class ComposingKeyBindingsTests: XCTestCase {
                             .commitLiteral: literal,
                             other: otherChord,
                         ])
+                        let description = """
+                        confirm=\(String(describing: confirm)) literal=\(String(describing: literal)) \
+                        \(other)=\(String(describing: otherChord))
+                        """
 
-                        for action in ComposingAction.alwaysBound {
-                            XCTAssertNotNil(
-                                bindings.chord(for: action),
-                                """
-                                \(action) left unbound by confirm=\(String(describing: confirm)) \
-                                literal=\(String(describing: literal)) \
-                                \(other)=\(String(describing: otherChord))
-                                """,
-                            )
+                        let held = Array(bindings.chords.values)
+                        XCTAssertEqual(held.count, Set(held).count, "one chord on two rows: \(description)")
+                        // Two rows stored with one chord is a defaults domain
+                        // edited behind the pane's back; the tiebreak there is
+                        // `removeDuplicates`', not this pass's.
+                        if let otherChord, otherChord != confirm, otherChord != literal {
+                            XCTAssertEqual(bindings.chord(for: other), otherChord, "recorded chord lost: \(description)")
                         }
-                        XCTAssertNotEqual(
-                            bindings.chord(for: .confirmHighlighted),
-                            bindings.chord(for: .commitLiteral),
-                            "the two commits cannot share one key",
-                        )
+                        if ComposingAction.refilledFromDefault.contains(where: { bindings.chord(for: $0) == nil }) {
+                            XCTAssertTrue(pool.allSatisfy(held.contains), "a commit row left empty with a default free: \(description)")
+                        }
                     }
                 }
             }
@@ -341,15 +373,6 @@ final class ComposingKeyBindingsTests: XCTestCase {
 
         XCTAssertEqual(bindings.chord(for: .commitLiteral), try chord("\r"))
         XCTAssertEqual(bindings.chord(for: .confirmHighlighted), try chord("\r", .shift))
-    }
-
-    /// Their two chords belong to them: an ordinary action holding one gives it
-    /// up, so the keys that end a composition stay where a user can find them.
-    func testAnOrdinaryAction_cannotHoldAnAlwaysBoundChord() throws {
-        let bindings = try ComposingKeyBindings(chords: [.nextCandidate: chord("\r", .shift)])
-
-        XCTAssertNil(bindings.chord(for: .nextCandidate))
-        XCTAssertEqual(bindings.chord(for: .commitLiteral), try chord("\r", .shift))
     }
 
     // MARK: - The candidate-slot tier

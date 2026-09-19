@@ -221,10 +221,7 @@ struct ShortcutSettingsView: View {
     /// Both registries at once, for the reason the pane is one list to begin
     /// with: which rows register a Carbon hotkey and which are read by the key
     /// classifier is not a distinction the reader makes, so a button that
-    /// restored half of them would leave rows it visibly did not touch. It is
-    /// also the only way home for a modifierless default — the library's
-    /// recorder refuses to record one, so nothing else can put the bare
-    /// backtick back on 漢羅對調.
+    /// restored half of them would leave rows it visibly did not touch.
     ///
     /// Told apart by how each half stores a default: this side removes the
     /// stored value so the row reads as never touched, while
@@ -243,8 +240,9 @@ struct ShortcutSettingsView: View {
         reload()
     }
 
-    /// Re-reads the resolved bindings, which is also what puts an always-bound
-    /// action's default back after the user clears its row.
+    /// Re-reads the resolved bindings, which is also what puts a commit row's
+    /// default back after the user clears it — when no other row holds that
+    /// key (`ComposingAction.refilledFromDefault`).
     private func reload() {
         bindings = store.composingKeyBindings
     }

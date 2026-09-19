@@ -378,9 +378,8 @@ impl SettingsWindow {
                 self.recorder.rejection = Some(reason);
                 taigi_windows_platform::beep();
             }
-            // Escape leaves the row as it was; Tab leaves it AND walks the
-            // form, which the hook let it do by not swallowing it.
-            RecorderOutcome::Blurred | RecorderOutcome::PassThrough => self.stop_recording(),
+            // Escape leaves the row as it was.
+            RecorderOutcome::Blurred => self.stop_recording(),
             RecorderOutcome::Ignored => {}
         }
     }
