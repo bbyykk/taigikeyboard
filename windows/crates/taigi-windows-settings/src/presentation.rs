@@ -9,6 +9,12 @@ use taigi_windows_core::strings::{DisplayLanguage, StringKey, StringResolver};
 
 /// `GeneralSettingsView.sponsorURL`.
 pub const SPONSOR_URL: &str = "https://p.ecpay.com.tw/AA663DE";
+/// `GeneralSettingsView.githubURL`.
+pub const GITHUB_URL: &str = "https://github.com/taigikeyboard";
+/// `GeneralSettingsView.discordURL`.
+pub const DISCORD_URL: &str = "https://discord.gg/kXhtQfWvK";
+/// `GeneralSettingsView.emailURL`.
+pub const EMAIL_URL: &str = "mailto:info@taigikeyboard.tw";
 
 /// The machine's UI language, read once. Windows requires a sign-out to
 /// change it, so a running window can hold the answer instead of asking

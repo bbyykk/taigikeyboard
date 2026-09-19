@@ -931,7 +931,7 @@
       }
     },
     "copyrightLine": {
-      "comment": "Settings 一般 pane footer: authorship line beside the sponsor link. Same in every language — a personal name carries no translation. The year is a literal, updated by hand at release time.",
+      "comment": "關於 page footer: authorship line beside the sponsor link. Same in every language — a personal name carries no translation. The year is a literal, updated by hand at release time.",
       "scope": {
         "platforms": [
           "macos",
@@ -949,8 +949,65 @@
         "ja": "© 2026 Bîn-hiân"
       }
     },
+    "aboutIntroProject": {
+      "comment": "關於 page, first paragraph: what the project is. Hanji authored by the USER 2026-09-20; tailo / poj carry the Hanji verbatim until the USER supplies romanized versions.",
+      "scope": {
+        "platforms": [
+          "macos",
+          "windows"
+        ],
+        "surfaces": [
+          "host"
+        ]
+      },
+      "values": {
+        "hanji": "台語齒盤是一个自由、開源 ê 台語拍字家私，拍字 ia̋n-jín 由台灣人家己開發，照台語 ê 拍字習慣設計。支援 iOS、Android、macOS、Windows，會當用白話字、教育部台羅佮方音符號拍字。",
+        "tailo": "台語齒盤是一个自由、開源 ê 台語拍字家私，拍字 ia̋n-jín 由台灣人家己開發，照台語 ê 拍字習慣設計。支援 iOS、Android、macOS、Windows，會當用白話字、教育部台羅佮方音符號拍字。",
+        "poj": "台語齒盤是一个自由、開源 ê 台語拍字家私，拍字 ia̋n-jín 由台灣人家己開發，照台語 ê 拍字習慣設計。支援 iOS、Android、macOS、Windows，會當用白話字、教育部台羅佮方音符號拍字。",
+        "en": "TaigiKeyboard is a free, open-source Taiwanese input method. Its typing engine is developed by Taiwanese people and designed around how Taiwanese is typed. It runs on iOS, Android, macOS and Windows, and takes Pe̍h-ōe-jī, the MOE Tâi-lô romanization and Taiwanese Phonetic Symbols.",
+        "ja": "台湾語キーボードは、自由でオープンソースの台湾語入力ツールです。入力エンジンは台湾人自身が開発し、台湾語の入力習慣に合わせて設計しています。iOS、Android、macOS、Windows に対応し、白話字、教育部台羅、方音符号で入力できます。"
+      }
+    },
+    "aboutIntroFree": {
+      "comment": "關於 page, second paragraph: free forever, for everyone. Hanji authored by the USER 2026-09-20; tailo / poj carry the Hanji verbatim until the USER supplies romanized versions.",
+      "scope": {
+        "platforms": [
+          "macos",
+          "windows"
+        ],
+        "surfaces": [
+          "host"
+        ]
+      },
+      "values": {
+        "hanji": "台語齒盤永遠免費、無廣告，嘛袂推出付費功能。毋管是一般使用者、先生、學校抑是台語教育團體，攏會當自由使用。希望予逐家用台語、教台語 ê 時，免有額外 ê 負擔。",
+        "tailo": "台語齒盤永遠免費、無廣告，嘛袂推出付費功能。毋管是一般使用者、先生、學校抑是台語教育團體，攏會當自由使用。希望予逐家用台語、教台語 ê 時，免有額外 ê 負擔。",
+        "poj": "台語齒盤永遠免費、無廣告，嘛袂推出付費功能。毋管是一般使用者、先生、學校抑是台語教育團體，攏會當自由使用。希望予逐家用台語、教台語 ê 時，免有額外 ê 負擔。",
+        "en": "TaigiKeyboard is free forever, carries no ads, and will never add paid features. Anyone — individual users, teachers, schools and Taiwanese-language education groups — may use it freely, so that using and teaching Taiwanese comes with no extra burden.",
+        "ja": "台湾語キーボードはずっと無料で、広告もなく、有料機能を追加することもありません。一般の利用者、先生、学校、台湾語教育団体のどなたでも自由にお使いいただけます。台湾語を使うとき、教えるときに、余計な負担がないことを願っています。"
+      }
+    },
+    "aboutIntroMaintainer": {
+      "comment": "關於 page, third paragraph: one maintainer, sponsorship. Hanji authored by the USER 2026-09-20; tailo / poj carry the Hanji verbatim until the USER supplies romanized versions.",
+      "scope": {
+        "platforms": [
+          "macos",
+          "windows"
+        ],
+        "surfaces": [
+          "host"
+        ]
+      },
+      "values": {
+        "hanji": "這个計畫目前由我一个人利用上班以外 ê 時間開發佮維護。所需要 ê 費用主要由我家己負擔，嘛有逐家 ê 贊助支持。向望台語齒盤會當一直維持落去，予逐个想欲用母語拍字 ê 人，攏有一个好用 ê 家私。",
+        "tailo": "這个計畫目前由我一个人利用上班以外 ê 時間開發佮維護。所需要 ê 費用主要由我家己負擔，嘛有逐家 ê 贊助支持。向望台語齒盤會當一直維持落去，予逐个想欲用母語拍字 ê 人，攏有一个好用 ê 家私。",
+        "poj": "這个計畫目前由我一个人利用上班以外 ê 時間開發佮維護。所需要 ê 費用主要由我家己負擔，嘛有逐家 ê 贊助支持。向望台語齒盤會當一直維持落去，予逐个想欲用母語拍字 ê 人，攏有一个好用 ê 家私。",
+        "en": "This project is developed and maintained by one person, in the hours outside a day job. The costs are mostly my own, with the support of those who sponsor it. I hope TaigiKeyboard keeps going, so that everyone who wants to type in their mother tongue has a tool that works well.",
+        "ja": "このプロジェクトは現在、私一人が本業以外の時間で開発と保守を行っています。必要な費用は主に自己負担で、皆さまからのご支援にも支えられています。台湾語キーボードがこれからも続き、母語で入力したいすべての人に、使いやすいツールを届けられることを願っています。"
+      }
+    },
     "sponsorLink": {
-      "comment": "Settings 一般 pane footer: link out to the ECPay donation page. The heart is part of the authored label, so each language owns its own placement.",
+      "comment": "關於 page footer: link out to the ECPay donation page. The heart is part of the authored label, so each language owns its own placement.",
       "scope": {
         "platforms": [
           "macos",
@@ -966,6 +1023,63 @@
         "poj": "Chàn-chō͘ chi-chhî ❤️",
         "en": "Support this project ❤️",
         "ja": "支援する ❤️"
+      }
+    },
+    "githubLink": {
+      "comment": "關於 page footer: tooltip + accessibility name of the GitHub icon link. A product name — same in every language.",
+      "scope": {
+        "platforms": [
+          "macos",
+          "windows"
+        ],
+        "surfaces": [
+          "host"
+        ]
+      },
+      "values": {
+        "hanji": "GitHub",
+        "tailo": "GitHub",
+        "poj": "GitHub",
+        "en": "GitHub",
+        "ja": "GitHub"
+      }
+    },
+    "discordLink": {
+      "comment": "關於 page footer: tooltip + accessibility name of the Discord icon link. A product name — same in every language.",
+      "scope": {
+        "platforms": [
+          "macos",
+          "windows"
+        ],
+        "surfaces": [
+          "host"
+        ]
+      },
+      "values": {
+        "hanji": "Discord",
+        "tailo": "Discord",
+        "poj": "Discord",
+        "en": "Discord",
+        "ja": "Discord"
+      }
+    },
+    "emailLink": {
+      "comment": "關於 page footer: tooltip + accessibility name of the email icon link. The address itself — same in every language.",
+      "scope": {
+        "platforms": [
+          "macos",
+          "windows"
+        ],
+        "surfaces": [
+          "host"
+        ]
+      },
+      "values": {
+        "hanji": "info@taigikeyboard.tw",
+        "tailo": "info@taigikeyboard.tw",
+        "poj": "info@taigikeyboard.tw",
+        "en": "info@taigikeyboard.tw",
+        "ja": "info@taigikeyboard.tw"
       }
     },
     "updateCheckNow": {
@@ -1540,6 +1654,25 @@
         "poj": "Jī-hêng koán-lí",
         "en": "Manage Typefaces",
         "ja": "フォント管理"
+      }
+    },
+    "aboutTab": {
+      "comment": "Input-source menu row and settings window title: the 關於 page, reachable only from the menu — no sidebar row.",
+      "scope": {
+        "platforms": [
+          "macos",
+          "windows"
+        ],
+        "surfaces": [
+          "host"
+        ]
+      },
+      "values": {
+        "hanji": "關於台語齒盤",
+        "tailo": "Kuan-î Tâi-gí Khí-puânn",
+        "poj": "Koan-î Tâi-gí Khí-pôaⁿ",
+        "en": "About TaigiKeyboard",
+        "ja": "台語齒盤について"
       }
     }
   }

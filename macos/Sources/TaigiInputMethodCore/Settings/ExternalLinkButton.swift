@@ -18,9 +18,14 @@ struct ExternalLinkButton: View {
     /// as the text beside it — an icon and an accent colour are what would make a footer
     /// read as a control rather than as fine print, and the pointer plus the hover lift
     /// carry the affordance instead.
+    ///
+    /// `.footerGlyph` is the footer form with a glyph in place of the title: the title
+    /// becomes the tooltip and the accessibility name, so the mark alone carries the
+    /// line and the words are still there for whoever hovers or listens.
     enum Style {
         case standard
         case footer
+        case footerGlyph(FontAwesomeGlyph)
     }
 
     @Environment(DisplayLanguageStore.self) private var language
@@ -51,9 +56,24 @@ struct ExternalLinkButton: View {
             .buttonStyle(.link)
 
         case .footer:
-            Button(action: open) {
-                Text(language.string(titleKey))
+            footerButton { Text(language.string(titleKey)) }
+
+        case let .footerGlyph(glyph):
+            let title = language.string(titleKey)
+            footerButton {
+                Image(nsImage: glyph.image)
+                    .renderingMode(.template)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(height: Metrics.glyphHeight)
+                    .accessibilityLabel(title)
             }
+            .help(title)
+        }
+    }
+
+    private func footerButton(@ViewBuilder label: () -> some View) -> some View {
+        Button(action: open, label: label)
             .buttonStyle(.plain)
             // The idle colour restates the `.secondary` the footer line already sets, rather than
             // inheriting it, because hovering needs a stated colour to lift away from.
@@ -66,7 +86,11 @@ struct ExternalLinkButton: View {
             // is a link rather than a button: it navigates away instead of acting on the window.
             .accessibilityRemoveTraits(.isButton)
             .accessibilityAddTraits(.isLink)
-        }
+    }
+
+    private enum Metrics {
+        /// Sized to the footnote's cap height, so a glyph sits in the line like a word.
+        static let glyphHeight: CGFloat = 11
     }
 
     private func open() {
