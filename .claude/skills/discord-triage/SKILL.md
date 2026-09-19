@@ -114,6 +114,8 @@ Post link = `https://discord.com/channels/<guild>/<post id>` (guild from the mes
 After the run: rewrite `triage.md` with a `result` column (post ID or error) and print the
 counts. Write `state.json` `{"last_seen": "<newest message id of the scan>"}` — the next `scan`
 starts after it, so replied, skipped and discussion messages are never re-read.
+Then commit + push `state.json` (and `channels.json` if changed) straight to `main` without
+asking — admin lane (USER 2026-09-19: 「apply完就直接commit,不需要問我」).
 
 ## Rules
 
