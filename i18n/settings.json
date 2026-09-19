@@ -144,7 +144,7 @@
     "autoSpace": {
       "comment": "Toggle label: auto-insert a space after committing a word.",
       "scope": { "platforms": ["android", "ios", "macos", "windows"], "surfaces": ["host", "extension"] },
-      "values": { "hanji": "自動空白", "tailo": "Tsū-tōng khàng-pe̍h", "poj": "Chū-tōng khàng-pe̍h", "en": "Auto-Space", "ja": "自動スペース" }
+      "values": { "hanji": "自動閬一个縫", "tailo": "Tsū-tōng làng tsi̍t ê phāng", "poj": "Chū-tōng làng chi̍t ê phāng", "en": "Auto-Space", "ja": "自動スペース" }
     },
     "keyboardSectionTitle": {
       "comment": "Section header for keyboard-chrome settings.",
