@@ -293,6 +293,7 @@ public extension RustEngineBridge {
         translateSwapped: Bool,
         associationRecordingEnabled: Bool,
         candidateDisplayMode: CandidateDisplayMode = .sideBySide,
+        hyphenlessRoman: Bool = false,
         generation: UInt64,
     ) -> NextWordFilterResult {
         var payload = Taigi_Engine_FilterPredictions()
@@ -318,6 +319,7 @@ public extension RustEngineBridge {
                 translateSwapped: translateSwapped,
                 associationRecordingEnabled: associationRecordingEnabled,
                 candidateDisplayMode: candidateDisplayMode,
+                hyphenlessRoman: hyphenlessRoman,
             ),
         ) else {
             return NextWordFilterResult(predictions: [], wasStale: false)
@@ -411,17 +413,21 @@ public extension RustEngineBridge {
     /// Build an `AppConfig` populated for the NextWord engine. iOS bridge
     /// always sets `platform_id = .ios`; tone toggles default to false (the
     /// NextWord engine does not read them, but the field is required).
-    // `candidateDisplayMode` rides only `nextwordFilter` — the sole nextword reader of field 9 (mirrors Android);
-    // `nextwordFilter` MUST pass the live setting; the other entry points leave the default.
+    // `candidateDisplayMode` and `hyphenlessRoman` ride only `nextwordFilter` — the sole nextword reader of
+    // fields 9 / 10 (mirrors Android); `nextwordFilter` MUST pass the live settings; the other entry points
+    // leave the defaults.
     private static func nextwordConfig(
         mode: InputMode,
         translateSwapped: Bool,
         associationRecordingEnabled: Bool,
         candidateDisplayMode: CandidateDisplayMode = .sideBySide,
+        hyphenlessRoman: Bool = false,
     ) -> Taigi_Engine_AppConfig {
         var cfg = Taigi_Engine_AppConfig()
         // Proto field 9 — the nextword filter collapses same-roman predictions under 羅馬字.
         cfg.candidateDisplayMode = candidateDisplayMode.engineValue
+        // Proto field 10 — 無連字符 shapes `EnginePrediction.text`; `tl` keeps the hyphen.
+        cfg.hyphenlessRoman = hyphenlessRoman
         switch mode {
         case .poj: cfg.inputMode = "poj"
         case .tl: cfg.inputMode = "tl"

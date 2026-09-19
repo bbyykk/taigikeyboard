@@ -96,6 +96,16 @@
       "scope": { "platforms": ["macos", "windows"], "surfaces": ["host"] },
       "values": { "hanji": "羅馬字", "tailo": "Lô-má-jī", "poj": "Lô-má-jī", "en": "Romanization", "ja": "ローマ字" }
     },
+    "hyphenlessRoman": {
+      "comment": "Toggle label: render candidate / committed romanization without the dictionary's inter-syllable hyphen, 輕聲 -- as · (tâi-uân → tâiuân, hōo--guá → hōo·guá). All four platforms, host settings only.",
+      "scope": { "platforms": ["android", "ios", "macos", "windows"], "surfaces": ["host"] },
+      "values": { "hanji": "無連字符", "tailo": "Bô liân-jī-hû", "poj": "Bô liân-jī-hû", "en": "No Hyphens", "ja": "ハイフンなし" }
+    },
+    "hyphenlessRomanInfo": {
+      "comment": "Help text for the 無連字符 toggle (mobile host app).",
+      "scope": { "platforms": ["android", "ios"], "surfaces": ["host"] },
+      "values": { "hanji": "候選詞佮送出的羅馬字無連字符（tâi-uân → tâiuân），輕聲記號 -- 改用 ·（hōo--guá → hōo·guá）。你家己拍的連字符無影響。", "tailo": "Hāu-suán sû kah sàng-tshut ê lô-má-jī bô liân-jī-hû (tâi-uân → tâiuân), khin-siann kì-hō -- kái iōng · (hōo--guá → hōo·guá). Lí ka-kī phah ê liân-jī-hû bô íng-hióng.", "poj": "Hāu-soán sû kah sàng-chhut ê lô-má-jī bô liân-jī-hû (tâi-oân → tâioân), khin-siaⁿ kì-hō -- kái iōng · (hō͘--goá → hō͘·goá). Lí ka-kī phah ê liân-jī-hû bô éng-hióng.", "en": "Shows and commits romanization without hyphens between syllables (tâi-uân → tâiuân); the neutral-tone marker -- becomes · (hōo--guá → hōo·guá). Hyphens you type yourself are unaffected.", "ja": "候補と確定するローマ字から音節間のハイフンを省きます（tâi-uân → tâiuân）。軽声記号 -- は · になります（hōo--guá → hōo·guá）。自分で入力したハイフンは変わりません。" }
+    },
     "candidateWindow": {
       "comment": "Toggle label on the desktop General pane: show the candidate window at all. Off = no window, Space / Enter write the typed romanization (S33).",
       "scope": { "platforms": ["macos", "windows"], "surfaces": ["host"] },

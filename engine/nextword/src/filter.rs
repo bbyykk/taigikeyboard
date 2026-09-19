@@ -245,11 +245,15 @@ fn separatorless_form(tl: &str) -> String {
 
 fn shape_prediction(m: MergedRow, config: &AppConfig) -> Option<EnginePrediction> {
     let use_tl = config.input_mode == "tl";
-    let roman = if use_tl {
+    let mut roman = if use_tl {
         m.tl.clone()
     } else {
         phonetics::api::tl_display_to_poj_display(&m.tl)
     };
+    // 無連字符 — presentation only; `tl` below stays the association key.
+    if config.hyphenless_roman {
+        roman = phonetics::api::hyphenless_display(&roman);
+    }
     if !config.is_translate_swapped && roman.is_empty() {
         return None;
     }
@@ -288,6 +292,7 @@ mod tests {
             platform_id: Platform::Ios as i32,
             output_both_scripts: false,
             candidate_display_mode: 0,
+            hyphenless_roman: false,
         }
     }
 
@@ -302,6 +307,7 @@ mod tests {
             platform_id: Platform::Ios as i32,
             output_both_scripts: false,
             candidate_display_mode: 0,
+            hyphenless_roman: false,
         }
     }
 
@@ -1023,6 +1029,36 @@ mod tests {
             2,
             "side-by-side keeps 同音異字 apart"
         );
+    }
+
+    /// 無連字符 shapes only the cell text; `tl` stays the association key
+    /// the platform hands back on tap, in TL and POJ mode alike.
+    #[test]
+    fn hyphenless_roman_strips_prediction_text_but_not_its_tl_key() {
+        let state = PersistedState::default();
+        let rows = || {
+            vec![
+                dict_row("台灣", "tâi-uân", 9),
+                dict_row("予我", "hōo--guá", 3),
+            ]
+        };
+        let tl = AppConfig {
+            hyphenless_roman: true,
+            ..config_tl_mode_translate_swapped(false)
+        };
+        let shaped = filter(&state, rows(), 0, 0, 10, &tl).unwrap();
+        assert_eq!(shaped.predictions[0].text, "tâiuân");
+        assert_eq!(shaped.predictions[0].tl, "tâi-uân");
+        assert_eq!(shaped.predictions[1].text, "hōo\u{00b7}guá");
+        assert_eq!(shaped.predictions[1].tl, "hōo--guá");
+
+        let poj = AppConfig {
+            hyphenless_roman: true,
+            ..config_poj_mode()
+        };
+        let shaped = filter(&state, rows(), 0, 0, 10, &poj).unwrap();
+        assert_eq!(shaped.predictions[0].text, "tâioân");
+        assert_eq!(shaped.predictions[0].tl, "tâi-uân");
     }
 
     /// The collapse runs before the limit so the strip is filled with

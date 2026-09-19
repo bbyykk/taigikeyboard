@@ -86,6 +86,7 @@ fun InputSettingsScreen(
     // 括號標註 binds the STORED flag; it is only disabled (not cleared) while roman-only.
     var outputBoth by remember(resetCounter) { mutableStateOf(prefs.storedOutputBothScripts) }
     var literalRomanCandidate by remember(resetCounter) { mutableStateOf(prefs.literalRomanCandidateEnabled) }
+    var hyphenlessRoman by remember(resetCounter) { mutableStateOf(prefs.storedHyphenlessRomanEnabled) }
     var autoCap by remember(resetCounter) { mutableStateOf(prefs.autoCapitalizationEnabled) }
     var autoSpace by remember(resetCounter) { mutableStateOf(prefs.isAutoSpaceEnabled) }
     var doubleOO by remember(resetCounter) { mutableStateOf(prefs.enableDoubleTapOO) }
@@ -218,6 +219,16 @@ fun InputSettingsScreen(
                         onCheckedChange = {
                             outputBoth = it
                             prefs.storedOutputBothScripts = it
+                        },
+                    )
+                    SettingsDivider()
+                    SwitchRow(
+                        label = L10n.settingsHyphenlessRoman,
+                        checked = hyphenlessRoman,
+                        infoText = L10n.settingsHyphenlessRomanInfo,
+                        onCheckedChange = {
+                            hyphenlessRoman = it
+                            prefs.storedHyphenlessRomanEnabled = it
                         },
                     )
                     SettingsDivider()

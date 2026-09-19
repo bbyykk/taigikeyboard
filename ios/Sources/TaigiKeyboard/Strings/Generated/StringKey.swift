@@ -187,6 +187,8 @@ enum StringKey: String {
     case settingsCandidateDisplayModeCombined = "i18n_settings_candidateDisplayModeCombined"
     case settingsCandidateDisplayModeRomanOnly = "i18n_settings_candidateDisplayModeRomanOnly"
     case settingsOutputBothScripts = "i18n_settings_outputBothScripts"
+    case settingsHyphenlessRoman = "i18n_settings_hyphenlessRoman"
+    case settingsHyphenlessRomanInfo = "i18n_settings_hyphenlessRomanInfo"
     case settingsLiteralRomanCandidate = "i18n_settings_literalRomanCandidate"
     case settingsLiteralRomanCandidateInfo = "i18n_settings_literalRomanCandidateInfo"
     case settingsAutoCapitalization = "i18n_settings_autoCapitalization"

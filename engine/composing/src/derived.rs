@@ -173,6 +173,7 @@ mod tests {
             platform_id: 0,
             output_both_scripts: false,
             candidate_display_mode: 0,
+            hyphenless_roman: false,
         }
     }
 

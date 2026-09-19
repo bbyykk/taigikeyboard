@@ -262,6 +262,7 @@ impl SettingsDocument {
             candidate_display_mode,
             is_literal_roman_candidate_enabled: self
                 .bool(&keys::IS_LITERAL_ROMAN_CANDIDATE_ENABLED),
+            is_hyphenless_roman_enabled: self.bool(&keys::IS_HYPHENLESS_ROMAN_ENABLED),
             is_frequency_recording_enabled: self.bool(&keys::IS_FREQUENCY_RECORDING_ENABLED),
             is_association_recording_enabled: self.bool(&keys::IS_ASSOCIATION_RECORDING_ENABLED),
             is_custom_dict_enabled: self.bool(&keys::IS_CUSTOM_DICT_ENABLED),
@@ -585,6 +586,16 @@ mod tests {
         doc.set_bool(&keys::IS_LITERAL_ROMAN_CANDIDATE_ENABLED, false);
 
         assert!(!doc.engine_settings().is_literal_roman_candidate_enabled);
+    }
+
+    #[test]
+    fn hyphenless_roman_reads_the_stored_switch() {
+        let mut doc = SettingsDocument::default();
+        assert!(!doc.engine_settings().is_hyphenless_roman_enabled, "ships OFF");
+        doc.set_bool(&keys::IS_HYPHENLESS_ROMAN_ENABLED, true);
+        assert!(doc.engine_settings().is_hyphenless_roman_enabled);
+        doc.reset_general();
+        assert!(!doc.contains(keys::IS_HYPHENLESS_ROMAN_ENABLED.name), "一般's key");
     }
 
     #[test]

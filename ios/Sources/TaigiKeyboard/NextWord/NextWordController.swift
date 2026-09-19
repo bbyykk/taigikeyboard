@@ -248,6 +248,7 @@ final class NextWordController {
             translateSwapped: settings.isTranslateSwapped,
             associationRecordingEnabled: settings.isAssociationRecordingEnabled,
             candidateDisplayMode: settings.candidateDisplayMode,
+            hyphenlessRoman: settings.isHyphenlessRomanEnabled,
             generation: envelopeGen,
         )
         if filterResult.wasStale {

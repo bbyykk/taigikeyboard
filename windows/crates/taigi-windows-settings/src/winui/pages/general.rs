@@ -69,6 +69,14 @@ pub fn view(
             },
             context,
         ),
+        // 無連字符 (§49), directly under 輸出文字 — it describes that output's
+        // shape.
+        cards::switch_row(
+            strings.resolve(StringKey::SettingsHyphenlessRoman),
+            document.bool(&keys::IS_HYPHENLESS_ROMAN_ENABLED),
+            true,
+            context.callback(|is_on| Message::SetSwitch(keys::IS_HYPHENLESS_ROMAN_ENABLED, is_on)),
+        ),
         // Which keys type a tone is a fact about how the syllable is
         // spelled, not a shortcut (USER 2026-09-08), and the slot keys
         // follow from it rather than being chosen on the shortcut pane.

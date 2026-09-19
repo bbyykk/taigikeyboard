@@ -255,6 +255,18 @@ public nonisolated enum Taigi_Engine_CandidateDisplayMode: SwiftProtobuf.Enum, S
 /// read it; the other request families ignore it. Platforms keep sending the
 /// derived `is_translate_swapped` / `output_both_scripts` pair (both `false`
 /// under 羅馬字) so spacing / recording semantics need no new reader.
+///
+/// 2026-09-20 added `hyphenless_roman` (無連字符, USER): the rendered
+/// romanization drops the inter-syllable `-` and writes the 輕聲 marker `--`
+/// as `·` U+00B7 (`tâi-uân` → `tâiuân`, `hōo--guá` → `hōo·guá`). Rendering
+/// only — `phonetics::api::hyphenless_display` is applied to the candidate
+/// `roman` (`composing::dispatch`), the prediction `text`
+/// (`nextword::filter`) and the engine-synthesised compound joiner
+/// (`composing::api::nailed_prefix`); identity fields (`display_text`,
+/// `canonical_tl`, `tl`) and user-typed text keep their hyphens. The
+/// platform sends `false` under a TPS layout (the engine sees TPS as
+/// `"tl"` / `"poj"` and the platform re-splits `roman` on `-` for bopomofo),
+/// exactly as it folds TPS into `is_translate_swapped`.
 public nonisolated struct Taigi_Engine_AppConfig: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
@@ -277,6 +289,8 @@ public nonisolated struct Taigi_Engine_AppConfig: Sendable {
   public var outputBothScripts: Bool = false
 
   public var candidateDisplayMode: Taigi_Engine_CandidateDisplayMode = .unspecified
+
+  public var hyphenlessRoman: Bool = false
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
@@ -493,7 +507,7 @@ nonisolated extension Taigi_Engine_CandidateDisplayMode: SwiftProtobuf._ProtoNam
 
 nonisolated extension Taigi_Engine_AppConfig: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".AppConfig"
-  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}tone_mode\0\u{3}input_mode\0\u{3}oo_doubletap_enabled\0\u{3}nn_doubletap_enabled\0\u{3}is_translate_swapped\0\u{3}is_association_recording_enabled\0\u{3}platform_id\0\u{3}output_both_scripts\0\u{3}candidate_display_mode\0")
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}tone_mode\0\u{3}input_mode\0\u{3}oo_doubletap_enabled\0\u{3}nn_doubletap_enabled\0\u{3}is_translate_swapped\0\u{3}is_association_recording_enabled\0\u{3}platform_id\0\u{3}output_both_scripts\0\u{3}candidate_display_mode\0\u{3}hyphenless_roman\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -510,6 +524,7 @@ nonisolated extension Taigi_Engine_AppConfig: SwiftProtobuf.Message, SwiftProtob
       case 7: try { try decoder.decodeSingularEnumField(value: &self.platformID) }()
       case 8: try { try decoder.decodeSingularBoolField(value: &self.outputBothScripts) }()
       case 9: try { try decoder.decodeSingularEnumField(value: &self.candidateDisplayMode) }()
+      case 10: try { try decoder.decodeSingularBoolField(value: &self.hyphenlessRoman) }()
       default: break
       }
     }
@@ -543,6 +558,9 @@ nonisolated extension Taigi_Engine_AppConfig: SwiftProtobuf.Message, SwiftProtob
     if self.candidateDisplayMode != .unspecified {
       try visitor.visitSingularEnumField(value: self.candidateDisplayMode, fieldNumber: 9)
     }
+    if self.hyphenlessRoman != false {
+      try visitor.visitSingularBoolField(value: self.hyphenlessRoman, fieldNumber: 10)
+    }
     try unknownFields.traverse(visitor: &visitor)
   }
 
@@ -556,6 +574,7 @@ nonisolated extension Taigi_Engine_AppConfig: SwiftProtobuf.Message, SwiftProtob
     if lhs.platformID != rhs.platformID {return false}
     if lhs.outputBothScripts != rhs.outputBothScripts {return false}
     if lhs.candidateDisplayMode != rhs.candidateDisplayMode {return false}
+    if lhs.hyphenlessRoman != rhs.hyphenlessRoman {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

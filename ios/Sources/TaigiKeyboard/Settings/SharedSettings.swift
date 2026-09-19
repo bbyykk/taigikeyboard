@@ -51,6 +51,7 @@ final class SharedSettings {
     private static let isFrequencyRecordingEnabledKey: SettingsKey<Bool> = .bool("frequencyRecordingEnabled", default: true)
     private static let isAssociationRecordingEnabledKey: SettingsKey<Bool> = .bool("associationRecordingEnabled", default: true)
     private static let isLiteralRomanCandidateEnabledKey: SettingsKey<Bool> = .bool("literalRomanCandidateEnabled", default: true)
+    private static let isHyphenlessRomanEnabledKey: SettingsKey<Bool> = .bool("hyphenlessRomanEnabled", default: false)
     private static let isCustomDictEnabledKey: SettingsKey<Bool> = .bool("customDictEnabled", default: true)
 
     private static let isMoeDictEnabledKey: SettingsKey<Bool> = .bool("moeDictEnabled", default: true)
@@ -288,6 +289,15 @@ final class SharedSettings {
     var isLiteralRomanCandidateEnabled: Bool {
         get { userDefaults.value(for: Self.isLiteralRomanCandidateEnabledKey) }
         set { userDefaults.set(newValue, for: Self.isLiteralRomanCandidateEnabledKey) }
+    }
+
+    // MARK: - Hyphenless Romanization (無連字符, §49, default: off)
+
+    /// The STORED switch, bound by the settings toggle. `isHyphenlessRomanEnabled`
+    /// (the engine-facing value) folds TPS on top of it.
+    var storedIsHyphenlessRomanEnabled: Bool {
+        get { userDefaults.value(for: Self.isHyphenlessRomanEnabledKey) }
+        set { userDefaults.set(newValue, for: Self.isHyphenlessRomanEnabledKey) }
     }
 
     // MARK: - Custom Dictionary
@@ -628,6 +638,7 @@ final class SharedSettings {
         storedIsOutputBothScripts = false
         candidateDisplayMode = .sideBySide
         isLiteralRomanCandidateEnabled = true
+        storedIsHyphenlessRomanEnabled = false
         fontType = .keyboardDefault
         isAutoSpaceEnabled = false
         keyboardLayoutType = .phahTaigi
@@ -728,6 +739,15 @@ extension SharedSettings: EngineSettings {
     /// Effective 括號標註 — same seam, same rule owner.
     var isOutputBothScripts: Bool {
         candidateDisplayMode.effectiveOutputBothScripts(stored: storedIsOutputBothScripts)
+    }
+
+    /// Effective 無連字符 — never under a TPS layout: the engine receives TPS as
+    /// `"tl"` / `"poj"` and the strip would break the platform's `-` re-split of
+    /// the candidate roman for bopomofo (`tlDisplayToTPS`). Same fold, same seam
+    /// as `effectiveSwapped` in `ComposingManager.continuousSpacingFlags`.
+    // CROSS-PLATFORM INVARIANT — mirrors android PrefHelper.isHyphenlessRomanEnabled (!isTpsLayout && …).
+    var isHyphenlessRomanEnabled: Bool {
+        inputMode != .tps && storedIsHyphenlessRomanEnabled
     }
 }
 

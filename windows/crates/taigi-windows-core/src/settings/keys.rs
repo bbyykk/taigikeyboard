@@ -46,6 +46,10 @@ pub const IS_LITERAL_ROMAN_CANDIDATE_ENABLED: SettingsKey<bool> = SettingsKey::n
     "literalRomanCandidateEnabled",
     ENGINE_DEFAULTS.is_literal_roman_candidate_enabled,
 );
+pub const IS_HYPHENLESS_ROMAN_ENABLED: SettingsKey<bool> = SettingsKey::new(
+    "hyphenlessRomanEnabled",
+    ENGINE_DEFAULTS.is_hyphenless_roman_enabled,
+);
 pub const IS_FREQUENCY_RECORDING_ENABLED: SettingsKey<bool> = SettingsKey::new(
     "frequencyRecordingEnabled",
     ENGINE_DEFAULTS.is_frequency_recording_enabled,
@@ -223,7 +227,7 @@ pub const CLEARED_COMPOSING_CHORD: &str = "";
 /// The keys the 一般 pane's reset removes — every setting the pane draws,
 /// same shape as `DICTIONARY_SOURCE_KEYS`. Not the update bookkeeping, not
 /// the remembered pane (`SettingsStore.swift resetGeneralSettings`).
-pub const GENERAL_KEYS: [&str; 7] = [
+pub const GENERAL_KEYS: [&str; 8] = [
     INPUT_MODE.name,
     TONE_INPUT_SCHEME.name,
     IS_TRANSLATE_SWAPPED.name,
@@ -231,6 +235,7 @@ pub const GENERAL_KEYS: [&str; 7] = [
     IS_AUTO_SPACE_ENABLED.name,
     IS_CANDIDATE_WINDOW_ENABLED.name,
     IS_LITERAL_ROMAN_CANDIDATE_ENABLED.name,
+    IS_HYPHENLESS_ROMAN_ENABLED.name,
 ];
 
 /// The keys the 外觀 pane's reset removes (`SettingsStore.swift:457-465`).

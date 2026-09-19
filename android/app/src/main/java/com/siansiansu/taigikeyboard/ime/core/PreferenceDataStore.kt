@@ -46,6 +46,7 @@ object PreferenceKeys {
     // Raw value = CandidateDisplayMode.storageValue ("sideBySide" / "romanOnly" / "combined").
     val CANDIDATE_DISPLAY_MODE = stringPreferencesKey("keyboard__candidate_display_mode")
     val LITERAL_ROMAN_CANDIDATE = booleanPreferencesKey("keyboard__literal_roman_candidate")
+    val HYPHENLESS_ROMAN = booleanPreferencesKey("keyboard__hyphenless_roman")
     val PHAH_TAIGI_LAYOUT_ENABLED = booleanPreferencesKey("keyboard__phah_taigi_layout_enabled")
     val KEYBOARD_LAYOUT_TYPE = stringPreferencesKey("keyboard__layout_type")
     val INPUT_MODE_BEFORE_TPS = stringPreferencesKey("keyboard__input_mode_before_tps")

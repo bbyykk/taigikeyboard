@@ -169,8 +169,8 @@ fn continuous_word_space(config: &AppConfig) -> bool {
 /// - else, find the **longest run** `[j, j+n)` (`n >= 2`) starting at
 ///   the current position such that every member is single-syllable
 ///   AND `is_compound(Σ canonical_text, n)` is true. If found, emit
-///   internal `-` between run members; otherwise advance one segment
-///   and emit a single space at the boundary.
+///   `joiner` (`-`, or `` under 無連字符) between run members; otherwise
+///   advance one segment and emit a single space at the boundary.
 ///
 /// Anti-overgluing (overlapping bigrams `AB` + `BC` without trigram
 /// `ABC` → `A-B C`, not `A-B-C`) is a natural consequence of
@@ -185,6 +185,7 @@ fn continuous_word_space(config: &AppConfig) -> bool {
 fn nailed_prefix_with_oracle(
     nailed: &[NailedSegment],
     space: bool,
+    joiner: &str,
     is_compound: impl Fn(&str, u8) -> bool,
 ) -> String {
     let mut s = String::new();
@@ -202,7 +203,7 @@ fn nailed_prefix_with_oracle(
         }
         for k in 0..run_len {
             if k > 0 {
-                s.push('-');
+                s.push_str(joiner);
             }
             s.push_str(&nailed[j + k].display_text);
         }
@@ -273,24 +274,30 @@ fn longest_compound_run<F: Fn(&str, u8) -> bool>(segs: &[NailedSegment], is_comp
 /// pre-Option-A behaviour.
 pub(crate) fn nailed_prefix(nailed: &[NailedSegment], config: &AppConfig) -> String {
     let space = continuous_word_space(config);
+    // 無連字符: the engine-synthesised compound joiner is the one hyphen in
+    // this render that no user typed and no platform committed, so it is
+    // the one this flag owns here. Segment text arrives already rendered.
+    let joiner = if config.hyphenless_roman { "" } else { "-" };
     let eligible = space
         && nailed.len() >= 2
         && nailed
             .windows(2)
             .any(|w| w[0].syllable_count == 1 && w[1].syllable_count == 1);
     if !eligible {
-        return nailed_prefix_with_oracle(nailed, space, |_, _| false);
+        return nailed_prefix_with_oracle(nailed, space, joiner, |_, _| false);
     }
     LexiconHandle::with_state(|state| {
         let (Some(prefix), Some(dict)) = (state.prefix_index.as_ref(), state.dictionary.as_ref())
         else {
-            return Ok(nailed_prefix_with_oracle(nailed, space, |_, _| false));
+            return Ok(nailed_prefix_with_oracle(nailed, space, joiner, |_, _| {
+                false
+            }));
         };
-        Ok(nailed_prefix_with_oracle(nailed, space, |h, n| {
+        Ok(nailed_prefix_with_oracle(nailed, space, joiner, |h, n| {
             compound_hanji_exists(h, n, prefix, dict)
         }))
     })
-    .unwrap_or_else(|_| nailed_prefix_with_oracle(nailed, space, |_, _| false))
+    .unwrap_or_else(|_| nailed_prefix_with_oracle(nailed, space, joiner, |_, _| false))
 }
 
 /// The Model B composing-buffer surface for a `(nailed, raw)` pair:
@@ -586,6 +593,7 @@ mod tests {
             platform_id: 0,
             output_both_scripts: both,
             candidate_display_mode: 0,
+            hyphenless_roman: false,
         }
     }
 
@@ -664,11 +672,17 @@ mod tests {
         // Regression pin: with no compound ever, the roman-ish join is
         // exactly the pre-Option-A behaviour.
         let n = [seg("hit"), seg("tui")];
-        assert_eq!(nailed_prefix_with_oracle(&n, true, |_, _| false), "hit tui");
+        assert_eq!(
+            nailed_prefix_with_oracle(&n, true, "-", |_, _| false),
+            "hit tui"
+        );
         // Hanji-first / TPS (space = false) → no separator at all,
         // oracle irrelevant.
         let h = [seg("彼"), seg("隻")];
-        assert_eq!(nailed_prefix_with_oracle(&h, false, |_, _| true), "彼隻");
+        assert_eq!(
+            nailed_prefix_with_oracle(&h, false, "-", |_, _| true),
+            "彼隻"
+        );
     }
 
     #[test]
@@ -684,7 +698,7 @@ mod tests {
             seg_dc("bóo", "某", 1),
         ];
         assert_eq!(
-            nailed_prefix_with_oracle(&n, true, |h, n| n == 2 && h == "查某"),
+            nailed_prefix_with_oracle(&n, true, "-", |h, n| n == 2 && h == "查某"),
             "hit ê tsa-bóo"
         );
     }
@@ -701,7 +715,7 @@ mod tests {
             seg_dc("tang", "冬", 1),
         ];
         assert_eq!(
-            nailed_prefix_with_oracle(&n, true, |h, n| matches!(
+            nailed_prefix_with_oracle(&n, true, "-", |h, n| matches!(
                 (h, n),
                 ("紅尾冬", 3) | ("紅尾", 2)
             )),
@@ -723,7 +737,7 @@ mod tests {
             seg_dc("lâng", "人", 1),
         ];
         assert_eq!(
-            nailed_prefix_with_oracle(&n, true, |h, n| n == 2 && (h == "查某" || h == "某人")),
+            nailed_prefix_with_oracle(&n, true, "-", |h, n| n == 2 && (h == "查某" || h == "某人")),
             "tsa-bóo lâng"
         );
     }
@@ -740,7 +754,7 @@ mod tests {
             seg_dc("huân", "煩", 1),
         ];
         assert_eq!(
-            nailed_prefix_with_oracle(&n, true, |h, n| n == 2 && (h == "查某" || h == "麻煩")),
+            nailed_prefix_with_oracle(&n, true, "-", |h, n| n == 2 && (h == "查某" || h == "麻煩")),
             "tsa-bóo mâ-huân"
         );
     }
@@ -754,7 +768,7 @@ mod tests {
         // syllable segment.
         let n = [seg_dc("tsa-bóo", "查某", 2), seg_dc("lâng", "人", 1)];
         assert_eq!(
-            nailed_prefix_with_oracle(&n, true, |_, _| true),
+            nailed_prefix_with_oracle(&n, true, "-", |_, _| true),
             "tsa-bóo lâng"
         );
     }
@@ -770,7 +784,28 @@ mod tests {
         // `tai-uan` (Codex PR #349 r3311725114).
         let n = [seg_dc("tai-", "台", 1), seg_dc("uan", "灣", 1)];
         assert_eq!(
-            nailed_prefix_with_oracle(&n, true, |h, n| n == 2 && h == "台灣"),
+            nailed_prefix_with_oracle(&n, true, "-", |h, n| n == 2 && h == "台灣"),
+            "tai-uan"
+        );
+    }
+
+    #[test]
+    fn hyphenless_joiner_glues_the_compound_run_and_keeps_the_typed_hyphen() {
+        // 無連字符: the compound run is still detected (no spurious space
+        // between 台 and 灣) but joined with nothing; the following word
+        // boundary and a user-typed `tai-` continuation are untouched.
+        let n = [
+            seg_dc("tai", "台", 1),
+            seg_dc("uan", "灣", 1),
+            seg_dc("lang", "人", 1),
+        ];
+        assert_eq!(
+            nailed_prefix_with_oracle(&n, true, "", |h, n| n == 2 && h == "台灣"),
+            "taiuan lang"
+        );
+        let typed = [seg_dc("tai-", "台", 1), seg_dc("uan", "灣", 1)];
+        assert_eq!(
+            nailed_prefix_with_oracle(&typed, true, "", |h, n| n == 2 && h == "台灣"),
             "tai-uan"
         );
     }
@@ -792,7 +827,7 @@ mod tests {
             seg_dc("e", "E", 1),
         ];
         assert_eq!(
-            nailed_prefix_with_oracle(&n, true, |h, n| {
+            nailed_prefix_with_oracle(&n, true, "-", |h, n| {
                 // ALL prefixes match — without the cap we'd get a
                 // single 5-syll run "a-b-c-d-e".
                 matches!((h, n), ("ABCDE", 5) | ("ABCD", 4) | ("ABC", 3) | ("AB", 2))
@@ -813,7 +848,7 @@ mod tests {
             seg_dc("X", "國", 1),
         ];
         assert_eq!(
-            nailed_prefix_with_oracle(&n, true, |h, n| n == 2 && h == "灣國"),
+            nailed_prefix_with_oracle(&n, true, "-", |h, n| n == 2 && h == "灣國"),
             "tai-uan X"
         );
     }

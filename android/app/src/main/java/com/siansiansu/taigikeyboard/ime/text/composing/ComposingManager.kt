@@ -336,6 +336,7 @@ class ComposingManager(
                 effectiveSwapped = spacing.effectiveSwapped,
                 outputBothScripts = spacing.outputBothScripts,
                 candidateDisplayMode = settings.candidateDisplayMode,
+                hyphenlessRoman = spacing.hyphenlessRoman,
             ),
             ic,
         )
@@ -361,6 +362,7 @@ class ComposingManager(
                 effectiveSwapped = spacing.effectiveSwapped,
                 outputBothScripts = spacing.outputBothScripts,
                 candidateDisplayMode = settings.candidateDisplayMode,
+                hyphenlessRoman = spacing.hyphenlessRoman,
             ),
             ic,
         )
@@ -385,6 +387,7 @@ class ComposingManager(
                 effectiveSwapped = spacing.effectiveSwapped,
                 outputBothScripts = spacing.outputBothScripts,
                 candidateDisplayMode = settings.candidateDisplayMode,
+                hyphenlessRoman = spacing.hyphenlessRoman,
             ),
             ic,
         )
@@ -406,6 +409,7 @@ class ComposingManager(
                 effectiveSwapped = spacing.effectiveSwapped,
                 outputBothScripts = spacing.outputBothScripts,
                 candidateDisplayMode = settings.candidateDisplayMode,
+                hyphenlessRoman = spacing.hyphenlessRoman,
             ),
             ic,
         )
@@ -538,6 +542,7 @@ class ComposingManager(
             enabledSourcesBitmask = fetch.enabledSourcesBitmask,
             literalRomanCandidateDisabled = fetch.literalRomanCandidateDisabled,
             candidateDisplayMode = fetch.candidateDisplayMode,
+            hyphenlessRoman = fetch.spacing.hyphenlessRoman,
         )
         // Phase-1 FFI failure or empty carrier → "no candidates this frame".
         // Nothing to mirror: a matching-generation fetch echoes the state the
@@ -574,6 +579,7 @@ class ComposingManager(
             enabledSourcesBitmask = fetch.enabledSourcesBitmask,
             literalRomanCandidateDisabled = fetch.literalRomanCandidateDisabled,
             candidateDisplayMode = fetch.candidateDisplayMode,
+            hyphenlessRoman = fetch.spacing.hyphenlessRoman,
         )
         // Phase-2 FFI failure: the request never reached the engine —
         // degrade to the neutral-ranked phase-1 list instead of dropping
@@ -749,6 +755,7 @@ class ComposingManager(
             effectiveSwapped = spacing.effectiveSwapped,
             outputBothScripts = spacing.outputBothScripts,
             candidateDisplayMode = settings.candidateDisplayMode,
+            hyphenlessRoman = spacing.hyphenlessRoman,
         )
         // Inspect transition BEFORE dispatching effects so we return an
         // effect-backed signal. `applyAsSelfCommit` body inlined (3 lines)
@@ -966,6 +973,8 @@ class ComposingManager(
      * `input_mode` (its own `input_mode == "tps"` branch never fires
      * from the platform). [EngineSettings.inputMode] is the raw string
      * (`"tps"` representable) per the documented Android divergence.
+     * `hyphenlessRoman` (無連字符, §49) rides along already TPS-folded by
+     * `PrefHelper.isHyphenlessRomanEnabled`.
      */
     // CROSS-PLATFORM INVARIANT — mirrors ios/Sources/TaigiKeyboard/Input/Composing/ComposingManager.swift continuousSpacingFlags.
     // Drift causes silent divergence (hanji-first spurious word-boundary spaces).
@@ -975,11 +984,13 @@ class ComposingManager(
         ContinuousSpacingFlags(
             effectiveSwapped = settings.isTranslateSwapped || settings.inputMode == "tps",
             outputBothScripts = settings.isOutputBothScripts,
+            hyphenlessRoman = settings.isHyphenlessRomanEnabled,
         )
 
     private data class ContinuousSpacingFlags(
         val effectiveSwapped: Boolean,
         val outputBothScripts: Boolean,
+        val hyphenlessRoman: Boolean,
     )
 
     /**

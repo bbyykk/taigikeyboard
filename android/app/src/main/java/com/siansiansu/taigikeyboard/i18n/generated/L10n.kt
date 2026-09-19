@@ -380,6 +380,10 @@ object L10n {
         @Composable get() = stringRes(StringKey.SETTINGS_CANDIDATE_DISPLAY_MODE_ROMAN_ONLY)
     val settingsOutputBothScripts: String
         @Composable get() = stringRes(StringKey.SETTINGS_OUTPUT_BOTH_SCRIPTS)
+    val settingsHyphenlessRoman: String
+        @Composable get() = stringRes(StringKey.SETTINGS_HYPHENLESS_ROMAN)
+    val settingsHyphenlessRomanInfo: String
+        @Composable get() = stringRes(StringKey.SETTINGS_HYPHENLESS_ROMAN_INFO)
     val settingsLiteralRomanCandidate: String
         @Composable get() = stringRes(StringKey.SETTINGS_LITERAL_ROMAN_CANDIDATE)
     val settingsLiteralRomanCandidateInfo: String

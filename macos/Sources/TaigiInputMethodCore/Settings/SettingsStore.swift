@@ -62,6 +62,10 @@ final class SettingsStore: EngineSettingsProvider, @unchecked Sendable {
             name: "literalRomanCandidateEnabled",
             defaultValue: EngineSettings.defaults.isLiteralRomanCandidateEnabled,
         )
+        static let isHyphenlessRomanEnabled = SettingsKey(
+            name: "hyphenlessRomanEnabled",
+            defaultValue: EngineSettings.defaults.isHyphenlessRomanEnabled,
+        )
         static let isFrequencyRecordingEnabled = SettingsKey(
             name: "frequencyRecordingEnabled",
             defaultValue: EngineSettings.defaults.isFrequencyRecordingEnabled,
@@ -369,6 +373,7 @@ final class SettingsStore: EngineSettingsProvider, @unchecked Sendable {
             isFullWidthPunctuation: displayMode.effectiveFullWidthPunctuation(stored: storedSwap),
             candidateDisplayMode: displayMode,
             isLiteralRomanCandidateEnabled: bool(Keys.isLiteralRomanCandidateEnabled),
+            isHyphenlessRomanEnabled: bool(Keys.isHyphenlessRomanEnabled),
             isFrequencyRecordingEnabled: bool(Keys.isFrequencyRecordingEnabled),
             isAssociationRecordingEnabled: bool(Keys.isAssociationRecordingEnabled),
             isCustomDictEnabled: bool(Keys.isCustomDictEnabled),
@@ -577,7 +582,7 @@ final class SettingsStore: EngineSettingsProvider, @unchecked Sendable {
 
     /// Puts every setting the 一般 pane owns back to shipped state — the
     /// romanization, the tone keys, the output script, the display language
-    /// and the three switches. Removed rather than written, like
+    /// and the four switches. Removed rather than written, like
     /// `resetAppearanceSettings`, and spelled out like `resetDictionarySources`.
     /// The update bookkeeping and the remembered pane are not settings of the
     /// user's and are left alone.
@@ -590,6 +595,7 @@ final class SettingsStore: EngineSettingsProvider, @unchecked Sendable {
             Keys.isAutoSpaceEnabled.name,
             Keys.isCandidateWindowEnabled.name,
             Keys.isLiteralRomanCandidateEnabled.name,
+            Keys.isHyphenlessRomanEnabled.name,
         )
     }
 

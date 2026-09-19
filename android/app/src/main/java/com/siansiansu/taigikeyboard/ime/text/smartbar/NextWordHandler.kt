@@ -432,6 +432,7 @@ class NextWordHandler(
             associationRecordingEnabled = settings.isAssociationRecordingEnabled,
             generation = envelopeGen,
             candidateDisplayMode = settings.candidateDisplayMode,
+            hyphenlessRoman = settings.isHyphenlessRomanEnabled,
         )
         if (filterResult.wasStale) {
             logger.debug(TAG) { "[NEXTWORD] Drop stale result gen=$queryGeneration" }

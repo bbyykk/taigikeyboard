@@ -173,6 +173,12 @@ pub struct EngineSettings {
     /// (`ios/.../SharedSettings.swift`) and `literalRomanCandidateEnabled`
     /// (`android/.../PrefHelper.kt`), both default ON.
     pub is_literal_roman_candidate_enabled: bool,
+    /// 無連字符 (`behavioral-invariants.md` §49) — `AppConfig.hyphenless_roman`
+    /// on the base config; no TPS layout here, so no fold.
+    /// CROSS-PLATFORM INVARIANT — mirrors `isHyphenlessRomanEnabled`
+    /// (`macos/.../EngineSettings.swift`, `ios/.../SharedSettings.swift`) and
+    /// `hyphenlessRomanEnabled` (`android/.../PrefHelper.kt`), all OFF.
+    pub is_hyphenless_roman_enabled: bool,
     /// Read on the write path only; the boost always applies to whatever was
     /// learned. CROSS-PLATFORM INVARIANT — `SharedSettings.swift:48` (ON).
     pub is_frequency_recording_enabled: bool,
@@ -207,6 +213,7 @@ impl EngineSettings {
             is_full_width_punctuation: MODE.effective_full_width_punctuation(STORED_SWAP),
             candidate_display_mode: MODE,
             is_literal_roman_candidate_enabled: true,
+            is_hyphenless_roman_enabled: false,
             is_frequency_recording_enabled: true,
             is_association_recording_enabled: true,
             is_custom_dict_enabled: true,

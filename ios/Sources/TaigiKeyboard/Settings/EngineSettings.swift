@@ -42,6 +42,12 @@ protocol EngineSettings {
     // Drift causes silent divergence (one platform shows the §34 candidate, the other does not).
     var isLiteralRomanCandidateEnabled: Bool { get }
 
+    /// 無連字符 (`behavioral-invariants.md` §49), EFFECTIVE: the stored switch
+    /// with TPS folded off. Forwarded verbatim as `AppConfig.hyphenless_roman`.
+    // CROSS-PLATFORM INVARIANT — mirrors android/app/src/main/java/com/siansiansu/taigikeyboard/ime/core/settings/EngineSettings.kt:isHyphenlessRomanEnabled.
+    // Drift causes silent divergence (one platform still shows hyphens).
+    var isHyphenlessRomanEnabled: Bool { get }
+
     /// POJ preprocessing toggles bundled as a live-read value so
     /// `ComposingState` / `ToneConverter` can stay Foundation-pure.
     var toneToggles: ToneToggles { get }
