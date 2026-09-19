@@ -25,6 +25,23 @@ class UserThemeStoreTest {
         return UserTheme(UUID.randomUUID().toString(), name, appearance, createdAt = 0L, updatedAt = 0L)
     }
 
+    // Every persisted mutation hands the new list to the hook (the photo sweep); a rejected add does not.
+    @Test
+    fun mutations_runHookWithNewList() {
+        val memory = MemoryStore()
+        val seen = mutableListOf<List<UserTheme>>()
+        val store = UserThemeStore(read = { memory.json }, write = { memory.json = it }, onMutated = { seen += it })
+        val t = theme("A")
+        store.add(t)
+        store.update(t.copy(name = "B"))
+        store.delete(t.id)
+        assertEquals(listOf(listOf("A"), listOf("B"), emptyList()), seen.map { list -> list.map { it.name } })
+        repeat(UserThemeStore.MAX_USER_THEMES) { store.add(theme("T$it")) }
+        val before = seen.size
+        store.add(theme("overflow"))
+        assertEquals("a rejected add persists nothing", before, seen.size)
+    }
+
     @Test
     fun load_emptyStore_returnsEmpty() {
         assertEquals(emptyList<UserTheme>(), MemoryStore().store().load())

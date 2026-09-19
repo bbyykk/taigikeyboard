@@ -41,6 +41,13 @@ class CompositionRoot private constructor(
     val lexicon: LexiconService = LexiconService(appContext, logger)
     val backup: BackupService = BackupService(logger, customDict, userFreq, nextWord)
 
+    /** Decoded theme photos (custom-theme photo background), over the app-private photo store. */
+    val themeImages: ThemeImageCache = ThemeImageCache(ThemeImageStore.forApp(appContext))
+
+    /** The user-theme store over [prefs], with the photo sweep wired as its mutation hook. */
+    fun userThemeStore(prefs: PrefHelper): UserThemeStore =
+        UserThemeStore(read = { prefs.userThemes }, write = { prefs.userThemes = it }, onMutated = themeImages::sweep)
+
     /**
      * Lexicon engine readiness gate. Completed by
      * `TaigiKeyboardApplication.installLexiconEngine` on success;

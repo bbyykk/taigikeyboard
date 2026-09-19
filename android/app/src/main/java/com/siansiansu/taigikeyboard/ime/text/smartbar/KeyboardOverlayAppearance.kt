@@ -13,25 +13,25 @@ import androidx.compose.ui.res.dimensionResource
 import com.siansiansu.taigikeyboard.R
 import com.siansiansu.taigikeyboard.ime.core.PrefHelper
 import com.siansiansu.taigikeyboard.ime.core.ThemeAppearanceCache
-import com.siansiansu.taigikeyboard.ime.core.ThemeBackground
+import com.siansiansu.taigikeyboard.ime.core.ThemeSurface
 import com.siansiansu.taigikeyboard.ime.core.isKeyboardNightMode
 
 /**
  * The theme colors a keyboard overlay panel paints with.
  *
  * Single seam for the symbol / layout / settings overlays so they match the candidate overlay:
- * a custom theme repaints its [background] (solid or gradient — the panels are siblings of the
- * painted keyboard parent, not children, so they must paint it themselves); the adaptive
+ * a custom theme repaints its [surface] (solid, gradient or photo — the panels are siblings of
+ * the painted keyboard parent, not children, so they must paint it themselves); the adaptive
  * default falls back to [solidBackground] (`?keyboard_bgColor`). [foreground] is role-first
  * ([candidateTextColor] over the `?smartbar_fgColor` attr) so a light-only gradient theme stays
  * readable in system dark mode (the PR #425 invariant, here extended to these panels). [accent]
- * keeps the chrome accent. Paint with `Modifier.themeBackground(background, solidBackground,
+ * keeps the chrome accent. Paint with `Modifier.themeBackground(surface, solidBackground,
  * topInsetPx)` — [rememberSmartbarInsetPx] for the panels mounted below the smartbar, 0 for the
  * candidate overlay that spans the full keyboard.
  */
 data class KeyboardOverlayAppearance(
     val solidBackground: Color,
-    val background: ThemeBackground?,
+    val surface: ThemeSurface?,
     val foreground: Color,
     val accent: Color,
 )
@@ -57,7 +57,7 @@ fun rememberKeyboardOverlayAppearance(
         val colors = cache.resolve(isKeyboardNightMode(context)).colors
         KeyboardOverlayAppearance(
             solidBackground = chrome.background,
-            background = colors.background,
+            surface = colors.surface,
             foreground = colors.candidateTextColor?.let { Color(it) } ?: chrome.foreground,
             accent = chrome.accent,
         )

@@ -13,6 +13,8 @@ package com.siansiansu.taigikeyboard.ime.core
 class UserThemeStore(
     private val read: () -> String,
     private val write: (String) -> Unit,
+    /** Runs after every persisted mutation with the new theme list (photo sweep; mirrors iOS `onMutated`). */
+    private val onMutated: (List<UserTheme>) -> Unit = {},
 ) {
     /** Loads all persisted themes (seeded at decode, see [UserTheme.fromJson]); [] when absent or corrupt. */
     fun load(): List<UserTheme> = UserTheme.decodeList(read())
@@ -26,7 +28,7 @@ class UserThemeStore(
     fun add(theme: UserTheme): Boolean {
         val themes = load()
         if (themes.size >= MAX_USER_THEMES) return false
-        write(UserTheme.encodeList(themes + theme))
+        persist(themes + theme)
         return true
     }
 
@@ -35,7 +37,7 @@ class UserThemeStore(
         val themes = load()
         val index = themes.indexOfFirst { it.id == theme.id }
         if (index < 0) return
-        write(UserTheme.encodeList(themes.toMutableList().also { it[index] = theme }))
+        persist(themes.toMutableList().also { it[index] = theme })
     }
 
     /** Removes the theme with [id] (no-op if absent). */
@@ -43,7 +45,12 @@ class UserThemeStore(
         val themes = load()
         val filtered = themes.filterNot { it.id == id }
         if (filtered.size == themes.size) return
-        write(UserTheme.encodeList(filtered))
+        persist(filtered)
+    }
+
+    private fun persist(themes: List<UserTheme>) {
+        write(UserTheme.encodeList(themes))
+        onMutated(themes)
     }
 
     companion object {

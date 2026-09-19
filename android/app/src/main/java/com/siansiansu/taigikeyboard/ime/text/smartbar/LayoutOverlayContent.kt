@@ -119,7 +119,7 @@ fun LayoutOverlayContent(
         modifier =
             modifier
                 .fillMaxSize()
-                .themeBackground(appearance.background, appearance.solidBackground, topInsetPx)
+                .themeBackground(appearance.surface, appearance.solidBackground, topInsetPx)
                 .verticalScroll(rememberScrollState())
                 .padding(top = 10.dp, bottom = 4.dp),
     ) {

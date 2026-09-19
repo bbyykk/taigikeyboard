@@ -12,6 +12,9 @@ import com.siansiansu.taigikeyboard.ime.core.InputView
 import com.siansiansu.taigikeyboard.ime.core.KeyboardColorSettings
 import com.siansiansu.taigikeyboard.ime.core.ThemeBackground
 import com.siansiansu.taigikeyboard.ime.core.ThemeGradient
+import com.siansiansu.taigikeyboard.ime.core.CompositionRoot
+import com.siansiansu.taigikeyboard.ime.core.ThemeSurface
+import com.siansiansu.taigikeyboard.ime.core.UserThemeSeed
 import com.siansiansu.taigikeyboard.ime.text.smartbar.SmartbarView
 
 /**
@@ -29,24 +32,30 @@ import com.siansiansu.taigikeyboard.ime.text.smartbar.SmartbarView
 internal class KeyboardThemeSurfaceController(
     private val inputView: InputView,
 ) {
-    private var applied: ThemeBackground? = null
+    private var applied: ThemeSurface? = null
     private var hasApplied = false
 
     fun apply(colors: KeyboardColorSettings) {
         // apply() runs on every keyboard show; only re-allocate the drawable when the
-        // resolved background actually changed.
-        if (!hasApplied || applied != colors.background) {
+        // resolved surface actually changed.
+        val surface = colors.surface
+        if (!hasApplied || applied != surface) {
             hasApplied = true
-            applied = colors.background
-            inputView.findViewById<ViewGroup>(R.id.text_input_content)?.background = colors.background?.let { drawable(it) }
+            applied = surface
+            inputView.findViewById<ViewGroup>(R.id.text_input_content)?.background = surface?.let { drawable(it) }
         }
         inputView.findViewById<SmartbarView>(R.id.smartbar)?.applyThemeSurface(colors)
     }
 
-    private fun drawable(background: ThemeBackground): Drawable =
-        when (background) {
+    private fun drawable(surface: ThemeSurface): Drawable =
+        when (val background = surface.background) {
             is ThemeBackground.Solid -> ColorDrawable(background.color)
             is ThemeBackground.Gradient -> gradientDrawable(background.gradient)
+            is ThemeBackground.Image ->
+                // A missing photo file paints the seed grey so the keyboard never renders see-through.
+                CompositionRoot.shared(inputView.context).themeImages.bitmap(background.image.file)
+                    ?.let { ThemeImageDrawable(it, background.image.dim, surface.dimsTowardWhite) }
+                    ?: ColorDrawable(UserThemeSeed.SOLID_COLOR)
         }
 
     /**

@@ -652,7 +652,7 @@ class SmartbarManager(
         overlay.show(
             currentSuggestions,
             keyboardHeight,
-            colorSettings.background,
+            colorSettings.surface,
             colorSettings.candidateTextColor,
         )
     }
