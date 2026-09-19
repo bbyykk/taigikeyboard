@@ -82,6 +82,7 @@ enum StringKey: String {
     case desktopAboutIntroFree = "i18n_desktop_aboutIntroFree"
     case desktopAboutIntroMaintainer = "i18n_desktop_aboutIntroMaintainer"
     case desktopSponsorLink = "i18n_desktop_sponsorLink"
+    case desktopWebsiteLink = "i18n_desktop_websiteLink"
     case desktopGithubLink = "i18n_desktop_githubLink"
     case desktopDiscordLink = "i18n_desktop_discordLink"
     case desktopEmailLink = "i18n_desktop_emailLink"

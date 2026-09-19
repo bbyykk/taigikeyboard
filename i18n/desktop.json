@@ -1025,6 +1025,25 @@
         "ja": "支援する ❤️"
       }
     },
+    "websiteLink": {
+      "comment": "關於 page: title of the website link card. The host name itself — same in every language.",
+      "scope": {
+        "platforms": [
+          "macos",
+          "windows"
+        ],
+        "surfaces": [
+          "host"
+        ]
+      },
+      "values": {
+        "hanji": "taigikeyboard.tw",
+        "tailo": "taigikeyboard.tw",
+        "poj": "taigikeyboard.tw",
+        "en": "taigikeyboard.tw",
+        "ja": "taigikeyboard.tw"
+      }
+    },
     "githubLink": {
       "comment": "關於 page footer: tooltip + accessibility name of the GitHub icon link. A product name — same in every language.",
       "scope": {

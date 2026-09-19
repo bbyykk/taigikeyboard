@@ -3,7 +3,7 @@
 import SwiftUI
 
 /// What the input-source menu's 關於 row opens (USER 2026-09-20): the name over
-/// the three paragraphs the USER wrote and the sponsor button; the three
+/// the three paragraphs the USER wrote and the sponsor button; the four
 /// community links as rows; the attribution line.
 ///
 /// A grouped `Form` like every other pane (USER 2026-09-20 「用頁面式」), so the
@@ -32,6 +32,7 @@ struct AboutPage: View {
             // ground, where a form puts a note that is neither a setting nor
             // a link.
             Section {
+                ExternalLinkButton(titleKey: .desktopWebsiteLink, url: Self.websiteURL, style: .row(.globe))
                 ExternalLinkButton(titleKey: .desktopGithubLink, url: Self.githubURL, style: .row(.github))
                 ExternalLinkButton(titleKey: .desktopDiscordLink, url: Self.discordURL, style: .row(.discord))
                 ExternalLinkButton(titleKey: .desktopEmailLink, url: Self.emailURL, style: .row(.envelope))
@@ -44,6 +45,7 @@ struct AboutPage: View {
         .formStyle(.grouped)
     }
 
+    private static let websiteURL = URL(string: "https://taigikeyboard.tw")
     private static let githubURL = URL(string: "https://github.com/taigikeyboard")
     private static let discordURL = URL(string: "https://discord.gg/kXhtQfWvK")
     private static let emailURL = URL(string: "mailto:info@taigikeyboard.tw")

@@ -2,13 +2,13 @@
 //! `AboutPage.swift`.
 //!
 //! What the tray menu's 關於 row opens (USER 2026-09-20): the name over the
-//! three paragraphs the USER wrote and the sponsor button; the three
+//! three paragraphs the USER wrote and the sponsor button; the four
 //! community links as cards; the attribution line. In
 //! the same cards as every other pane (USER 2026-09-20 「用頁面式」). No app
 //! icon and no version — the update row on 一般 already says which build
 //! this is.
 
-use crate::presentation::{DISCORD_URL, EMAIL_URL, GITHUB_URL, SPONSOR_URL};
+use crate::presentation::{DISCORD_URL, EMAIL_URL, GITHUB_URL, SPONSOR_URL, WEBSITE_URL};
 use crate::winui::cards;
 use crate::winui::font_awesome::FontAwesomeGlyph;
 use crate::winui::window::{Message, SettingsWindow};
@@ -63,6 +63,13 @@ pub fn view(
     View::fragment((
         introduction,
         cards::section_gap(),
+        link_card(
+            strings,
+            context,
+            FontAwesomeGlyph::Globe,
+            StringKey::DesktopWebsiteLink,
+            WEBSITE_URL,
+        ),
         link_card(
             strings,
             context,
