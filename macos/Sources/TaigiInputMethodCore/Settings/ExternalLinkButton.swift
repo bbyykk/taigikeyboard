@@ -13,9 +13,6 @@ struct ExternalLinkButton: View {
     /// `.standard` is the settings-row form: the project's `arrow.up.forward.square`
     /// leave-the-app affordance, drawn in the accent colour.
     ///
-    /// `.text` is the same link colour with no icon, for a sentence that already
-    /// says where it goes.
-    ///
     /// `.row(glyph)` is a whole form row: the glyph, the title, and the leave-the-app
     /// arrow at the trailing edge in the secondary colour — the shape System Settings
     /// gives a row that opens somewhere else.
@@ -23,7 +20,6 @@ struct ExternalLinkButton: View {
     /// `.prominent` is the one call to action on a page, in the accent fill.
     enum Style {
         case standard
-        case text
         case row(FontAwesomeGlyph)
         case prominent
     }
@@ -53,10 +49,6 @@ struct ExternalLinkButton: View {
                 Label(language.string(titleKey), systemImage: "arrow.up.forward.square")
             }
             .buttonStyle(.link)
-
-        case .text:
-            Button(language.string(titleKey), action: open)
-                .buttonStyle(.link)
 
         case let .row(glyph):
             Button(action: open) {
