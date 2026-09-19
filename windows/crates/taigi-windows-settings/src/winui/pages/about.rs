@@ -1,11 +1,11 @@
 //! The 關於 page: what the project is and where to find it. Port of
 //! `AboutPage.swift`.
 //!
-//! What the tray menu's 關於 row opens (USER 2026-09-20): the name over the
-//! three paragraphs the USER wrote and the sponsor button; the four
+//! What the tray menu's 關於 row opens (USER 2026-09-20): the three
+//! paragraphs the USER wrote and the sponsor button; the four
 //! community links as cards; the attribution line. In
 //! the same cards as every other pane (USER 2026-09-20 「用頁面式」). No app
-//! icon and no version — the update row on 一般 already says which build
+//! icon, no name and no version — the update row on 一般 already says which build
 //! this is.
 
 use crate::presentation::{DISCORD_URL, EMAIL_URL, GITHUB_URL, SPONSOR_URL, WEBSITE_URL};
@@ -15,15 +15,10 @@ use crate::winui::window::{Message, SettingsWindow};
 use taigi_windows_core::strings::{StringKey, StringResolver};
 use windows_reactor::*;
 
-/// `SubtitleTextBlockStyle`'s size: the name is a heading under the
-/// window's own title, not a second title.
-const NAME_FONT_SIZE: f64 = 20.0;
 /// `CaptionTextBlockStyle`'s size, the attribution's fine print.
 const CAPTION_FONT_SIZE: f64 = 12.0;
 /// Between paragraphs of one text (`Metrics.paragraphSpacing`).
 const PARAGRAPH_SPACING: f64 = 10.0;
-/// Under the name, over its paragraphs (`Metrics.titleGap`).
-const TITLE_GAP: f64 = 2.0;
 /// Over the sponsor button, so it reads as the paragraphs' close rather
 /// than a fourth one (`Metrics.buttonGap`).
 const BUTTON_GAP: f64 = 6.0;
@@ -40,22 +35,19 @@ pub fn view(
     strings: &StringResolver,
     context: &mut ViewContext<SettingsWindow>,
 ) -> View {
+    // Centred, no heading (USER 2026-09-20 「不需要『台語齒盤』標題」
+    // 「文案置中」): the window title already names the page, and the three
+    // paragraphs read as a statement rather than a form.
     let introduction = cards::frame(
         StackPanel::new().spacing(PARAGRAPH_SPACING).children((
-            TextBlock::new()
-                .text(strings.resolve(StringKey::HomeAppHeaderTitle))
-                .font_size(NAME_FONT_SIZE)
-                .font_weight(FontWeight::SEMI_BOLD)
-                .margin(Thickness::new(0.0, 0.0, 0.0, TITLE_GAP)),
             paragraph(strings.resolve(StringKey::DesktopAboutIntroProject)),
             paragraph(strings.resolve(StringKey::DesktopAboutIntroFree)),
             paragraph(strings.resolve(StringKey::DesktopAboutIntroMaintainer)),
-            // The one call to action on the page, in the accent fill
-            // (`ExternalLinkButton.Style.prominent`).
+            // An ordinary button, the same weight as the cards around it
+            // (`ExternalLinkButton.Style.button`).
             Button::new()
-                .style(ButtonStyle::Accent)
                 .on_click(context.callback(|()| Message::OpenUrl(SPONSOR_URL.to_owned())))
-                .horizontal_alignment(HorizontalAlignment::Left)
+                .horizontal_alignment(HorizontalAlignment::Center)
                 .margin(Thickness::new(0.0, BUTTON_GAP, 0.0, 0.0))
                 .content(strings.resolve(StringKey::DesktopSponsorLink)),
         )),
@@ -106,6 +98,11 @@ fn paragraph(text: &str) -> View {
     TextBlock::new()
         .text(text)
         .text_wrapping(TextWrapping::Wrap)
+        // The block centred, not each line: this pinned `windows-reactor`
+        // exposes no `TextAlignment`, so a paragraph that wraps stays
+        // ragged-right while a short one centres. Not a departure the Mac
+        // shares — revisit when the pin moves.
+        .horizontal_alignment(HorizontalAlignment::Center)
         .into()
 }
 
