@@ -1,11 +1,11 @@
-//! The 關於 page: the app's name and version, what the project is, and
-//! where to find it. Port of `AboutPage.swift`.
+//! The 關於 page: the app's name and version, and where to find the
+//! project. Port of `AboutPage.swift`.
 //!
 //! What the tray menu's 關於 row opens (USER 2026-09-20): the name and
-//! installed version, the three paragraphs the USER wrote, the community
-//! links as bare glyphs, and the attribution line that used to foot the 一般
-//! pane. No app icon, by request; no cards either, because nothing here is a
-//! setting — text in cards would read as controls that do nothing.
+//! installed version, the community links as bare glyphs, and the
+//! attribution line that used to foot the 一般 pane. No app icon and no
+//! introduction text, by request; no cards either, because nothing here is
+//! a setting — text in cards would read as controls that do nothing.
 
 use crate::presentation::{DISCORD_URL, EMAIL_URL, GITHUB_URL, SPONSOR_URL};
 use crate::updates::INSTALLED_VERSION;
@@ -19,11 +19,9 @@ use windows_reactor::*;
 const NAME_FONT_SIZE: f64 = 20.0;
 /// `CaptionTextBlockStyle`'s size, the attribution's fine print.
 const CAPTION_FONT_SIZE: f64 = 12.0;
-/// Between the title block, the paragraphs, the links and the attribution
-/// line (`Metrics.sectionSpacing`).
+/// Between the title block, the links and the attribution line
+/// (`Metrics.sectionSpacing`).
 const SECTION_SPACING: f64 = 20.0;
-/// Between paragraphs of one text (`Metrics.paragraphSpacing`).
-const PARAGRAPH_SPACING: f64 = 10.0;
 /// Within a block: name over version; the attribution's phrase spacing
 /// (`Metrics.lineSpacing`).
 const LINE_SPACING: f64 = 4.0;
@@ -49,11 +47,6 @@ pub fn view(
                 &[&INSTALLED_VERSION],
             ))
             .opacity(SECONDARY_OPACITY),
-    ));
-    let paragraphs = StackPanel::new().spacing(PARAGRAPH_SPACING).children((
-        paragraph(strings.resolve(StringKey::DesktopAboutIntroProject)),
-        paragraph(strings.resolve(StringKey::DesktopAboutIntroFree)),
-        paragraph(strings.resolve(StringKey::DesktopAboutIntroMaintainer)),
     ));
     // The three community links as marks: a brand mark names itself, and
     // three words more would crowd the line. No spacing of the stack's own:
@@ -108,19 +101,9 @@ pub fn view(
                 .on_click(context.callback(|()| Message::OpenUrl(SPONSOR_URL.to_owned())))
                 .content(strings.resolve(StringKey::DesktopSponsorLink)),
         ));
-    StackPanel::new().spacing(SECTION_SPACING).children((
-        name_block,
-        paragraphs,
-        glyph_links,
-        attribution,
-    ))
-}
-
-fn paragraph(text: &str) -> View {
-    TextBlock::new()
-        .text(text)
-        .text_wrapping(TextWrapping::Wrap)
-        .into()
+    StackPanel::new()
+        .spacing(SECTION_SPACING)
+        .children((name_block, glyph_links, attribution))
 }
 
 /// A link that shows a glyph: the title becomes the tooltip and the

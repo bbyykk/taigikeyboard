@@ -1,10 +1,11 @@
-// The 關於 page: the app's name and version, what the project is, and where to find it.
+// The 關於 page: the app's name and version, and where to find the project.
 
 import SwiftUI
 
 /// What the input-source menu's 關於 row opens (USER 2026-09-20): the name and
-/// installed version, the three paragraphs the USER wrote, the community links
-/// as bare glyphs, and the attribution line that used to foot the 一般 pane.
+/// installed version, the community links as bare glyphs, and the attribution
+/// line that used to foot the 一般 pane. No introduction text (USER 2026-09-20
+/// 「不需要了」).
 ///
 /// No app icon, by request; no `Form` either, because nothing here is a
 /// setting — text in cards would read as controls that do nothing. Plain
@@ -22,13 +23,6 @@ struct AboutPage: View {
                     Text(language.resolver.desktopUpdateCurrentVersionLabel(version: AppVersion.installed))
                         .foregroundStyle(.secondary)
                 }
-
-                VStack(alignment: .leading, spacing: Metrics.paragraphSpacing) {
-                    Text(language.string(.desktopAboutIntroProject))
-                    Text(language.string(.desktopAboutIntroFree))
-                    Text(language.string(.desktopAboutIntroMaintainer))
-                }
-                .fixedSize(horizontal: false, vertical: true)
 
                 // The three community links as marks: a brand mark names
                 // itself, and three words more would crowd the line. Each
@@ -66,11 +60,8 @@ struct AboutPage: View {
         /// The grouped form's own content inset, so the text lines up with the other panes' cards.
         static let inset: CGFloat = 20
 
-        /// Between the title block, the paragraphs, the links and the attribution line.
+        /// Between the title block, the links and the attribution line.
         static let sectionSpacing: CGFloat = 20
-
-        /// Between paragraphs of one text.
-        static let paragraphSpacing: CGFloat = 10
 
         /// Within a block: title over version; the attribution line's own phrase spacing.
         static let lineSpacing: CGFloat = 4
