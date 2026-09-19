@@ -8,6 +8,7 @@ use phonetics::InputMode;
 use unicode_normalization::UnicodeNormalization;
 
 use crate::lattice::{build_lattice_with_barriers, Lattice};
+use crate::syllabifier::tl::is_tl_tone_digit;
 use crate::syllabifier::valid_span_endings_lowered;
 
 /// v3.5.9 B-2 — map `mode` to its FST key family prefix. The tagged-single-FST
@@ -465,6 +466,14 @@ pub(crate) fn left_anchored_keys_and_restrictions(
     // (`fetch_walker_slot0_inner`) + min-hop `span_min_syllable_count` still
     // see every split (non-greedy `ta`+`nia` recovery, Codex PR #290 P1,
     // unaffected).
+    //
+    // (d) The phrase reading does NOT rescue a closed dead end (USER report
+    // 2026-09-19: `iah8` / `ioh8` / `iok8` trailed the whole `ia` / `io`
+    // family). `iah8` parses as `i`+`a` at end 2, so (c) kept `ia` — but no
+    // lattice edge leaves end 2 and the remainder `h8` already carries a
+    // typed tone, so it can never grow into a syllable: committing 也 would
+    // strand it. Both halves are required; the mid-typing controls
+    // (`iah`, `iakau3`) live in `tests/build_keys_tl_lattice.rs`.
     let lowered = shadow.to_ascii_lowercase();
     // §18 recompute is barrier-aware (Codex post-impl 2026-08-19 BLOCK 2):
     // the lattice above was built with barriers, so re-deriving the
@@ -477,6 +486,11 @@ pub(crate) fn left_anchored_keys_and_restrictions(
     );
     let max_single_end = single_ends.iter().copied().max();
     let has_phrase_reading = |end: usize| lattice.edges().iter().any(|&(s, e)| e == end && s > 0);
+    let is_closed_dead_end = |end: usize| {
+        lattice.edges().iter().all(|&(s, _)| s != end)
+            && remainder_has_closed_syllable(shadow, end, mode, barriers)
+    };
+    let survives_as_phrase = |end: usize| has_phrase_reading(end) && !is_closed_dead_end(end);
 
     let mut out = Vec::with_capacity(lattice.edges().len());
     let mut restrictions: Vec<Vec<usize>> = Vec::with_capacity(lattice.edges().len());
@@ -491,9 +505,9 @@ pub(crate) fn left_anchored_keys_and_restrictions(
             continue;
         }
         // Drop a strictly-shorter single-syllable-only prefix span (see the
-        // (a)/(b)/(c) rule above). Longest single, phrase ends, and
-        // phrase-reachable shorter spans are all kept.
-        if single_ends.contains(&end) && Some(end) != max_single_end && !has_phrase_reading(end) {
+        // (a)/(b)/(c)/(d) rule above). Longest single, phrase ends, and
+        // phrase-reachable shorter spans that can still continue are kept.
+        if single_ends.contains(&end) && Some(end) != max_single_end && !survives_as_phrase(end) {
             continue;
         }
         // Tone-aware lookup body + §35 / §41 barrier metadata, same
@@ -516,6 +530,29 @@ pub(crate) fn left_anchored_keys_and_restrictions(
         keys: out,
         final_only: restrictions,
         tone_pins,
+    }
+}
+
+/// True when the user has already closed a syllable somewhere in
+/// `shadow[end..]`, so that remainder can no longer be an open pending
+/// tail (§18 guard (d)). What closes a syllable per family: a typed TL /
+/// POJ tone digit, a TPS tone mark, or a §41 stripped-space barrier
+/// strictly after `end` (one AT `end` closes the span itself, not its
+/// remainder; the barrier closes the syllable on its unmarked tone).
+/// English carries no tone marks, so its remainder is never closed.
+fn remainder_has_closed_syllable(
+    shadow: &str,
+    end: usize,
+    mode: InputMode,
+    barriers: &[usize],
+) -> bool {
+    let remainder = &shadow[end..];
+    match mode {
+        InputMode::Tl | InputMode::Poj => remainder.bytes().any(is_tl_tone_digit),
+        InputMode::Tps => {
+            remainder.chars().any(phonetics::is_tps_tone_mark) || barriers.iter().any(|&b| b > end)
+        }
+        InputMode::English => false,
     }
 }
 

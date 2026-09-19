@@ -166,3 +166,42 @@ fn full_key_seam_equals_base_key_seam_for_non_tps_modes() {
         }
     }
 }
+
+#[test]
+fn closed_dead_end_prefix_is_not_rescued_by_its_phrase_reading() {
+    // §18 guard (d) (USER report 2026-09-19: `iah8` trailed the whole `ia`
+    // family). `ia` (end 2) is a non-longest single AND parses as `i`+`a`,
+    // so guard (c) alone keeps it — but nothing leaves end 2 (`h8` is no
+    // syllable) and the remainder carries a typed tone digit, so `ia` is a
+    // closed dead end: committing it would strand `h8`. Only the longest
+    // single `iah8` survives. Fixture rule: every production syllable that
+    // is a strict prefix of `iah8` (`i`, `ia`, `iah`) plus the interior
+    // chain `a` / `ah` / `ah8` is present, so the `i`+`a` phrase reading
+    // and the `iah`-before-digit false boundary both actually fire.
+    let inv = build_inventory(&["i1", "ia1", "iah4", "iah8", "a1", "ah4", "ah8"]);
+    let keys = build_keys_tl_with_inventory("iah8", &inv, phonetics::InputMode::Tl);
+    assert_eq!(
+        mapped(&keys),
+        vec![((0, 4), "tl:iah8")],
+        "closed dead-end `ia` must be suppressed despite its `i`+`a` reading",
+    );
+}
+
+#[test]
+fn phrase_reachable_prefix_survives_while_the_remainder_is_open() {
+    // Guard (d) negative controls — both halves of "closed dead end" are
+    // required, so the mid-typing affordance is untouched:
+    // - `iah` (no digit yet): `h` is an open pending tail that may still
+    //   become `hoo`, so `ia` keeps surfacing exactly as before.
+    // - `iakau3`: an edge leaves end 2 (`kau3`), so `ia` is no dead end
+    //   even though the remainder carries a digit.
+    let inv = build_inventory(&["i1", "ia1", "iah4", "iah8", "a1", "ah4", "ah8", "kau3"]);
+    for input in ["iah", "iakau3"] {
+        let keys = build_keys_tl_with_inventory(input, &inv, phonetics::InputMode::Tl);
+        let m = mapped(&keys);
+        assert!(
+            m.iter().any(|(_, k)| *k == "tl:ia"),
+            "{input}: phrase-reachable `ia` with an open remainder must survive, got {m:?}",
+        );
+    }
+}

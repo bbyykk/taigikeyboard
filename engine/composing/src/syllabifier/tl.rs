@@ -116,10 +116,17 @@ pub(crate) fn valid_span_endings_lowered(
 /// `phonetics::syllable.rs:18-20` only digits 1..=9 carry tone
 /// meaning; '0' is not a tone marker.
 fn is_false_toneless_boundary(bytes: &[u8], end: usize) -> bool {
-    let last_is_tone_digit =
-        matches!(bytes.get(end - 1), Some(b) if b.is_ascii_digit() && *b != b'0');
+    let last_is_tone_digit = bytes.get(end - 1).is_some_and(|&b| is_tl_tone_digit(b));
     if last_is_tone_digit {
         return false;
     }
-    matches!(bytes.get(end), Some(b) if b.is_ascii_digit() && *b != b'0')
+    bytes.get(end).is_some_and(|&b| is_tl_tone_digit(b))
+}
+
+/// The ASCII tone digits a TL / POJ syllable can end in: `1..=9`. `0` is
+/// not a tone marker (`phonetics::syllable.rs:18-20`), so it never closes
+/// a syllable — shared by the false-boundary check above and the §18
+/// guard (d) remainder check in `composing::shadow`.
+pub(crate) fn is_tl_tone_digit(b: u8) -> bool {
+    b.is_ascii_digit() && b != b'0'
 }
