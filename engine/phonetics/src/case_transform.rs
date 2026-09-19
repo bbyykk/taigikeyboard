@@ -331,8 +331,9 @@ fn split_by_letter_count(text: &str, letter_count: usize) -> (String, String) {
 
 /// Per-letter case matching: the Nth letter of `target` is raised when
 /// the Nth letter of `source` is uppercase, otherwise kept as stored
-/// (raise-only, see [`raise_case`]). Non-letters pass through unchanged.
-fn match_case(target: &str, source: &str, mode: InputMode) -> String {
+/// (raise-only, see [`raise_case`]). Non-letters pass through unchanged,
+/// so a tone placed as a combining mark never shifts the alignment.
+pub(crate) fn match_case(target: &str, source: &str, mode: InputMode) -> String {
     let mut source_letters = source.chars().filter(|c| c.is_alphabetic());
     let mut result = String::with_capacity(target.len());
     for ch in target.chars() {
