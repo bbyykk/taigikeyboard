@@ -1,6 +1,6 @@
 //! The tray button and its menu — the macOS input-source menu, exactly:
-//! 設定 / separator / 檢查更新 (`TaigiInputController.swift:264-329`;
-//! roadmap W6). The button sits in the standard input-mode slot
+//! the three global shortcuts a click can stand in for / separator / 設定 /
+//! separator / 檢查更新 (`TaigiInputController.menu()`; roadmap W6). The button sits in the standard input-mode slot
 //! (`GUID_LBI_INPUTMODE`, rakukan `language_bar.rs:21-23`).
 //!
 //! The menu is DRAWN HERE, from `OnClick`, rather than declared through
@@ -40,7 +40,30 @@ use windows::Win32::UI::WindowsAndMessaging::{
 /// nothing" — the one rule a new row has to keep.
 pub const MENU_OPEN_SETTINGS: u32 = 1;
 pub const MENU_CHECK_FOR_UPDATES: u32 = 2;
+/// The global shortcuts the menu stands in for, in row order, each with its
+/// id (USER 2026-09-19: the menu is where a user looks up the chords they
+/// last recorded). One table drives both the drawing and the id → action
+/// lookup, so no row can print one action and fire another. Not the 漢羅對調
+/// swap — its default is the bare backtick, which the Mac's menu can never
+/// print (`TaigiInputController.menu()`) — and not the symbol picker, which
+/// needs the caret a click has no hold of (`needs_key_context`).
+pub const MENU_SHORTCUT_ROWS: [(u32, ShortcutAction); 3] = [
+    (3, ShortcutAction::ToggleRomanization),
+    (4, ShortcutAction::CycleCandidateDisplayMode),
+    (5, ShortcutAction::ShowTelexGuide),
+];
 const _: () = assert!(MENU_OPEN_SETTINGS != 0 && MENU_CHECK_FOR_UPDATES != 0);
+const _: () = assert!(
+    MENU_SHORTCUT_ROWS[0].0 != 0 && MENU_SHORTCUT_ROWS[1].0 != 0 && MENU_SHORTCUT_ROWS[2].0 != 0
+);
+
+/// The global shortcut a menu id stands for, `None` for the other rows.
+pub fn shortcut_for_menu_id(id: u32) -> Option<ShortcutAction> {
+    MENU_SHORTCUT_ROWS
+        .iter()
+        .find(|(row_id, _)| *row_id == id)
+        .map(|(_, action)| *action)
+}
 /// The one cookie `ITfSource::AdviseSink` hands out for the lang-bar sink.
 pub const LANG_BAR_SINK_COOKIE: u32 = 0x5461_6967;
 /// The DLL icon resource the installer build adds (PR10); index 1.
@@ -72,30 +95,39 @@ pub fn item_info() -> TF_LANGBARITEMINFO {
 }
 
 /// The rows, in order, as (id, label) — `None` is a separator. Pure, so the
-/// menu is testable without a live menu. The 設定 row prints the chord the
-/// user last recorded on it, tab-separated: a Win32 menu draws what follows
-/// a tab in its accelerator column, which is what `show_popup` builds.
-/// 檢查更新 carries no chord by design.
+/// menu is testable without a live menu. Every shortcut row prints the chord
+/// the user last recorded on it, tab-separated: a Win32 menu draws what
+/// follows a tab in its accelerator column, which is what `show_popup`
+/// builds. The shortcut rows carry the 快捷鍵 pane's own names; the 設定 row
+/// keeps its one-word menu name. 檢查更新 carries no chord by design.
 pub fn menu_rows(
     strings: &StringResolver,
     settings: &SettingsDocument,
 ) -> Vec<Option<(u32, String)>> {
-    let settings_label = match ShortcutAction::OpenLastSettingsPane.chord_in(settings) {
-        Some(chord) => format!(
-            "{}\t{}",
-            strings.resolve(StringKey::DesktopMenuSettings),
-            chord.display()
-        ),
-        None => strings.resolve(StringKey::DesktopMenuSettings).to_owned(),
+    let shortcut_label = |action: ShortcutAction, name: StringKey| match action.chord_in(settings) {
+        Some(chord) => format!("{}\t{}", strings.resolve(name), chord.display()),
+        None => strings.resolve(name).to_owned(),
     };
-    vec![
-        Some((MENU_OPEN_SETTINGS, settings_label)),
+    let mut rows: Vec<Option<(u32, String)>> = MENU_SHORTCUT_ROWS
+        .iter()
+        .map(|(id, action)| Some((*id, shortcut_label(*action, action.label_key()))))
+        .collect();
+    rows.extend([
+        None,
+        Some((
+            MENU_OPEN_SETTINGS,
+            shortcut_label(
+                ShortcutAction::OpenLastSettingsPane,
+                StringKey::DesktopMenuSettings,
+            ),
+        )),
         None,
         Some((
             MENU_CHECK_FOR_UPDATES,
             strings.resolve(StringKey::DesktopUpdateCheckNow).to_owned(),
         )),
-    ]
+    ]);
+    rows
 }
 
 /// The window a popup is owned by: the focused window of the calling
@@ -220,27 +252,45 @@ mod tests {
 
     #[test]
     fn the_menu_mirrors_the_macos_input_source_menu() {
-        // trace: TaigiInputController.swift:264-329 → [[settings], [checkForUpdates]].
+        // trace: TaigiInputController.menu() → [shortcuts(3)], [settings], [checkForUpdates];
+        // the literal oracle is the authored Hanji, as in TaigiInputControllerMenuTests.
         let strings = StringResolver::new(DisplayLanguage::Hanji);
         let rows = menu_rows(&strings, &SettingsDocument::default());
-        assert_eq!(rows.len(), 3);
-        let (id, label) = rows[0].as_ref().unwrap();
-        assert_eq!(*id, MENU_OPEN_SETTINGS);
-        assert!(label.ends_with("\tCtrl+Alt+S"), "{label}");
-        assert!(rows[1].is_none(), "a separator between the two groups");
-        let (id, label) = rows[2].as_ref().unwrap();
-        assert_eq!(*id, MENU_CHECK_FOR_UPDATES);
-        assert!(
-            !label.contains('\t'),
-            "no chord on 檢查更新 by design: {label}"
+        let labels: Vec<Option<&str>> = rows
+            .iter()
+            .map(|row| row.as_ref().map(|(_, label)| label.as_str()))
+            .collect();
+        assert_eq!(
+            labels,
+            [
+                Some("切換台羅/白話字\tCtrl+Alt+C"),
+                Some("切換候選詞顯示\tCtrl+Alt+H"),
+                Some("拍開 Telex 說明\tCtrl+Alt+/"),
+                None,
+                Some("設定\tCtrl+Alt+S"),
+                None,
+                Some("檢查更新"),
+            ]
         );
+        let ids: Vec<Option<u32>> = rows
+            .iter()
+            .map(|row| row.as_ref().map(|(id, _)| *id))
+            .collect();
+        assert_eq!(
+            ids,
+            [Some(3), Some(4), Some(5), None, Some(1), None, Some(2)]
+        );
+        for (id, action) in MENU_SHORTCUT_ROWS {
+            assert_eq!(shortcut_for_menu_id(id), Some(action));
+        }
+        assert_eq!(shortcut_for_menu_id(MENU_OPEN_SETTINGS), None);
+        assert_eq!(shortcut_for_menu_id(MENU_CHECK_FOR_UPDATES), None);
         let mut cleared = SettingsDocument::default();
         ShortcutAction::OpenLastSettingsPane.store_in(&mut cleared, None);
+        ShortcutAction::ToggleRomanization.store_in(&mut cleared, None);
         let rows = menu_rows(&strings, &cleared);
-        assert!(
-            !rows[0].as_ref().unwrap().1.contains('\t'),
-            "a cleared row prints no chord"
-        );
+        assert_eq!(rows[0].as_ref().unwrap().1, "切換台羅/白話字");
+        assert_eq!(rows[4].as_ref().unwrap().1, "設定");
         // A plain tray button, whose click reaches `OnClick`. A
         // `TF_LBI_STYLE_BTN_MENU` here shows no menu at all in the
         // Windows 8+ taskbar input indicator (module header).

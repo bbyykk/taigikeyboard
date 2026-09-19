@@ -402,24 +402,66 @@ public final class TaigiInputController: IMKInputController {
             // commits a language change, and committing one runs the chrome renderer.
             language.syncFromSettings()
 
+            // A row for a global shortcut may claim a key equivalent because it
+            // IS a shortcut: an entry in the registry the 快捷鍵 pane records,
+            // whose chord carries modifiers no composition types. Read live, so
+            // the row prints whatever the user last recorded on it. (No
+            // composing key can ever claim one — the agent proved unable to
+            // DISPLAY one without also DISPATCHING it, `InputSourceMenuRow`.)
+            //
+            // Only a chord WITH modifiers: the recorder lets a user move any
+            // row onto a bare key, and a bare key equivalent here would be
+            // eaten by the agent everywhere for as long as this input source is
+            // selected — the Carbon hotkey is session-scoped, the menu is not.
+            // Such a row prints nothing, like a cleared one; the pane still
+            // shows the key.
+            @MainActor
+            func shortcutRow(_ action: ShortcutAction, label: String, selector: Selector) -> InputSourceMenuRow {
+                guard let shortcut = KeyboardShortcuts.getShortcut(for: action.name),
+                      !shortcut.modifiers.isEmpty
+                else {
+                    return InputSourceMenuRow(label: label, action: selector)
+                }
+                return InputSourceMenuRow(
+                    label: label,
+                    keyEquivalent: shortcut.nsMenuItemKeyEquivalent ?? "",
+                    modifiers: shortcut.modifiers,
+                    action: selector,
+                )
+            }
+
+            // The global shortcuts a click can stand in for (USER 2026-09-19):
+            // the switches and the guide, each under the name the 快捷鍵 pane
+            // gives it, so the menu is where a user looks up what they last
+            // recorded. Not the 漢羅對調 swap — its default is the bare
+            // backtick, which the rule above would never print — and not the
+            // symbol picker, which needs the caret a click has no hold of.
+            let shortcuts = [
+                shortcutRow(
+                    .toggleRomanization,
+                    label: ShortcutAction.toggleRomanization.label(language),
+                    selector: #selector(toggleRomanization(_:)),
+                ),
+                shortcutRow(
+                    .cycleCandidateDisplayMode,
+                    label: ShortcutAction.cycleCandidateDisplayMode.label(language),
+                    selector: #selector(cycleCandidateDisplayMode(_:)),
+                ),
+                shortcutRow(
+                    .showTelexGuide,
+                    label: ShortcutAction.showTelexGuide.label(language),
+                    selector: #selector(showTelexGuide(_:)),
+                ),
+            ]
             // One doorway (USER 2026-08-26). There was a row per settings pane
             // from 2026-08-21 until then: each carried its own ⌃⇧ chord, and
             // once those were retired the five rows were five names for one
             // window. What is left is the window itself, opening wherever the
             // user left it — naming the panes is the sidebar's job.
-            //
-            // This row may claim a key equivalent because it IS a shortcut: an
-            // entry in the registry the 快捷鍵 pane records, whose chord
-            // carries modifiers no composition types. Read live, so the row
-            // prints whatever the user last recorded on it. (No composing key
-            // can ever claim one — the agent proved unable to DISPLAY one
-            // without also DISPATCHING it, `InputSourceMenuRow`.)
-            let openSettingsShortcut = KeyboardShortcuts.getShortcut(for: .openLastSettingsPane)
-            let settings = InputSourceMenuRow(
+            let settings = shortcutRow(
+                .openLastSettingsPane,
                 label: language.string(.desktopMenuSettings),
-                keyEquivalent: openSettingsShortcut?.nsMenuItemKeyEquivalent ?? "",
-                modifiers: openSettingsShortcut?.modifiers ?? [],
-                action: #selector(showPreferences(_:)),
+                selector: #selector(showPreferences(_:)),
             )
             // No chord, by design: an on-demand check is a command a user
             // reaches for once in a while, and a key equivalent claimed here
@@ -429,7 +471,7 @@ public final class TaigiInputController: IMKInputController {
                 label: language.string(.desktopUpdateCheckNow),
                 action: #selector(checkForUpdates(_:)),
             )
-            return [[settings], [checkForUpdates]]
+            return [shortcuts, [settings], [checkForUpdates]]
         }
         return InputSourceMenuRenderer.menu(groups)
     }
@@ -487,6 +529,32 @@ public final class TaigiInputController: IMKInputController {
         onMainActor(nil) { controller, _ in
             let checker = controller.updateCheckerOverride ?? UpdateChecker.shared
             checker.checkManually()
+        }
+    }
+
+    /// The menu's stand-ins for the global chords: each row sends the same
+    /// command its chord does, through the same doorway (`ShortcutHotkeys.perform`),
+    /// so the click and the key can never drift apart. With no session armed
+    /// the coordinator drops the command, as it drops the chord.
+    @objc
+    private func toggleRomanization(_: Any!) {
+        performGlobalShortcut(.toggleRomanization)
+    }
+
+    @objc
+    private func cycleCandidateDisplayMode(_: Any!) {
+        performGlobalShortcut(.cycleCandidateDisplayMode)
+    }
+
+    @objc
+    private func showTelexGuide(_: Any!) {
+        performGlobalShortcut(.showTelexGuide)
+    }
+
+    private func performGlobalShortcut(_ action: ShortcutAction) {
+        Self.logger.debug("menu shortcut \(action)")
+        onMainActor(nil) { _, _ in
+            ShortcutHotkeys.perform(action)
         }
     }
 

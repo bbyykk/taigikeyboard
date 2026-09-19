@@ -413,6 +413,22 @@ impl TextService_Impl {
         Ok(())
     }
 
+    /// The identity of the context on top of the focused document manager,
+    /// registered on first sight like a key's context; 0 when nothing is
+    /// focused. The thread manager is cloned out of the borrow before the
+    /// COM calls: `GetFocus` / `GetTop` can re-enter this service.
+    pub(crate) fn focused_context_identity(&self) -> usize {
+        let Some(thread_mgr) = self.state.borrow().thread_mgr.clone() else {
+            return 0;
+        };
+        // SAFETY: plain COM calls on an interface this service holds.
+        let context = unsafe { thread_mgr.GetFocus().and_then(|document| document.GetTop()) };
+        match context {
+            Ok(context) => self.token_for(&context).map_or(0, |(_, identity)| identity),
+            Err(_) => 0,
+        }
+    }
+
     /// The token for `context`, allocating on first sight. The identity
     /// query and the `AddRef` happen before the borrow; only the insert is
     /// under it.
@@ -1068,7 +1084,20 @@ impl ITfLangBarItemButton_Impl for TextService_Impl {
                         self.hide_symbol_picker_now();
                         settings_launcher::check_for_updates();
                     }
-                    other => log::warn!("tsf.menu_unknown_id id={other}"),
+                    id => match lang_bar::shortcut_for_menu_id(id) {
+                        // A shortcut row does what its chord does, through
+                        // the same doorway (`perform_global`), against the
+                        // context focused NOW — resolved after the popup's
+                        // modal loop, not before it — so the guide has a
+                        // token to belong to. No focused context is the
+                        // `OnPreservedKey` case: identity 0, the switches
+                        // still flip, the guide declines.
+                        Some(action) => {
+                            let identity = self.focused_context_identity();
+                            self.perform_global(action, identity);
+                        }
+                        None => log::warn!("tsf.menu_unknown_id id={id}"),
+                    },
                 }
                 self.notify_lang_bar();
             }
