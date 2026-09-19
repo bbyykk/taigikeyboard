@@ -35,11 +35,19 @@ class KeyPressVibrator(
     fun vibrate() {
         if (!prefs.isVibrationFeedbackEnabled) return
         val vib = vibrator?.takeIf { it.hasVibrator() } ?: return
-        // EFFECT_CLICK is the closest predefined match to the AOSP KEYBOARD_TAP
-        // mapping (EFFECT_TICK is noticeably weaker). `createPredefined` is
-        // API 29+, which minSdk 30 clears. Default USAGE (UNKNOWN) keeps the
-        // effect off the OS touch-haptic gate — see behavioral-invariants.md §36.
-        vib.vibrate(VibrationEffect.createPredefined(VibrationEffect.EFFECT_CLICK))
+        // Either effect vibrates with the default USAGE (UNKNOWN), which keeps
+        // it off the OS touch-haptic gate — see behavioral-invariants.md §36.
+        val effect =
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                // EFFECT_CLICK is the closest predefined match to the AOSP
+                // KEYBOARD_TAP mapping (EFFECT_TICK is noticeably weaker).
+                VibrationEffect.createPredefined(VibrationEffect.EFFECT_CLICK)
+            } else {
+                // createPredefined is API 29+; API 28 gets a 20 ms
+                // default-amplitude one-shot — a brief tap, matching key-press feel.
+                VibrationEffect.createOneShot(20L, VibrationEffect.DEFAULT_AMPLITUDE)
+            }
+        vib.vibrate(effect)
     }
 
     private fun resolveVibrator(context: Context): Vibrator? =
@@ -49,5 +57,4 @@ class KeyPressVibrator(
             @Suppress("DEPRECATION")
             context.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
         }
-
 }

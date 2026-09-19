@@ -5,12 +5,13 @@ package com.siansiansu.taigikeyboard.ime.dictionary
 
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
-import android.database.sqlite.SQLiteStatement
+import androidx.core.database.sqlite.transaction
 import com.siansiansu.taigikeyboard.BuildConfig
 import com.siansiansu.taigikeyboard.engine.assocLookup
 import com.siansiansu.taigikeyboard.engine.dictionaryFilters
 import com.siansiansu.taigikeyboard.engine.RustEngineBridge
 import com.siansiansu.taigikeyboard.ime.core.db.rowCount
+import com.siansiansu.taigikeyboard.ime.core.db.upsert
 import com.siansiansu.taigikeyboard.ime.core.db.vacuumBestEffort
 import com.siansiansu.taigikeyboard.ime.core.logging.LoggerBackend
 import com.siansiansu.taigikeyboard.ime.core.logging.debug
@@ -21,20 +22,6 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.util.concurrent.atomic.AtomicInteger
-
-private fun SQLiteStatement.bindArgs(vararg args: Any?) {
-    clearBindings()
-    args.forEachIndexed { index, arg ->
-        val i = index + 1
-        when (arg) {
-            null -> bindNull(i)
-            is String -> bindString(i, arg)
-            is Long -> bindLong(i, arg)
-            is Int -> bindLong(i, arg.toLong())
-            else -> throw IllegalArgumentException("Unsupported bind type: ${arg::class}")
-        }
-    }
-}
 
 /**
  * NextWord bigram prediction service.
@@ -91,14 +78,21 @@ class NextWordService(
         private const val PRUNE_BATCH_SIZE = 5_000
 
         // Built once rather than re-`trimIndent()`-ed on every commit: these
-        // three run on the IME's per-committed-word path.
-        private val RECORD_ASSOCIATION_SQL =
+        // run on the IME's per-committed-word path. Writes are UPDATE +
+        // INSERT OR IGNORE pairs for `upsert` (SQLite 3.22 ceiling, §8a);
+        // each pair binds one arg tuple.
+        internal val RECORD_ASSOCIATION_UPDATE_SQL =
             """
-            INSERT INTO user_association (prev_word, prev_tl, next_word, next_tl, count, last_used)
-            VALUES (?, ?, ?, ?, 1, CURRENT_TIMESTAMP)
-            ON CONFLICT(prev_word, prev_tl, next_word, next_tl) DO UPDATE SET
-                count = count + 1,
+            UPDATE user_association
+            SET count = count + 1,
                 last_used = CURRENT_TIMESTAMP
+            WHERE prev_word = ? AND prev_tl = ? AND next_word = ? AND next_tl = ?
+            """.trimIndent()
+
+        internal val RECORD_ASSOCIATION_INSERT_SQL =
+            """
+            INSERT OR IGNORE INTO user_association (prev_word, prev_tl, next_word, next_tl, count, last_used)
+            VALUES (?, ?, ?, ?, 1, CURRENT_TIMESTAMP)
             """.trimIndent()
 
         private val USER_PREDICT_SQL =
@@ -113,13 +107,33 @@ class NextWordService(
             LIMIT ?
             """.trimIndent()
 
-        private val BATCH_IMPORT_ASSOCIATION_SQL =
+        /** The v6 shape, one source for the live table, the rebuild's, and the JVM SQL tests. */
+        internal fun userAssocTableSql(name: String) =
             """
-            INSERT INTO user_association (prev_word, prev_tl, next_word, next_tl, count, last_used)
-            VALUES (?, ?, ?, ?, ?, datetime('now'))
-            ON CONFLICT(prev_word, prev_tl, next_word, next_tl) DO UPDATE SET
-                count = MAX(count, excluded.count),
+            CREATE TABLE IF NOT EXISTS $name (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                prev_word TEXT NOT NULL,
+                prev_tl TEXT DEFAULT '',
+                next_word TEXT NOT NULL,
+                next_tl TEXT DEFAULT '',
+                count INTEGER DEFAULT 1,
+                last_used TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(prev_word, prev_tl, next_word, next_tl)
+            )
+            """.trimIndent()
+
+        internal val BATCH_IMPORT_ASSOCIATION_UPDATE_SQL =
+            """
+            UPDATE user_association
+            SET count = MAX(count, ?),
                 last_used = datetime('now')
+            WHERE prev_word = ? AND prev_tl = ? AND next_word = ? AND next_tl = ?
+            """.trimIndent()
+
+        internal val BATCH_IMPORT_ASSOCIATION_INSERT_SQL =
+            """
+            INSERT OR IGNORE INTO user_association (count, prev_word, prev_tl, next_word, next_tl, last_used)
+            VALUES (?, ?, ?, ?, ?, datetime('now'))
             """.trimIndent()
     }
 
@@ -367,7 +381,9 @@ class NextWordService(
             val db = userDatabase ?: return@withContext
 
             try {
-                db.execSQL(RECORD_ASSOCIATION_SQL, arrayOf(prev, prevTl, nextHanzi, nextTl))
+                db.transaction {
+                    upsert(RECORD_ASSOCIATION_UPDATE_SQL, RECORD_ASSOCIATION_INSERT_SQL, prev, prevTl, nextHanzi, nextTl)
+                }
 
                 logger.debug(TAG) { "[RECORD] '$prev' (tl='$prevTl') -> '$nextHanzi' (tl='$nextTl')" }
 
@@ -377,7 +393,7 @@ class NextWordService(
                 }
             } catch (e: Exception) {
                 // Fire-and-forget: a failed association write must never block
-                // typing. Single boundary — execSQL throws the real
+                // typing. Single boundary — the transaction rethrows the real
                 // SQLiteException, logged once here. LoggerBackend gates all
                 // levels on BuildConfig.DEBUG (release no-op).
                 logger.e(TAG, "association.record.failed prev=$prev next=$nextHanzi", e)
@@ -392,24 +408,14 @@ class NextWordService(
                 ensureInitialized()
                 val db = userDatabase ?: return@withContext 0
 
-                db.beginTransaction()
                 var imported = 0
-                try {
-                    val stmt = db.compileStatement(BATCH_IMPORT_ASSOCIATION_SQL)
+                db.transaction {
+                    val update = compileStatement(BATCH_IMPORT_ASSOCIATION_UPDATE_SQL)
+                    val insert = compileStatement(BATCH_IMPORT_ASSOCIATION_INSERT_SQL)
                     for (entry in entries) {
-                        stmt.bindArgs(
-                            entry.prevWord,
-                            entry.prevTl,
-                            entry.nextWord,
-                            entry.nextTl,
-                            entry.count.toLong(),
-                        )
-                        stmt.executeInsert()
+                        upsert(update, insert, entry.count.toLong(), entry.prevWord, entry.prevTl, entry.nextWord, entry.nextTl)
                         imported++
                     }
-                    db.setTransactionSuccessful()
-                } finally {
-                    db.endTransaction()
                 }
                 imported
             } catch (e: Exception) {
@@ -517,21 +523,6 @@ class NextWordService(
     /// are two observations, not one. CROSS-PLATFORM INVARIANT — mirrors
     /// ios/…/NextWord/Repository/NextWordSchema.swift `createTables`.
     private fun createUserAssocTable(db: SQLiteDatabase) = db.execSQL(userAssocTableSql("user_association"))
-
-    /** The v6 shape, one source for both the live table and the rebuild's. */
-    private fun userAssocTableSql(name: String) =
-        """
-        CREATE TABLE IF NOT EXISTS $name (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            prev_word TEXT NOT NULL,
-            prev_tl TEXT DEFAULT '',
-            next_word TEXT NOT NULL,
-            next_tl TEXT DEFAULT '',
-            count INTEGER DEFAULT 1,
-            last_used TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            UNIQUE(prev_word, prev_tl, next_word, next_tl)
-        )
-        """.trimIndent()
 
     private fun createUserAssocIndexes(db: SQLiteDatabase) {
         // One read index: (prev_word, prev_tl) serves the recall query's

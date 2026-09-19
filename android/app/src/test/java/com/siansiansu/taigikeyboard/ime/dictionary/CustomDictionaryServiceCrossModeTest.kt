@@ -18,20 +18,7 @@ class CustomDictionaryServiceCrossModeTest {
     private fun openSchema(): Connection {
         val conn = DriverManager.getConnection("jdbc:sqlite::memory:")
         conn.createStatement().use { stmt ->
-            stmt.executeUpdate(
-                """
-                CREATE TABLE custom_dictionary (
-                    id TEXT PRIMARY KEY,
-                    roman TEXT NOT NULL,
-                    hanzi TEXT NOT NULL,
-                    notone TEXT DEFAULT '',
-                    abbrev TEXT DEFAULT '',
-                    roman_num TEXT DEFAULT '',
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                );
-                """.trimIndent(),
-            )
+            stmt.executeUpdate(CustomDictionaryService.CREATE_TABLE_SQL)
             stmt.executeUpdate(CustomDictionaryService.CREATE_SEARCH_KEY_TABLE_SQL)
             stmt.executeUpdate(CustomDictionaryService.CREATE_SEARCH_KEY_LOOKUP_INDEX_SQL)
             stmt.executeUpdate(CustomDictionaryService.CREATE_SEARCH_KEY_ENTRY_INDEX_SQL)

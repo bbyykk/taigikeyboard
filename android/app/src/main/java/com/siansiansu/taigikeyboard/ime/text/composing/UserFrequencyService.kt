@@ -5,9 +5,10 @@ package com.siansiansu.taigikeyboard.ime.text.composing
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
-import android.database.sqlite.SQLiteStatement
+import androidx.core.database.sqlite.transaction
 import com.siansiansu.taigikeyboard.BuildConfig
 import com.siansiansu.taigikeyboard.ime.core.db.rowCount
+import com.siansiansu.taigikeyboard.ime.core.db.upsert
 import com.siansiansu.taigikeyboard.ime.core.logging.LoggerBackend
 import com.siansiansu.taigikeyboard.ime.core.logging.debug
 import com.siansiansu.taigikeyboard.ime.dictionary.FrequencyData
@@ -17,20 +18,6 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import java.util.concurrent.atomic.AtomicInteger
-
-private fun SQLiteStatement.bindArgs(vararg args: Any?) {
-    clearBindings()
-    args.forEachIndexed { index, arg ->
-        val i = index + 1
-        when (arg) {
-            null -> bindNull(i)
-            is String -> bindString(i, arg)
-            is Long -> bindLong(i, arg)
-            is Int -> bindLong(i, arg.toLong())
-            else -> throw IllegalArgumentException("Unsupported bind type: ${arg::class}")
-        }
-    }
-}
 
 /**
  * User-word frequency service. Records how often each displayed word is
@@ -57,6 +44,53 @@ class UserFrequencyService(
         private const val MAX_ENTRIES = 20_000
         private const val PRUNE_CHECK_INTERVAL = 100
         private const val PRUNE_BATCH_SIZE = 2_000
+
+        // Built once: the record pair runs on the IME's per-committed-word
+        // path. Writes are UPDATE + INSERT OR IGNORE pairs for `upsert`
+        // (SQLite 3.22 ceiling, §8a); each pair binds one arg tuple.
+        internal val RECORD_USAGE_UPDATE_SQL =
+            """
+            UPDATE ${Table.NAME}
+            SET ${Table.COUNT} = ${Table.COUNT} + 1,
+                ${Table.LAST_USED} = CURRENT_TIMESTAMP
+            WHERE ${Table.WORD} = ? AND ${Table.TL} = ?
+            """.trimIndent()
+
+        internal val RECORD_USAGE_INSERT_SQL =
+            """
+            INSERT OR IGNORE INTO ${Table.NAME} (${Table.WORD}, ${Table.TL}, ${Table.COUNT}, ${Table.LAST_USED})
+            VALUES (?, ?, 1, CURRENT_TIMESTAMP)
+            """.trimIndent()
+
+        internal val BATCH_IMPORT_UPDATE_SQL =
+            """
+            UPDATE ${Table.NAME}
+            SET ${Table.COUNT} = MAX(${Table.COUNT}, ?),
+                ${Table.LAST_USED} = datetime('now')
+            WHERE ${Table.WORD} = ? AND ${Table.TL} = ?
+            """.trimIndent()
+
+        internal val BATCH_IMPORT_INSERT_SQL =
+            """
+            INSERT OR IGNORE INTO ${Table.NAME} (${Table.COUNT}, ${Table.WORD}, ${Table.TL}, ${Table.LAST_USED})
+            VALUES (?, ?, ?, datetime('now'))
+            """.trimIndent()
+
+        // R5 (#7): identity is `UNIQUE(word, tl)` — 一字多音 keep separate
+        // rows. `tl` defaults to '' (the legacy fallback bucket). One source
+        // for onCreate and the JVM SQL tests.
+        internal val CREATE_TABLE_SQL =
+            """
+            CREATE TABLE ${Table.NAME} (
+                ${Table.ID} INTEGER PRIMARY KEY AUTOINCREMENT,
+                ${Table.WORD} TEXT NOT NULL,
+                ${Table.TL} TEXT NOT NULL DEFAULT '',
+                ${Table.COUNT} INTEGER DEFAULT 1,
+                ${Table.LAST_USED} TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                ${Table.CREATED_AT} TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(${Table.WORD}, ${Table.TL})
+            );
+            """.trimIndent()
     }
 
     // Schema — table & column names
@@ -188,16 +222,7 @@ class UserFrequencyService(
             ensureInitialized()
             val db = dbHelper?.writableDatabase ?: return@withContext
 
-            val sql =
-                """
-                INSERT INTO ${Table.NAME} (${Table.WORD}, ${Table.TL}, ${Table.COUNT}, ${Table.LAST_USED})
-                VALUES (?, ?, 1, CURRENT_TIMESTAMP)
-                ON CONFLICT(${Table.WORD}, ${Table.TL}) DO UPDATE SET
-                    ${Table.COUNT} = ${Table.COUNT} + 1,
-                    ${Table.LAST_USED} = CURRENT_TIMESTAMP
-                """.trimIndent()
-
-            db.execSQL(sql, arrayOf(word, tl))
+            db.transaction { upsert(RECORD_USAGE_UPDATE_SQL, RECORD_USAGE_INSERT_SQL, word, tl) }
 
             logger.debug(TAG) { "[RECORD] Recorded usage for: $word / $tl" }
 
@@ -207,7 +232,7 @@ class UserFrequencyService(
             }
         } catch (e: Exception) {
             // Fire-and-forget: a failed frequency write must never block
-            // typing. Single boundary — execSQL throws the real
+            // typing. Single boundary — the transaction rethrows the real
             // SQLiteException, logged once here. LoggerBackend gates all levels
             // on BuildConfig.DEBUG (release no-op).
             logger.e(TAG, "frequency.record.failed word=$word tl=$tl", e)
@@ -369,27 +394,14 @@ class UserFrequencyService(
                 ensureInitialized()
                 val db = dbHelper?.writableDatabase ?: return@withContext 0
 
-                val sql =
-                    """
-                    INSERT INTO ${Table.NAME} (${Table.WORD}, ${Table.TL}, ${Table.COUNT}, ${Table.LAST_USED})
-                    VALUES (?, ?, ?, datetime('now'))
-                    ON CONFLICT(${Table.WORD}, ${Table.TL}) DO UPDATE SET
-                        ${Table.COUNT} = MAX(${Table.COUNT}, excluded.${Table.COUNT}),
-                        ${Table.LAST_USED} = datetime('now')
-                    """.trimIndent()
-
-                db.beginTransaction()
                 var imported = 0
-                try {
-                    val stmt = db.compileStatement(sql)
+                db.transaction {
+                    val update = compileStatement(BATCH_IMPORT_UPDATE_SQL)
+                    val insert = compileStatement(BATCH_IMPORT_INSERT_SQL)
                     for ((word, tl, count) in entries) {
-                        stmt.bindArgs(word, tl, count.toLong())
-                        stmt.executeInsert()
+                        upsert(update, insert, count.toLong(), word, tl)
                         imported++
                     }
-                    db.setTransactionSuccessful()
-                } finally {
-                    db.endTransaction()
                 }
                 imported
             } catch (e: Exception) {
@@ -480,23 +492,7 @@ class UserFrequencyService(
             logger.i(TAG, "[CREATE] Database tables created successfully")
         }
 
-        private fun createUserFrequencyTable(db: SQLiteDatabase) {
-            // R5 (#7): identity is `UNIQUE(word, tl)` — 一字多音 keep separate
-            // rows. `tl` defaults to '' (the legacy fallback bucket).
-            db.execSQL(
-                """
-                CREATE TABLE ${Table.NAME} (
-                    ${Table.ID} INTEGER PRIMARY KEY AUTOINCREMENT,
-                    ${Table.WORD} TEXT NOT NULL,
-                    ${Table.TL} TEXT NOT NULL DEFAULT '',
-                    ${Table.COUNT} INTEGER DEFAULT 1,
-                    ${Table.LAST_USED} TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    ${Table.CREATED_AT} TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    UNIQUE(${Table.WORD}, ${Table.TL})
-                );
-                """.trimIndent(),
-            )
-        }
+        private fun createUserFrequencyTable(db: SQLiteDatabase) = db.execSQL(CREATE_TABLE_SQL)
 
         private fun createUserFrequencyIndexes(db: SQLiteDatabase) {
             // No standalone idx_word: the UNIQUE(word, tl) autoindex has
