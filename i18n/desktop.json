@@ -809,11 +809,11 @@
         ]
       },
       "values": {
-        "hanji": "確定",
-        "tailo": "Khak-tīng",
-        "poj": "Khak-tēng",
-        "en": "Confirm",
-        "ja": "確定"
+        "hanji": "確定齒",
+        "tailo": "Khak-tīng khí",
+        "poj": "Khak-tēng khí",
+        "en": "Confirm Key",
+        "ja": "確定キー"
       }
     },
     "actionCommitLiteral": {
