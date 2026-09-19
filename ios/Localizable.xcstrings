@@ -37,8 +37,26 @@
         }
       }
     },
+    "i18n_common_close": {
+      "comment": "Generic Close: Android color-picker dismiss a11y description, setup-guide full-screen close button (mobile), File menu ⌘W item (macOS). Merged 2026-09-20 from home.setupGuideCloseButton / desktop.menuClose; 關起來 → 關閉 to match them.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Close"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "閉じる"
+          }
+        }
+      }
+    },
     "i18n_common_delete": {
-      "comment": "Generic delete action label / a11y description (custom-theme card menu item, dictionary row delete).",
+      "comment": "Generic delete action label / a11y description (custom-theme card menu item, dictionary row delete). Also the Android media-input backspace a11y description (keyboard.deleteIcon merged 2026-09-20).",
       "extractionState": "manual",
       "localizations": {
         "en": {
@@ -271,6 +289,78 @@
         }
       }
     },
+    "i18n_common_pageNext": {
+      "comment": "Next page of candidates: mobile candidate-overlay page-down a11y label, desktop shortcut row + user-data list pager. Merged 2026-09-20 from keyboard.pageDown / desktop.actionPageForward.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Next Page"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "次のページ"
+          }
+        }
+      }
+    },
+    "i18n_common_pagePrevious": {
+      "comment": "Previous page of candidates: mobile candidate-overlay page-up a11y label, desktop shortcut row + user-data list pager. Merged 2026-09-20 from keyboard.pageUp / desktop.actionPageBackward.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Previous Page"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "前のページ"
+          }
+        }
+      }
+    },
+    "i18n_common_save": {
+      "comment": "Generic Save button: custom-dictionary add/edit entry dialog (all platforms), theme editor / name dialog (mobile). Merged 2026-09-20 from dictionary.save (儉起來) / theme.editorSave (儲存) — 儲存 matches system UI.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保存"
+          }
+        }
+      }
+    },
+    "i18n_common_settings": {
+      "comment": "Generic Settings label: main-app bottom-nav tab title + page title (mobile), smartbar settings button a11y label (extension), input-source menu row that opens the settings window (desktop). Merged 2026-09-20 from keyboard.settings / nav.tabSettings / desktop.menuSettings — one word, one key.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Settings"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "設定"
+          }
+        }
+      }
+    },
     "i18n_common_sttiDict": {
       "comment": "Display name of the MOE academic-subject terminology Taigi translation data source.",
       "extractionState": "manual",
@@ -458,13 +548,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Association records may reflect phrases you have typed. Check for sensitive content before exporting or sharing them. When recording is off, the keyboard stops learning your next-word habits."
+            "value": "Association records may reflect phrases you have typed; check them before exporting or sharing. When off, the keyboard stops learning your next-word habits."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "単語連携の記録には、入力した語句が反映される場合があります。エクスポートや共有の前に、機密情報が含まれていないか確認してください。記録をオフにすると、次の単語の使い方を学習しなくなります。"
+            "value": "単語連携の記録には入力した語句が反映されることがあります。エクスポートや共有の前に確認してください。オフにすると、次の単語の使い方を学習しなくなります。"
           }
         }
       }
@@ -692,13 +782,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "When on, words you add appear among the candidates. When off, your custom words no longer show up."
+            "value": "When on, words you add appear among the candidates."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "オンにすると、追加した単語が候補に表示されます。オフにすると、カスタム単語は表示されなくなります。"
+            "value": "オンにすると、追加した単語が候補に表示されます。"
           }
         }
       }
@@ -1034,13 +1124,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Frequency records may reflect words you have selected. Check for sensitive content before exporting or sharing them. When recording is off, the keyboard stops learning your candidate ranking."
+            "value": "Frequency records may reflect words you have selected; check them before exporting or sharing. When off, the keyboard stops learning your candidate ranking."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "単語頻度の記録には、選んだ単語が反映される場合があります。エクスポートや共有の前に、機密情報が含まれていないか確認してください。記録をオフにすると、候補の並び順を学習しなくなります。"
+            "value": "単語頻度の記録には選んだ単語が反映されることがあります。エクスポートや共有の前に確認してください。オフにすると、候補の並び順を学習しなくなります。"
           }
         }
       }
@@ -1801,24 +1891,6 @@
         }
       }
     },
-    "i18n_dictionary_save": {
-      "comment": "Save button in the custom-dictionary add/edit entry dialog.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Save"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "保存"
-          }
-        }
-      }
-    },
     "i18n_dictionary_searchPlaceholder": {
       "comment": "Search-field placeholder in the dictionary browser, and the filter box on the macOS 自訂詞庫 pane.",
       "extractionState": "manual",
@@ -2395,24 +2467,6 @@
         }
       }
     },
-    "i18n_home_setupGuideCloseButton": {
-      "comment": "Setup-guide full-screen close button.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Close"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "閉じる"
-          }
-        }
-      }
-    },
     "i18n_home_setupGuideCompletedMessage": {
       "comment": "Setup-guide full-screen closing paragraph: restart the app and switch via the globe key.",
       "extractionState": "manual",
@@ -2420,13 +2474,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Once done, restart the app you are using so it reloads the keyboard list. Then, wherever you can type, press and hold the globe icon to switch to Taigi Keyboard."
+            "value": "Once done, restart the app you are using. Then, wherever you can type, press and hold the globe icon to switch to Taigi Keyboard."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "完了したら、使用中のアプリを再起動してキーボード一覧を読み込み直してください。その後、文字を入力できる場所で地球儀アイコンを長押しして、台湾語キーボードに切り替えます。"
+            "value": "完了したら、使用中のアプリを再起動してください。その後、文字を入力できる場所で地球儀アイコンを長押しして、台湾語キーボードに切り替えます。"
           }
         }
       }
@@ -2701,60 +2755,6 @@
         }
       }
     },
-    "i18n_keyboard_pageDown": {
-      "comment": "Candidate-overlay page-down control-button a11y label (scrolls to the next page of candidates). Android via stringRes; iOS via DisplayLanguageStore in ExpandedCandidateOverlay.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Next page"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "次のページ"
-          }
-        }
-      }
-    },
-    "i18n_keyboard_pageUp": {
-      "comment": "Candidate-overlay page-up control-button a11y label (scrolls to the previous page of candidates). Android via stringRes; iOS via DisplayLanguageStore in ExpandedCandidateOverlay.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Previous page"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "前のページ"
-          }
-        }
-      }
-    },
-    "i18n_keyboard_settings": {
-      "comment": "Smartbar toolbar settings button a11y label (opens the app settings). Android via InputView.applyAccessibilityStrings; iOS via DisplayLanguageStore in ToolShortcutsToolbar.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Settings"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "設定"
-          }
-        }
-      }
-    },
     "i18n_keyboard_switchInputMethod": {
       "comment": "Smartbar toolbar globe button a11y label (opens the system input-method picker). Android via InputView.applyAccessibilityStrings; iOS via DisplayLanguageStore in ToolShortcutsToolbar.",
       "extractionState": "manual",
@@ -2852,13 +2852,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Swap Hanji and romanization"
+            "value": "Switch Hanji or romanization"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "漢字とローマ字を入れ替える"
+            "value": "漢字／ローマ字を切り替える"
           }
         }
       }
@@ -2953,24 +2953,6 @@
         }
       }
     },
-    "i18n_layout_taigiPhonetic": {
-      "comment": "Section header for the Taiwanese phonetic (TPS) keyboard layouts.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Taiwanese Phonetic Symbols"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "方音符号"
-          }
-        }
-      }
-    },
     "i18n_layout_tpsLayout": {
       "comment": "Layout name: the Taiwanese Phonetic Symbols (方音符號) keyboard.",
       "extractionState": "manual",
@@ -3039,24 +3021,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "レイアウト"
-          }
-        }
-      }
-    },
-    "i18n_nav_tabSettings": {
-      "comment": "Main app bottom-nav tab title + the tab's top-level page title (Settings). Follows the in-app display-language picker.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Settings"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "設定"
           }
         }
       }
@@ -3518,13 +3482,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Shows what you typed in the first slot of the candidate bar. Tap it or press Enter to commit it. When off, only Enter can commit it."
+            "value": "Shows what you typed in the first slot of the candidate bar; tap it or press Enter to commit. When off, only Enter commits it."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "入力したローマ字を候補バーの先頭に表示します。タップするか Enter で確定できます。オフの場合は Enter でのみ確定できます。"
+            "value": "入力したローマ字を候補バーの先頭に表示し、タップか Enter で確定できます。オフの場合は Enter でのみ確定できます。"
           }
         }
       }
@@ -3566,25 +3530,7 @@
       }
     },
     "i18n_settings_pojMode": {
-      "comment": "Input-mode option: Pe̍h-ōe-jī (白話字) romanization. Also the iOS smartbar input-mode button a11y label (extension surface).",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pe̍h-ōe-jī"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pe̍h-ōe-jī"
-          }
-        }
-      }
-    },
-    "i18n_settings_pojSettingsSectionTitle": {
-      "comment": "Section header for Pe̍h-ōe-jī-specific settings.",
+      "comment": "Input-mode option: Pe̍h-ōe-jī (白話字) romanization. Also the iOS smartbar input-mode button a11y label (extension surface). Also the Pe̍h-ōe-jī settings section header (pojSettingsSectionTitle merged 2026-09-20).",
       "extractionState": "manual",
       "localizations": {
         "en": {
@@ -3728,7 +3674,7 @@
       }
     },
     "i18n_settings_tpsMode": {
-      "comment": "Input-mode option: Taiwanese Phonetic Symbols (方音符號). Also the iOS smartbar input-mode button a11y label (extension surface).",
+      "comment": "Input-mode option: Taiwanese Phonetic Symbols (方音符號). Also the iOS smartbar input-mode button a11y label (extension surface). Also the TPS settings section header and the layout page's TPS section header (tpsSettingsSectionTitle / layout.taigiPhonetic merged 2026-09-20).",
       "extractionState": "manual",
       "localizations": {
         "en": {
@@ -3764,37 +3710,19 @@
       }
     },
     "i18n_settings_tpsOrMapsToERInfo": {
-      "comment": "Help text for the or→ㄜ toggle (multi-paragraph).",
+      "comment": "Help text for the or→ㄜ toggle.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Controls how TPS candidates display 'or'. When on, 'or' appears as ㄜ; when off, it appears as ㄛ. This setting does not affect search results."
+            "value": "When on, 'or' appears as ㄜ; when off, as ㄛ. Search results are unaffected."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "方音符号の候補で「or」をどう表示するかを設定します。オンでは ㄜ、オフでは ㄛ と表示します。検索結果には影響しません。"
-          }
-        }
-      }
-    },
-    "i18n_settings_tpsSettingsSectionTitle": {
-      "comment": "Section header for TPS-specific settings.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Phonetic Symbols"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "方音符号"
+            "value": "オンでは「or」を ㄜ、オフでは ㄛ と表示します。検索結果には影響しません。"
           }
         }
       }
@@ -4267,24 +4195,6 @@
         }
       }
     },
-    "i18n_theme_defaultName": {
-      "comment": "Fallback name when a theme is saved with a blank name (identity is the UUID; names may repeat and stay editable).",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "New Theme"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "新しいテーマ"
-          }
-        }
-      }
-    },
     "i18n_theme_editorResetAll": {
       "comment": "Reset-to-defaults button. Theme editor on Android and iOS; the macOS shortcuts pane reuses it for the same action.",
       "extractionState": "manual",
@@ -4299,24 +4209,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "既定値に戻す"
-          }
-        }
-      }
-    },
-    "i18n_theme_editorSave": {
-      "comment": "Theme editor / name dialog save button.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Save"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "保存"
           }
         }
       }
@@ -4340,7 +4232,7 @@
       }
     },
     "i18n_theme_editorTitleNew": {
-      "comment": "Theme editor top-bar title in create mode.",
+      "comment": "Theme editor top-bar title in create mode; also the fallback name when a theme is saved with a blank name (identity is the UUID; names may repeat and stay editable). theme.defaultName merged 2026-09-20.",
       "extractionState": "manual",
       "localizations": {
         "en": {
