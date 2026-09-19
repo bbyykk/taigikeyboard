@@ -1,14 +1,15 @@
-//! The 關於 page: the app's name and version, and where to find the
-//! project. Port of `AboutPage.swift`.
+//! The 關於 page: what the project is, how to reach it, and where to find
+//! it. Port of `AboutPage.swift`.
 //!
-//! What the tray menu's 關於 row opens (USER 2026-09-20): the name and
-//! installed version, the community links as bare glyphs, and the
-//! attribution line that used to foot the 一般 pane. No app icon and no
-//! introduction text, by request; no cards either, because nothing here is
-//! a setting — text in cards would read as controls that do nothing.
+//! What the tray menu's 關於 row opens (USER 2026-09-20): the name over the
+//! three paragraphs the USER wrote and the sponsor button; the 問題回報
+//! section; the three community links as cards; the attribution line. In
+//! the same cards as every other pane (USER 2026-09-20 「用頁面式」). No app
+//! icon and no version — the update row on 一般 already says which build
+//! this is.
 
 use crate::presentation::{DISCORD_URL, EMAIL_URL, GITHUB_URL, SPONSOR_URL};
-use crate::updates::INSTALLED_VERSION;
+use crate::winui::cards;
 use crate::winui::font_awesome::FontAwesomeGlyph;
 use crate::winui::window::{Message, SettingsWindow};
 use taigi_windows_core::strings::{StringKey, StringResolver};
@@ -19,14 +20,17 @@ use windows_reactor::*;
 const NAME_FONT_SIZE: f64 = 20.0;
 /// `CaptionTextBlockStyle`'s size, the attribution's fine print.
 const CAPTION_FONT_SIZE: f64 = 12.0;
-/// Between the title block, the links and the attribution line
-/// (`Metrics.sectionSpacing`).
-const SECTION_SPACING: f64 = 20.0;
-/// Within a block: name over version; the attribution's phrase spacing
-/// (`Metrics.lineSpacing`).
-const LINE_SPACING: f64 = 4.0;
-/// The glyphs' height, the caption's cap height (`Metrics.glyphHeight`).
-const GLYPH_HEIGHT: f64 = 11.0;
+/// Between paragraphs of one text (`Metrics.paragraphSpacing`).
+const PARAGRAPH_SPACING: f64 = 10.0;
+/// Under the name, over its paragraphs (`Metrics.titleGap`).
+const TITLE_GAP: f64 = 2.0;
+/// Over the sponsor button, so it reads as the paragraphs' close rather
+/// than a fourth one (`Metrics.buttonGap`).
+const BUTTON_GAP: f64 = 6.0;
+/// A link card's mark, the size of a sidebar icon (`Metrics.rowGlyphSize`).
+const MARK_SIZE: f64 = 16.0;
+/// Between the last card and the attribution under it (`Metrics.footerGap`).
+const FOOTER_GAP: f64 = 8.0;
 /// The fine print's weight, as opacity — `PrimaryText` at less than full
 /// is WinUI's secondary text, and it follows the theme.
 const SECONDARY_OPACITY: f64 = 0.65;
@@ -36,107 +40,101 @@ pub fn view(
     strings: &StringResolver,
     context: &mut ViewContext<SettingsWindow>,
 ) -> View {
-    let name_block = StackPanel::new().spacing(LINE_SPACING).children((
-        TextBlock::new()
-            .text(strings.resolve(StringKey::HomeAppHeaderTitle))
-            .font_size(NAME_FONT_SIZE)
-            .font_weight(FontWeight::SEMI_BOLD),
-        TextBlock::new()
-            .text(strings.format(
-                StringKey::DesktopUpdateCurrentVersionLabel,
-                &[&INSTALLED_VERSION],
-            ))
-            .opacity(SECONDARY_OPACITY),
-    ));
-    // The three community links as marks: a brand mark names itself, and
-    // three words more would crowd the line. No spacing of the stack's own:
-    // each button already carries `ButtonPadding` (11 a side) that this
-    // pinned `windows-reactor` exposes no way to shrink.
-    let glyph_links = StackPanel::new()
-        .orientation(Orientation::Horizontal)
-        .children((
-            glyph_link(
-                strings,
-                context,
-                FontAwesomeGlyph::Github,
-                StringKey::DesktopGithubLink,
-                GITHUB_URL,
-            ),
-            glyph_link(
-                strings,
-                context,
-                FontAwesomeGlyph::Discord,
-                StringKey::DesktopDiscordLink,
-                DISCORD_URL,
-            ),
-            glyph_link(
-                strings,
-                context,
-                FontAwesomeGlyph::Envelope,
-                StringKey::DesktopEmailLink,
-                EMAIL_URL,
-            ),
-        ));
-    // Small, grey, the link no louder than the text around it — the project
-    // site's own footer.
-    let attribution = StackPanel::new()
-        .orientation(Orientation::Horizontal)
-        .spacing(LINE_SPACING)
-        .children((
+    let introduction = cards::frame(
+        StackPanel::new().spacing(PARAGRAPH_SPACING).children((
             TextBlock::new()
-                .text(strings.resolve(StringKey::DesktopCopyrightLine))
-                .font_size(CAPTION_FONT_SIZE)
-                .vertical_alignment(VerticalAlignment::Center)
-                .opacity(SECONDARY_OPACITY),
-            // Punctuation between two pieces, with nothing to say on its own.
-            TextBlock::new()
-                .text("\u{00B7}")
-                .font_size(CAPTION_FONT_SIZE)
-                .vertical_alignment(VerticalAlignment::Center)
-                .opacity(SECONDARY_OPACITY),
+                .text(strings.resolve(StringKey::HomeAppHeaderTitle))
+                .font_size(NAME_FONT_SIZE)
+                .font_weight(FontWeight::SEMI_BOLD)
+                .margin(Thickness::new(0.0, 0.0, 0.0, TITLE_GAP)),
+            paragraph(strings.resolve(StringKey::DesktopAboutIntroProject)),
+            paragraph(strings.resolve(StringKey::DesktopAboutIntroFree)),
+            paragraph(strings.resolve(StringKey::DesktopAboutIntroMaintainer)),
+            // The one call to action on the page, in the accent fill
+            // (`ExternalLinkButton.Style.prominent`).
+            Button::new()
+                .style(ButtonStyle::Accent)
+                .on_click(context.callback(|()| Message::OpenUrl(SPONSOR_URL.to_owned())))
+                .horizontal_alignment(HorizontalAlignment::Left)
+                .margin(Thickness::new(0.0, BUTTON_GAP, 0.0, 0.0))
+                .content(strings.resolve(StringKey::DesktopSponsorLink)),
+        )),
+    );
+    let feedback = cards::frame(
+        StackPanel::new().spacing(PARAGRAPH_SPACING).children((
+            paragraph(strings.resolve(StringKey::DesktopAboutFeedbackBody)),
             // Our own open, not the control's `navigate_uri`: a browser
             // that refuses must be reported, never swallowed
             // (`ExternalLinkButton.swift`).
             HyperlinkButton::new()
-                .on_click(context.callback(|()| Message::OpenUrl(SPONSOR_URL.to_owned())))
-                .content(strings.resolve(StringKey::DesktopSponsorLink)),
-        ));
-    StackPanel::new()
-        .spacing(SECTION_SPACING)
-        .children((name_block, glyph_links, attribution))
+                .on_click(context.callback(|()| Message::OpenUrl(DISCORD_URL.to_owned())))
+                .content(strings.resolve(StringKey::DesktopAboutFeedbackDiscord)),
+        )),
+    );
+    View::fragment((
+        introduction,
+        cards::section_title(strings.resolve(StringKey::DesktopAboutFeedbackTitle)),
+        feedback,
+        cards::section_gap(),
+        link_card(
+            strings,
+            context,
+            FontAwesomeGlyph::Github,
+            StringKey::DesktopGithubLink,
+            GITHUB_URL,
+        ),
+        link_card(
+            strings,
+            context,
+            FontAwesomeGlyph::Discord,
+            StringKey::DesktopDiscordLink,
+            DISCORD_URL,
+        ),
+        link_card(
+            strings,
+            context,
+            FontAwesomeGlyph::Envelope,
+            StringKey::DesktopEmailLink,
+            EMAIL_URL,
+        ),
+        // Fine print on the ground under the last card: neither a setting
+        // nor a link.
+        TextBlock::new()
+            .text(strings.resolve(StringKey::DesktopCopyrightLine))
+            .font_size(CAPTION_FONT_SIZE)
+            .horizontal_alignment(HorizontalAlignment::Center)
+            .margin(Thickness::new(0.0, FOOTER_GAP, 0.0, 0.0))
+            .opacity(SECONDARY_OPACITY),
+    ))
 }
 
-/// A link that shows a glyph: the title becomes the tooltip and the
-/// automation name, so the mark alone carries the line and the words are
-/// still there for whoever hovers or listens (`Style.footerGlyph`).
-///
-/// A subtle `Button` rather than the `HyperlinkButton` beside it: a
-/// hyperlink paints its content accent, and three accent brand marks would
-/// out-shout the one call to action on the page. Subtle draws the glyph in
-/// the text colour — at the fine print's opacity, the same grey — and lifts
-/// a rounded fill under the pointer, the hover cue the Mac gives with a
-/// colour change.
-fn glyph_link(
+fn paragraph(text: &str) -> View {
+    TextBlock::new()
+        .text(text)
+        .text_wrapping(TextWrapping::Wrap)
+        .into()
+}
+
+/// A card that opens one of the community links, its Font Awesome mark at
+/// the left (`ExternalLinkButton.Style.row`).
+fn link_card(
     strings: &StringResolver,
     context: &mut ViewContext<SettingsWindow>,
     glyph: FontAwesomeGlyph,
     title: StringKey,
     url: &'static str,
 ) -> View {
-    let title = strings.resolve(title);
-    Button::new()
-        .style(ButtonStyle::Subtle)
-        .on_click(context.callback(move |()| Message::OpenUrl(url.to_owned())))
-        .automation_name(title)
+    // A `Viewbox` rather than a size on the icon: `PathIcon` draws its
+    // geometry at the geometry's own size, and a smaller frame would only
+    // clip it.
+    let mark = Viewbox::new()
+        .height(MARK_SIZE)
+        .stretch(Stretch::Uniform)
         .opacity(SECONDARY_OPACITY)
-        // A `Viewbox` rather than a height on the icon: `PathIcon` draws its
-        // geometry at the geometry's own size, and a smaller frame would only
-        // clip it.
-        .content(
-            Viewbox::new()
-                .height(GLYPH_HEIGHT)
-                .stretch(Stretch::Uniform)
-                .slot(ViewboxSlot::Child, glyph.icon()),
-        )
-        .tooltip(title)
+        .slot(ViewboxSlot::Child, glyph.icon());
+    cards::link_card(
+        mark,
+        strings.resolve(title),
+        context.callback(move |()| Message::OpenUrl(url.to_owned())),
+    )
 }

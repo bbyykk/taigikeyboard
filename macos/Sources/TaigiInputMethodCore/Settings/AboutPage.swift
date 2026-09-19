@@ -1,54 +1,55 @@
-// The 關於 page: the app's name and version, and where to find the project.
+// The 關於 page: what the project is, how to reach it, and where to find it.
 
 import SwiftUI
 
-/// What the input-source menu's 關於 row opens (USER 2026-09-20): the name and
-/// installed version, the community links as bare glyphs, and the attribution
-/// line that used to foot the 一般 pane. No introduction text (USER 2026-09-20
-/// 「不需要了」).
+/// What the input-source menu's 關於 row opens (USER 2026-09-20): the name over
+/// the three paragraphs the USER wrote and the sponsor button; the 問題回報
+/// section; the three community links as rows; the attribution line.
 ///
-/// No app icon, by request; no `Form` either, because nothing here is a
-/// setting — text in cards would read as controls that do nothing. Plain
-/// text at the grouped form's own inset, so the page sits where the other
-/// panes' forms do.
+/// A grouped `Form` like every other pane (USER 2026-09-20 「用頁面式」), so the
+/// page sits where the settings do and reads in the same cards. No app icon and
+/// no version — the update row on 一般 already says which build this is.
 struct AboutPage: View {
     @Environment(DisplayLanguageStore.self) private var language
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: Metrics.sectionSpacing) {
-                VStack(alignment: .leading, spacing: Metrics.lineSpacing) {
+        Form {
+            Section {
+                VStack(alignment: .leading, spacing: Metrics.paragraphSpacing) {
                     Text(language.string(.homeAppHeaderTitle))
                         .font(.title2.weight(.semibold))
-                    Text(language.resolver.desktopUpdateCurrentVersionLabel(version: AppVersion.installed))
-                        .foregroundStyle(.secondary)
+                        .padding(.bottom, Metrics.titleGap)
+                    Text(language.string(.desktopAboutIntroProject))
+                    Text(language.string(.desktopAboutIntroFree))
+                    Text(language.string(.desktopAboutIntroMaintainer))
+                    ExternalLinkButton(titleKey: .desktopSponsorLink, url: Self.sponsorURL, style: .prominent)
+                        .padding(.top, Metrics.buttonGap)
                 }
-
-                // The three community links as marks: a brand mark names
-                // itself, and three words more would crowd the line. Each
-                // carries its name as tooltip and accessibility label.
-                HStack(spacing: Metrics.glyphSpacing) {
-                    ExternalLinkButton(titleKey: .desktopGithubLink, url: Self.githubURL, style: .footerGlyph(.github))
-                    ExternalLinkButton(titleKey: .desktopDiscordLink, url: Self.discordURL, style: .footerGlyph(.discord))
-                    ExternalLinkButton(titleKey: .desktopEmailLink, url: Self.emailURL, style: .footerGlyph(.envelope))
-                }
-                .foregroundStyle(.secondary)
-
-                // Small, grey, the link no louder than the text around it —
-                // the project site's own footer.
-                HStack(spacing: Metrics.lineSpacing) {
-                    Text(language.string(.desktopCopyrightLine))
-                    // Punctuation between two pieces, with nothing to say on its own.
-                    Text(verbatim: "\u{00B7}")
-                        .accessibilityHidden(true)
-                    ExternalLinkButton(titleKey: .desktopSponsorLink, url: Self.sponsorURL, style: .footer)
-                }
-                .font(.footnote)
-                .foregroundStyle(.secondary)
+                .padding(.vertical, Metrics.cardInset)
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(Metrics.inset)
+
+            Section(language.string(.desktopAboutFeedbackTitle)) {
+                VStack(alignment: .leading, spacing: Metrics.paragraphSpacing) {
+                    Text(language.string(.desktopAboutFeedbackBody))
+                    ExternalLinkButton(titleKey: .desktopAboutFeedbackDiscord, url: Self.discordURL, style: .text)
+                }
+                .padding(.vertical, Metrics.cardInset)
+            }
+
+            // The attribution as the last card's footer: fine print on the
+            // ground, where a form puts a note that is neither a setting nor
+            // a link.
+            Section {
+                ExternalLinkButton(titleKey: .desktopGithubLink, url: Self.githubURL, style: .row(.github))
+                ExternalLinkButton(titleKey: .desktopDiscordLink, url: Self.discordURL, style: .row(.discord))
+                ExternalLinkButton(titleKey: .desktopEmailLink, url: Self.emailURL, style: .row(.envelope))
+            } footer: {
+                Text(language.string(.desktopCopyrightLine))
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, Metrics.footerGap)
+            }
         }
+        .formStyle(.grouped)
     }
 
     private static let githubURL = URL(string: "https://github.com/taigikeyboard")
@@ -57,16 +58,19 @@ struct AboutPage: View {
     private static let sponsorURL = URL(string: "https://p.ecpay.com.tw/AA663DE")
 
     private enum Metrics {
-        /// The grouped form's own content inset, so the text lines up with the other panes' cards.
-        static let inset: CGFloat = 20
+        /// Between paragraphs of one text.
+        static let paragraphSpacing: CGFloat = 10
 
-        /// Between the title block, the links and the attribution line.
-        static let sectionSpacing: CGFloat = 20
+        /// Under the name, over its paragraphs.
+        static let titleGap: CGFloat = 2
 
-        /// Within a block: title over version; the attribution line's own phrase spacing.
-        static let lineSpacing: CGFloat = 4
+        /// Over the sponsor button, so it reads as the paragraphs' close rather than a fourth one.
+        static let buttonGap: CGFloat = 6
 
-        /// Between the three glyphs: wide enough that each stays its own target.
-        static let glyphSpacing: CGFloat = 12
+        /// Air above and below a card of running text; a row of one line needs none.
+        static let cardInset: CGFloat = 4
+
+        /// Between the last card and the attribution under it.
+        static let footerGap: CGFloat = 8
     }
 }

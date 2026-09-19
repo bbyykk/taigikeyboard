@@ -263,6 +263,52 @@ pub fn action_row(
     )
 }
 
+/// `OpenInNewWindow`, the glyph Windows 11 Settings puts at the right of a
+/// card that opens somewhere outside the app.
+const OPEN_IN_NEW_WINDOW_GLYPH: &str = "\u{E8A7}";
+/// Between a link card's leading mark and its title: the gap a `Label`
+/// leaves on the Mac (`ExternalLinkButton.Metrics.rowSpacing`).
+const LINK_MARK_GAP: f64 = 8.0;
+
+/// A card that IS a link: a mark at the left, the title, and the
+/// leave-the-app glyph at the right, the whole card the button. The one
+/// shape here that is a full-width button, because in Windows 11 Settings a
+/// whole-card button means "this takes you somewhere" — and this one does
+/// (`ExternalLinkButton.Style.row`).
+///
+/// A `Button` rather than the `Border` the other cards are: the card must
+/// take the click, and the button's own fill and stroke are the theme's
+/// control colours, the nearest thing the reactor offers to a card that
+/// lifts under the pointer.
+pub fn link_card(mark: impl Into<View>, title: &str, on_click: Callback<()>) -> View {
+    Button::new()
+        .on_click(on_click)
+        .horizontal_alignment(HorizontalAlignment::Stretch)
+        .horizontal_content_alignment(HorizontalAlignment::Stretch)
+        .min_height(CARD_MIN_HEIGHT)
+        .automation_name(title)
+        .content(
+            Grid::new()
+                .columns([GridLength::Auto, GridLength::STAR, GridLength::Auto])
+                .column_spacing(LINK_MARK_GAP)
+                .children((
+                    Border::new()
+                        .grid_column(0)
+                        .vertical_alignment(VerticalAlignment::Center)
+                        .content(mark),
+                    TextBlock::new()
+                        .text(title)
+                        .vertical_alignment(VerticalAlignment::Center)
+                        .grid_column(1),
+                    FontIcon::new()
+                        .glyph(OPEN_IN_NEW_WINDOW_GLYPH)
+                        .vertical_alignment(VerticalAlignment::Center)
+                        .opacity(0.65)
+                        .grid_column(2),
+                )),
+        )
+}
+
 /// A section's title with a count at the line's right (`{matched} / {total}`).
 pub fn section_title_with_count(text: &str, count: &str) -> View {
     Grid::new()
