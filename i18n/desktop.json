@@ -1006,63 +1006,6 @@
         "ja": "このプロジェクトは現在、私一人が本業以外の時間で開発と保守を行っています。必要な費用は主に自己負担で、皆さまからのご支援にも支えられています。台湾語キーボードがこれからも続き、母語で入力したいすべての人に、使いやすいツールを届けられることを願っています。"
       }
     },
-    "aboutFeedbackTitle": {
-      "comment": "關於 page: section title above the feedback paragraph.",
-      "scope": {
-        "platforms": [
-          "macos",
-          "windows"
-        ],
-        "surfaces": [
-          "host"
-        ]
-      },
-      "values": {
-        "hanji": "問題回報",
-        "tailo": "Būn-tê huê-pò",
-        "poj": "Būn-tê hôe-pò",
-        "en": "Feedback",
-        "ja": "フィードバック"
-      }
-    },
-    "aboutFeedbackBody": {
-      "comment": "關於 page, feedback paragraph: how to reach the maintainer. The address is part of the authored text. Hanji authored by the USER 2026-09-20; tailo / poj carry the Hanji verbatim until the USER supplies romanized versions.",
-      "scope": {
-        "platforms": [
-          "macos",
-          "windows"
-        ],
-        "surfaces": [
-          "host"
-        ]
-      },
-      "values": {
-        "hanji": "無論是使用上拄著 ê 問題、感覺好用 ê 所在，抑是會當改進 ê 建議，攏歡迎寄批 info@taigikeyboard.tw 予我！",
-        "tailo": "無論是使用上拄著 ê 問題、感覺好用 ê 所在，抑是會當改進 ê 建議，攏歡迎寄批 info@taigikeyboard.tw 予我！",
-        "poj": "無論是使用上拄著 ê 問題、感覺好用 ê 所在，抑是會當改進 ê 建議，攏歡迎寄批 info@taigikeyboard.tw 予我！",
-        "en": "Problems you run into, things that work well, ideas for improvement — all are welcome at info@taigikeyboard.tw!",
-        "ja": "使っていて困ったこと、気に入ったところ、改善のアイデア — どれも info@taigikeyboard.tw までお気軽にお寄せください！"
-      }
-    },
-    "aboutFeedbackDiscord": {
-      "comment": "關於 page, feedback section: the link out to the Discord server. The arrow is part of the authored label. Hanji authored by the USER 2026-09-20; tailo / poj carry the Hanji verbatim until the USER supplies romanized versions.",
-      "scope": {
-        "platforms": [
-          "macos",
-          "windows"
-        ],
-        "surfaces": [
-          "host"
-        ]
-      },
-      "values": {
-        "hanji": "➡️ 加入 Discord 回報問題。",
-        "tailo": "➡️ 加入 Discord 回報問題。",
-        "poj": "➡️ 加入 Discord 回報問題。",
-        "en": "➡️ Join the Discord to report a problem.",
-        "ja": "➡️ Discord に参加して問題を報告する。"
-      }
-    },
     "sponsorLink": {
       "comment": "關於 page footer: link out to the ECPay donation page. The heart is part of the authored label, so each language owns its own placement.",
       "scope": {

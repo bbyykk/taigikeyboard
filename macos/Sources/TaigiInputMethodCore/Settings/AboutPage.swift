@@ -1,10 +1,10 @@
-// The 關於 page: what the project is, how to reach it, and where to find it.
+// The 關於 page: what the project is and where to find it.
 
 import SwiftUI
 
 /// What the input-source menu's 關於 row opens (USER 2026-09-20): the name over
-/// the three paragraphs the USER wrote and the sponsor button; the 問題回報
-/// section; the three community links as rows; the attribution line.
+/// the three paragraphs the USER wrote and the sponsor button; the three
+/// community links as rows; the attribution line.
 ///
 /// A grouped `Form` like every other pane (USER 2026-09-20 「用頁面式」), so the
 /// page sits where the settings do and reads in the same cards. No app icon and
@@ -24,14 +24,6 @@ struct AboutPage: View {
                     Text(language.string(.desktopAboutIntroMaintainer))
                     ExternalLinkButton(titleKey: .desktopSponsorLink, url: Self.sponsorURL, style: .prominent)
                         .padding(.top, Metrics.buttonGap)
-                }
-                .padding(.vertical, Metrics.cardInset)
-            }
-
-            Section(language.string(.desktopAboutFeedbackTitle)) {
-                VStack(alignment: .leading, spacing: Metrics.paragraphSpacing) {
-                    Text(language.string(.desktopAboutFeedbackBody))
-                    ExternalLinkButton(titleKey: .desktopAboutFeedbackDiscord, url: Self.discordURL, style: .text)
                 }
                 .padding(.vertical, Metrics.cardInset)
             }

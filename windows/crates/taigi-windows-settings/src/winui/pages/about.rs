@@ -1,9 +1,9 @@
-//! The 關於 page: what the project is, how to reach it, and where to find
-//! it. Port of `AboutPage.swift`.
+//! The 關於 page: what the project is and where to find it. Port of
+//! `AboutPage.swift`.
 //!
 //! What the tray menu's 關於 row opens (USER 2026-09-20): the name over the
-//! three paragraphs the USER wrote and the sponsor button; the 問題回報
-//! section; the three community links as cards; the attribution line. In
+//! three paragraphs the USER wrote and the sponsor button; the three
+//! community links as cards; the attribution line. In
 //! the same cards as every other pane (USER 2026-09-20 「用頁面式」). No app
 //! icon and no version — the update row on 一般 already says which build
 //! this is.
@@ -60,21 +60,8 @@ pub fn view(
                 .content(strings.resolve(StringKey::DesktopSponsorLink)),
         )),
     );
-    let feedback = cards::frame(
-        StackPanel::new().spacing(PARAGRAPH_SPACING).children((
-            paragraph(strings.resolve(StringKey::DesktopAboutFeedbackBody)),
-            // Our own open, not the control's `navigate_uri`: a browser
-            // that refuses must be reported, never swallowed
-            // (`ExternalLinkButton.swift`).
-            HyperlinkButton::new()
-                .on_click(context.callback(|()| Message::OpenUrl(DISCORD_URL.to_owned())))
-                .content(strings.resolve(StringKey::DesktopAboutFeedbackDiscord)),
-        )),
-    );
     View::fragment((
         introduction,
-        cards::section_title(strings.resolve(StringKey::DesktopAboutFeedbackTitle)),
-        feedback,
         cards::section_gap(),
         link_card(
             strings,
