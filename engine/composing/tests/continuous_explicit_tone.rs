@@ -60,11 +60,16 @@ fn fixture_rows() -> Vec<Row> {
 }
 
 fn install_fixture() {
-    let rows = fixture_rows();
-    let dict_path = write_temp("dictionary.bin", &build_tkdb_v3(&rows));
-    let fst_path = build_dictionary_fst_tl_toned(&rows);
+    install_tl_rows(&fixture_rows(), &["tsua2", "tsua5", "tsu"]);
+}
+
+/// Install `rows` as the TL lexicon with `syllables` as the syllable
+/// inventory (toned `tl:` dictionary keys, empty association table).
+fn install_tl_rows(rows: &[Row], syllables: &[&str]) {
+    let dict_path = write_temp("dictionary.bin", &build_tkdb_v3(rows));
+    let fst_path = build_dictionary_fst_tl_toned(rows);
     let assoc_path = write_temp("association.bin", &empty_association_bin());
-    let syllables_path = build_syllables_fst_tl(&["tsua2", "tsua5", "tsu"]);
+    let syllables_path = build_syllables_fst_tl(syllables);
     install_lexicon(&fst_path, &dict_path, &assoc_path, &syllables_path);
 }
 
@@ -168,6 +173,78 @@ fn longest_match_suppresses_shorter_prefix_syllable() {
     assert!(
         !toneless.iter().any(|h| h == "珠"),
         "toneless tsua must NOT surface 珠 (shorter prefix syllable); got {toneless:?}"
+    );
+}
+
+/// §18 guard (d) fixture (USER report 2026-09-19 `iah8`): 抑/ia̍h is the
+/// closed tone-8 syllable, 也/iā the shorter `ia` prefix that used to trail
+/// it, and 伊/i + 曷/a̍h the interior `i`+`a` / `i`+`ah8` readings that give
+/// `ia` its phrase reading in the first place. Fixture rule: every
+/// production syllable that is a strict prefix of `iah8` is present.
+fn closed_dead_end_rows() -> Vec<Row> {
+    vec![
+        Row {
+            toneless_key: "iah",
+            hanzi: "抑",
+            tl: "ia̍h",
+            syll: 1,
+            freq: 100,
+        },
+        Row {
+            toneless_key: "ia",
+            hanzi: "也",
+            tl: "iā",
+            syll: 1,
+            freq: 500,
+        },
+        Row {
+            toneless_key: "i",
+            hanzi: "伊",
+            tl: "i",
+            syll: 1,
+            freq: 900,
+        },
+        Row {
+            toneless_key: "ah",
+            hanzi: "曷",
+            tl: "a̍h",
+            syll: 1,
+            freq: 50,
+        },
+    ]
+}
+
+fn install_closed_dead_end_fixture() {
+    // `a` has no row but must be a syllable: it is what gives `ia` its
+    // `i`+`a` phrase reading — without it §18 (c) alone already drops `ia`
+    // and guard (d) is never exercised.
+    install_tl_rows(&closed_dead_end_rows(), &["iah8", "ia7", "i", "a", "ah8"]);
+}
+
+#[test]
+fn closed_tone8_syllable_does_not_trail_its_shorter_prefix_family() {
+    let _lock = engine_install_lock();
+    install_closed_dead_end_fixture();
+    // The reported strip: `iah8` surfaced 抑 first, then the whole `ia` family
+    // (也 …) as tier-2 tail. `ia` is a non-longest single whose `i`+`a`
+    // phrase reading rescued it from §18 — but `h8` after it can never become
+    // a syllable, so it is a closed dead end and must not surface.
+    let closed = fetch_hanji("iah8");
+    assert!(
+        closed.iter().any(|h| h == "抑"),
+        "iah8 must surface 抑 (ia̍h); got {closed:?}"
+    );
+    assert!(
+        !closed.iter().any(|h| h == "也"),
+        "iah8 must NOT surface 也 (closed dead-end `ia` prefix); got {closed:?}"
+    );
+
+    // Mid-typing `iah` (no digit yet) keeps the `ia` family: `h` is still an
+    // open pending tail, so the affordance is untouched.
+    let open = fetch_hanji("iah");
+    assert!(
+        open.iter().any(|h| h == "也"),
+        "iah must still surface 也 while the remainder is open; got {open:?}"
     );
 }
 

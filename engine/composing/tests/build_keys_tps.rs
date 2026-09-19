@@ -327,6 +327,37 @@ fn bare_nasal_glyph_emits_its_expanded_span_key() {
     );
 }
 
+#[test]
+fn closed_dead_end_prefix_is_suppressed_under_a_tone_mark() {
+    // §18 guard (d), TPS mirror of the TL `iah8` case. `ㄧㄚㆷ˙` (ia̍h,
+    // tone-8 dot U+02D9): `ㄧㄚ` (end 6) is a non-longest single that also
+    // parses as `ㄧ`+`ㄚ`, but nothing leaves end 6 (`ㆷ˙` is no syllable)
+    // and the remainder carries a tone mark — a closed dead end, so only
+    // the longest single `ㄧㄚㆷ˙` survives. Mid-typing `ㄧㄚㆷ` (no mark
+    // yet) keeps `ㄧㄚ`: the remainder is still an open pending tail.
+    let inv = build_tps_inventory(&[
+        "ㄧ",
+        "ㄧㄚ",
+        "ㄧㄚㆷ",
+        "ㄧㄚㆷ\u{0307}",
+        "ㄚ",
+        "ㄚㆷ",
+        "ㄚㆷ\u{0307}",
+    ]);
+    let closed =
+        build_continuous_keys_with_inventory("ㄧㄚㆷ\u{02d9}", &inv, phonetics::InputMode::Tps);
+    assert_eq!(
+        key_texts(&closed),
+        vec!["tps:ㄧㄚㆷ\u{0307}".to_string()],
+        "closed dead-end ㄧㄚ must be suppressed under the tone-8 mark",
+    );
+    let open = build_continuous_keys_with_inventory("ㄧㄚㆷ", &inv, phonetics::InputMode::Tps);
+    assert!(
+        key_texts(&open).contains(&"tps:ㄧㄚ".to_string()),
+        "mid-typing ㄧㄚㆷ must keep ㄧㄚ, got {open:?}",
+    );
+}
+
 // ---- Hermetic TPS SyllableInventory builder -------------------------
 // Key derivation is TPS-specific (no phonotactic gating); the FST tail is
 // `common::inventory_from_keys`. Samples are pre-stripped Bopomofo syllables (with

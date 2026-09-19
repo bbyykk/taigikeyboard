@@ -530,10 +530,13 @@ In continuous input, the span-local candidate strip surfaces, among the **single
 2. `tai5` → `台/臺/抬/…` (`tâi`, tone 5) only; `ta` is NOT surfaced. (Compounds with §17: the longest single syllable is also tone-filtered.)
 3. `tsua` → `紙/蛇/…` (`tsua`) only; the shorter `tsu` (`珠`) is NOT surfaced.
 4. A bare short syllable with no longer single-syllable extension typed still surfaces: `ka` → `共/家/加/…`, `m` / `ng` (syllabic consonants) — no `kah`/`kak` letters present, so `ka` is itself the longest.
+5. `iah8` → `抑/役/也/葉/…` (`ia̍h`) only; the 2-letter `ia` family (`也/耶/野/夜/椅仔/…`) is NOT surfaced, even though `ia` also reads as the phrase `i`+`a` (USER report 2026-09-19 — `iah8` / `ioh8` / `iok8` trailed the whole `ia` / `io` family). Same for `ioh8`, `iok8`, `tiah8`, `tsiah8`.
 
 Applies to **both toned and toneless input** — the suppression keys on span length, not tone (USER 2026-05-31「免調也壓制」). TL / POJ / TPS alike (the rule lives in the mode-agnostic span-local key builder).
 
 **Multi-syllable phrase spans are NOT suppressed.** A left-anchored phrase span (`tai`+`bak` → `taibak` → 台北; the sub-word `台`/`台語` of `taigikhipuann`) is a different word, kept alongside the longest single syllable. Only **shorter single-syllable prefixes** are dropped, never phrase candidates — `taigikhipuann` still surfaces `台` (span 0–3), `台語` (span 0–5), and the whole-buffer `台語齒盤`.
+
+**Phrase-reading guard and its dead-end exception (guard (c) / (d))**: a shorter single-syllable span survives when the same bytes ALSO parse as a phrase (`ai` = `a`+`i` under `ainn`) — it is a legitimate different-word candidate. That rescue does NOT apply when the span is a **closed dead end**: no lattice edge leaves its end AND the remainder after it is already tone-closed (TL / POJ: a typed tone digit `1..=9` anywhere in the remainder; TPS: a tone mark, or a §41 stripped-space barrier strictly after the end). `iah8` → `ia` has the `i`+`a` reading but `h8` can never grow into a syllable, so committing `也` would strand `h8` — suppressed. Both halves are required so the mid-typing affordance is untouched: `iah` (no digit yet) keeps `ia` because `h` is an open pending tail that may still become `hoo`; `iakau3` keeps `ia` because `kau3` continues from it. The rule stays confined to the shorter-single-prefix case — a phrase span whose remainder is dead (`tai5gi2` + a mistyped `boh7`) is NOT touched, so `台` and `台語` keep surfacing together while the user repairs the typo.
 
 **Why**: typing a complete syllable must not pollute the candidate strip with shorter prefix syllables. `tai` is one 3-letter syllable; a 2-letter `ta` candidate is noise (critical bug reported 2026-05-31 — `tai5` surfaced the full `ta` tone family). The shorter syllable IS phonotactically valid, but at the anchor the user committed to the longer reading by typing its extra letters.
 
@@ -544,9 +547,9 @@ Applies to **both toned and toneless input** — the suppression keys on span le
 **Relationship to §17**: §17 selects the tone (toned vs toneless FST key family) for a given span; §18 selects which span lengths surface at the anchor. Orthogonal axes — the reported `tai5`→`ta` bug needed §18 (the `ta` span carries no tone digit, so §17's tone filter never touched it).
 
 **Tests**:
-- **Rust engine** — `engine/composing/tests/continuous_explicit_tone.rs::longest_match_suppresses_shorter_prefix_syllable` (`tsua2` drops 珠; toneless `tsua` keeps 紙+蛇 but drops 珠). Golden `tl_toneless_multi` (`engine/composing/tests/golden_fetch_at_pos.rs`) freezes `tsua` → 紙 + 珠仔 (both longest-span) with 珠 absent. `tl_toneless_long_reach` freezes the phrase-not-suppressed property (台/台語 sub-words retained).
+- **Rust engine** — `engine/composing/tests/continuous_explicit_tone.rs::longest_match_suppresses_shorter_prefix_syllable` (`tsua2` drops 珠; toneless `tsua` keeps 紙+蛇 but drops 珠). Golden `tl_toneless_multi` (`engine/composing/tests/golden_fetch_at_pos.rs`) freezes `tsua` → 紙 + 珠仔 (both longest-span) with 珠 absent. `tl_toneless_long_reach` freezes the phrase-not-suppressed property (台/台語 sub-words retained). Guard (c) / (d): `engine/composing/tests/build_keys_tl_lattice.rs::{phrase_reachable_shorter_span_survives_suppression, closed_dead_end_prefix_is_not_rescued_by_its_phrase_reading, phrase_reachable_prefix_survives_while_the_remainder_is_open}` (key layer), `continuous_explicit_tone.rs::closed_tone8_syllable_does_not_trail_its_shorter_prefix_family` (hanji layer), `build_keys_tps.rs::closed_dead_end_prefix_is_suppressed_under_a_tone_mark` (TPS).
 - **Dev harness** — `engine/composing/tests/candidate_dump.rs` (`#[ignore]`) dumps production candidates for any input; run `cargo test -p composing --test candidate_dump -- --ignored --nocapture`.
-- **Dogfood (real-device, production gate)** — see `dogfood-checklist.md` S5.
+- **Dogfood (real-device, production gate)** — see `dogfood-checklist.md` S5 and S56.
 
 ---
 
