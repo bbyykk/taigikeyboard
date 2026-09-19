@@ -2,15 +2,15 @@
 ; Included by TaigiKeyboard.iss; the [Languages] section there names these languages.
 
 [CustomMessages]
-chinesetraditional.installerDllLocked=台語齒盤猶閣予執行中的程式咧用，檔案無法度換掉。%n%n請先換做別个輸入法，登出 Windows 閣再登入，然後閣執行一擺這个安裝程式。免重新開機。
-english.installerDllLocked=TaigiKeyboard is still in use by a running application, so its files cannot be replaced.%n%nSwitch to another input method, sign out of Windows, sign in again, and run this installer once more. No restart is needed.
-japanese.installerDllLocked=TaigiKeyboard は実行中のアプリケーションに使用されているため、ファイルを置き換えられません。%n%n別の入力方式に切り替えてから Windows からサインアウトし、再度サインインしてこのインストーラーを実行してください。再起動は不要です。
-chinesetraditional.installerStepFailed=安裝程式無法度完成這个步驟：%1%n%n若有舊版，已經復原矣。詳細請看安裝紀錄。
-english.installerStepFailed=Setup could not complete this step: %1%n%nThe previous version, if any, was put back. Details are in the setup log.
-japanese.installerStepFailed=次の手順を完了できませんでした: %1%n%n以前のバージョンがあれば元に戻しました。詳細はセットアップのログを参照してください。
+chinesetraditional.installerDllLocked=台語齒盤猶咧使用中，檔案換袂掉。請先換做別个輸入法，登出 Windows 閣登入，才閣執行安裝程式。免重新開機。
+english.installerDllLocked=TaigiKeyboard is still in use, so its files cannot be replaced. Switch to another input method, sign out of Windows and back in, then run this installer again. No restart is needed.
+japanese.installerDllLocked=TaigiKeyboard は使用中のため、ファイルを置き換えられません。別の入力方式に切り替え、Windows からサインアウトして再度サインインしてから、このインストーラーをもう一度実行してください。再起動は不要です。
+chinesetraditional.installerStepFailed=安裝步驟失敗：%1%n若有舊版，已經復原。詳細請看安裝紀錄。
+english.installerStepFailed=Setup failed at: %1%nThe previous version, if any, was put back. Details are in the setup log.
+japanese.installerStepFailed=セットアップに失敗した手順: %1%n以前のバージョンがあれば元に戻しました。詳細はセットアップのログを参照してください。
 chinesetraditional.installerSignOutNote=若是輸入法清單內底無看著台語齒盤，請登出 Windows 閣再登入。
 english.installerSignOutNote=If TaigiKeyboard does not appear in the input-method list, sign out of Windows and sign in again.
 japanese.installerSignOutNote=入力方式の一覧に TaigiKeyboard が表示されない場合は、Windows からサインアウトして再度サインインしてください。
-chinesetraditional.installerUpdateTaskSkippedNote=無法度設定自動檢查更新。請佇設定內底檢查更新。
-english.installerUpdateTaskSkippedNote=Automatic update checks could not be set up. You can check for updates in the settings window.
-japanese.installerUpdateTaskSkippedNote=更新の自動確認を設定できませんでした。設定ウィンドウから更新を確認できます。
+chinesetraditional.installerUpdateTaskSkippedNote=自動檢查更新設定袂起來，請佇設定內底手動檢查。
+english.installerUpdateTaskSkippedNote=Automatic update checks could not be set up. Check for updates in Settings instead.
+japanese.installerUpdateTaskSkippedNote=更新の自動確認を設定できませんでした。設定から手動で更新を確認してください。
