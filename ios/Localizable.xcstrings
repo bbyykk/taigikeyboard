@@ -2647,24 +2647,6 @@
         }
       }
     },
-    "i18n_home_versionHistory": {
-      "comment": "Home resource link + version-history page title.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Version History"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "更新履歴"
-          }
-        }
-      }
-    },
     "i18n_home_viewLicense": {
       "comment": "Copyright page button: open the license text for a source.",
       "extractionState": "manual",

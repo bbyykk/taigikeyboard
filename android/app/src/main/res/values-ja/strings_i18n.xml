@@ -139,7 +139,6 @@
     <string name="i18n_home_privacyPolicy">プライバシーポリシー</string>
     <string name="i18n_home_freePromise">台語キーボードは今後も無料で、有料機能を設けません。台湾語を学びたい、書きたい人が費用を気にせず使えることを願っています。</string>
     <string name="i18n_home_version">現在のバージョン</string>
-    <string name="i18n_home_versionHistory">更新履歴</string>
     <string name="i18n_home_copyrightNotice">謝辞</string>
     <string name="i18n_home_viewLicense">ライセンス</string>
     <string name="i18n_home_moeCopyright">© 教育部</string>

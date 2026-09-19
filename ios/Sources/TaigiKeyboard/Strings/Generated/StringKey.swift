@@ -137,7 +137,6 @@ enum StringKey: String {
     case homePrivacyPolicy = "i18n_home_privacyPolicy"
     case homeFreePromise = "i18n_home_freePromise"
     case homeVersion = "i18n_home_version"
-    case homeVersionHistory = "i18n_home_versionHistory"
     case homeCopyrightNotice = "i18n_home_copyrightNotice"
     case homeViewLicense = "i18n_home_viewLicense"
     case homeMoeCopyright = "i18n_home_moeCopyright"

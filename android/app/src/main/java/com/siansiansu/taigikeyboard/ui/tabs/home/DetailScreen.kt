@@ -3,7 +3,6 @@ package com.siansiansu.taigikeyboard.ui.tabs.home
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -39,7 +38,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -199,15 +197,6 @@ private fun DetailItemContent(
                 onClick = { onExternalUrl(item.url) },
             )
         }
-
-        is DetailItem.VersionCard -> {
-            VersionEntryCard(
-                version = item.version,
-                date = item.date,
-                changes = item.changes,
-                fontFamily = fontFamily,
-            )
-        }
     }
 }
 
@@ -306,57 +295,6 @@ private fun LinkCard(
                 modifier = Modifier.size(trailingIconSize),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-        }
-    }
-}
-
-@Composable
-private fun VersionEntryCard(
-    version: String,
-    date: String,
-    changes: List<String>,
-    fontFamily: FontFamily,
-) {
-    SettingsCard {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = "v$version",
-                    modifier = Modifier.weight(1f),
-                    fontWeight = FontWeight.Bold,
-                    fontFamily = fontFamily,
-                    color = MaterialTheme.colorScheme.primary,
-                    style = MaterialTheme.typography.bodyLarge,
-                )
-                Text(
-                    text = date,
-                    fontFamily = fontFamily,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    style = MaterialTheme.typography.labelLarge,
-                )
-            }
-
-            Spacer(Modifier.height(12.dp))
-
-            changes.forEach { change ->
-                Row(modifier = Modifier.padding(bottom = 8.dp)) {
-                    Text(
-                        text = "\u2022",
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        style = MaterialTheme.typography.bodyLarge,
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    Text(
-                        text = change,
-                        fontFamily = fontFamily,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        style = MaterialTheme.typography.bodyLarge,
-                    )
-                }
-            }
         }
     }
 }

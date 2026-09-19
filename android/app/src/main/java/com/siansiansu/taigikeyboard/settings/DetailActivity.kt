@@ -13,7 +13,7 @@ import com.siansiansu.taigikeyboard.ui.setTaigiContent
 import com.siansiansu.taigikeyboard.ui.tabs.home.DetailScreen
 import androidx.compose.ui.text.font.Typeface as ComposeTypeface
 
-// Generic detail page for feature explanations, FAQ, about-developer, and version history
+// Generic detail page for feature explanations, FAQ, and about-developer
 class DetailActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

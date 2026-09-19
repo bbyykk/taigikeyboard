@@ -5,13 +5,12 @@ import com.siansiansu.taigikeyboard.R
 import com.siansiansu.taigikeyboard.content.ContentType
 import com.siansiansu.taigikeyboard.content.FeatureContent
 import com.siansiansu.taigikeyboard.content.ParagraphAttachment
-import com.siansiansu.taigikeyboard.content.VersionHistory
 import com.siansiansu.taigikeyboard.i18n.DisplayLanguage
 import com.siansiansu.taigikeyboard.i18n.StringResolver
 import com.siansiansu.taigikeyboard.i18n.generated.StringKey
 import com.siansiansu.taigikeyboard.ui.components.resolveDrawableResId
 
-// Detail screen data model and content builders for feature/FAQ/about-developer/version pages
+// Detail screen data model and content builders for feature/FAQ/about-developer pages
 sealed interface DetailItem {
     data class Paragraph(
         val text: String,
@@ -37,12 +36,6 @@ sealed interface DetailItem {
         @param:DrawableRes val iconResId: Int,
         val url: String,
     ) : DetailItem
-
-    data class VersionCard(
-        val version: String,
-        val date: String,
-        val changes: List<String>,
-    ) : DetailItem
 }
 
 internal fun buildDetailItems(
@@ -52,7 +45,6 @@ internal fun buildDetailItems(
 ): List<DetailItem> =
     when (contentType) {
         ContentType.ABOUT_DEVELOPER -> buildAboutDeveloperItems(resolver)
-        ContentType.VERSION -> buildVersionItems()
         else -> buildGenericItems(resolver, contentKeys)
     }
 
@@ -118,7 +110,6 @@ internal fun getTextByKey(
 ): String? =
     when (key) {
         ContentType.KEY_ABOUT_DEVELOPER -> resolver.resolve(StringKey.HOME_ABOUT_DEVELOPER)
-        ContentType.KEY_VERSION_HISTORY -> resolver.resolve(StringKey.HOME_VERSION_HISTORY)
         else -> null
     }
 
@@ -131,11 +122,6 @@ private fun buildAboutDeveloperItems(resolver: StringResolver): List<DetailItem>
             "https://www.taigikeyboard.tw/",
         ),
     )
-
-private fun buildVersionItems(): List<DetailItem> =
-    VersionHistory.entries.map { entry ->
-        DetailItem.VersionCard(entry.version, entry.date, entry.changes)
-    }
 
 private fun buildGenericItems(
     resolver: StringResolver,

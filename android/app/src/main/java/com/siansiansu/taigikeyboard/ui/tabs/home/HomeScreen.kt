@@ -54,7 +54,6 @@ fun HomeScreen(
     onUrlClick: (String) -> Unit,
     onCopyright: () -> Unit,
     onAboutDeveloper: () -> Unit,
-    onVersionHistory: () -> Unit,
     onFaqClick: (titleKey: String, contentKeys: Array<String>) -> Unit,
 ) {
     val featureIconTint = AppStyle.warningOrange()
@@ -177,13 +176,6 @@ fun HomeScreen(
                     label = L10n.homeAboutDeveloper,
                     trailingIcon = chevronRight,
                     onClick = onAboutDeveloper,
-                )
-                SettingsDivider(Modifier.padding(horizontal = 16.dp))
-                NavigationRow(
-                    icon = painterResource(R.drawable.ic_history),
-                    label = L10n.homeVersionHistory,
-                    trailingIcon = chevronRight,
-                    onClick = onVersionHistory,
                 )
                 SettingsDivider(Modifier.padding(horizontal = 16.dp))
 

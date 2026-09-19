@@ -130,9 +130,6 @@ class SettingsMainActivity : AppCompatActivity() {
                                             emptyArray(),
                                         )
                                     },
-                                    onVersionHistory = {
-                                        openDetailActivity(ContentType.KEY_VERSION_HISTORY, ContentType.VERSION, emptyArray())
-                                    },
                                     onFaqClick = { titleKey, contentKeys ->
                                         openDetailActivity(titleKey, ContentType.FAQ, contentKeys)
                                     },

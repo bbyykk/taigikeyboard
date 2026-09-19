@@ -191,7 +191,7 @@ Rules:
 - Idempotent: re-running on an existing target file merges by topic. Refine the
   line for a behavior; never add a second line for it.
 - There are **no store notes on this train.** Do not create
-  `changelog/store/<target>/`, do not run `release_notes.py sync`, `check`, or
+  `changelog/store/<target>/`, do not run `release_notes.py check` or
   `print` — those validate the mobile surface only and will fail or mislead here.
 
 ## 5. Validate

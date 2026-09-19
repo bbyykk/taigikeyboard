@@ -278,8 +278,6 @@ object L10n {
         @Composable get() = stringRes(StringKey.HOME_FREE_PROMISE)
     val homeVersion: String
         @Composable get() = stringRes(StringKey.HOME_VERSION)
-    val homeVersionHistory: String
-        @Composable get() = stringRes(StringKey.HOME_VERSION_HISTORY)
     val homeCopyrightNotice: String
         @Composable get() = stringRes(StringKey.HOME_COPYRIGHT_NOTICE)
     val homeViewLicense: String
