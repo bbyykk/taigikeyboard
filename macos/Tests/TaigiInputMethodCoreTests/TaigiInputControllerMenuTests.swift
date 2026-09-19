@@ -66,23 +66,112 @@ final class TaigiInputControllerMenuTests: XCTestCase {
         )
     }
 
-    /// One doorway and one command, in that order: the way into the settings
-    /// window, then — past the rule — the check that has somewhere to go rather
-    /// than somewhere to be. No composing key appears here; the menu stopped
-    /// being the shortcut roster when the agent proved unable to display one
-    /// without also dispatching it.
-    func testMenu_isTheSettingsDoorwayThenCheckForUpdates() throws {
+    /// The global shortcuts a click can stand in for, then the doorway, then —
+    /// past the rule — the check that has somewhere to go rather than somewhere
+    /// to be (USER 2026-09-19: the menu is where a user looks up the chords
+    /// they last recorded). Each shortcut row carries the 快捷鍵 pane's own
+    /// name for it; the doorway keeps its one-word menu name. No composing key
+    /// appears here; the menu stopped being that roster when the agent proved
+    /// unable to display one without also dispatching it.
+    func testMenu_isTheGlobalShortcutsThenTheSettingsDoorwayThenCheckForUpdates() throws {
         let items = try menu().items
 
         // The literal oracle for this surface: the copy is the authored Hanji.
-        XCTAssertEqual(items.map(\.title), ["設定", "", "檢查更新"])
-        XCTAssertEqual(items.filter(\.isSeparatorItem).count, 1)
+        XCTAssertEqual(
+            items.map(\.title),
+            ["切換台羅/白話字", "切換候選詞顯示", "", "設定", "", "檢查更新"],
+        )
+        XCTAssertEqual(items.filter(\.isSeparatorItem).count, 2)
         XCTAssertFalse(try XCTUnwrap(items.first).isSeparatorItem)
         XCTAssertFalse(try XCTUnwrap(items.last).isSeparatorItem)
         XCTAssertEqual(
             items.filter { !$0.isSeparatorItem }.map(\.action),
-            [Self.openSettings, Self.checkForUpdates],
+            [Self.toggleRomanization, Self.cycleCandidateDisplayMode, Self.openSettings, Self.checkForUpdates],
         )
+    }
+
+    /// The 漢羅對調 swap stays off the menu: its default is the bare backtick,
+    /// and a bare key equivalent here would be eaten by the agent everywhere
+    /// this input source is selected — so the row could never print the one
+    /// chord it is known by. The picker stays off too: it needs the caret a
+    /// click has no hold of. And the Telex guide: a row for the few who use
+    /// the scheme is a row everyone else reads past (USER 2026-09-20).
+    func testMenu_hasNoRowForTheSwapThePickerOrTheGuide() throws {
+        let titles = try menu().items.map(\.title)
+
+        for action in [ShortcutAction.toggleTranslateSwapped, .showSymbolPicker, .showTelexGuide] {
+            XCTAssertFalse(titles.contains(action.label(try language())), "\(action)")
+        }
+    }
+
+    /// Each shortcut row prints its recorded chord, like the doorway does.
+    func testTheShortcutRows_printTheirDefaultChords() throws {
+        let menu = try menu()
+
+        for (action, key) in [(Self.toggleRomanization, "c"), (Self.cycleCandidateDisplayMode, "h")] {
+            let row = try item(action: action, in: menu)
+            XCTAssertEqual(row.keyEquivalent, key, "\(action)")
+            XCTAssertEqual(row.keyEquivalentModifierMask, [.control, .command], "\(action)")
+        }
+    }
+
+    /// A row re-recorded onto a bare key prints nothing: the Carbon hotkey
+    /// behind it is armed only while a session holds the engine, but a key
+    /// equivalent here is dispatched by the agent for as long as this input
+    /// source is selected, and a bare letter claimed that way is a letter the
+    /// user can no longer type. The pane still shows the key.
+    func testAShortcutRow_onABareKey_claimsNoKeyEquivalent() throws {
+        KeyboardShortcuts.setShortcut(.init(.z), for: .toggleRomanization)
+
+        let row = try item(action: Self.toggleRomanization, in: menu())
+
+        XCTAssertEqual(row.title, "切換台羅/白話字")
+        XCTAssertEqual(row.keyEquivalent, "")
+        XCTAssertEqual(row.keyEquivalentModifierMask, [])
+    }
+
+    /// A shortcut row follows a re-recording and a clearing the way the
+    /// doorway does: the menu is rebuilt on every draw.
+    func testAShortcutRow_printsTheRecordedChord_andNothingOnceCleared() throws {
+        KeyboardShortcuts.setShortcut(.init(.j, modifiers: [.control, .option]), for: .cycleCandidateDisplayMode)
+        let recorded = try item(action: Self.cycleCandidateDisplayMode, in: menu())
+        XCTAssertEqual(recorded.keyEquivalent, "j")
+        XCTAssertEqual(recorded.keyEquivalentModifierMask, [.control, .option])
+
+        KeyboardShortcuts.setShortcut(nil, for: .cycleCandidateDisplayMode)
+        let cleared = try item(action: Self.cycleCandidateDisplayMode, in: menu())
+        XCTAssertEqual(cleared.title, "切換候選詞顯示")
+        XCTAssertEqual(cleared.keyEquivalent, "")
+        XCTAssertEqual(cleared.keyEquivalentModifierMask, [])
+    }
+
+    /// With no session armed the click goes nowhere, as the chord does: there
+    /// is no composition for the switch to apply to.
+    func testTheRomanizationRow_withNoSession_changesNothing() throws {
+        XCTAssertEqual(controller.settings.inputMode, .tl)
+
+        try select(Self.toggleRomanization)
+
+        XCTAssertEqual(controller.settings.inputMode, .tl)
+    }
+
+    /// Clicking a shortcut row does what its chord does, through the same
+    /// doorway: with the session armed, the romanization flips.
+    func testTheRomanizationRow_switchesTheRomanization() throws {
+        // Recorded rather than shown: a real flash is a panel ordered in
+        // front of whoever is running the tests.
+        controller.modeFlashOverride = { _ in }
+        controller.activateServer(RecordingTextInputClient())
+        defer { controller.deactivateServer(nil) }
+        XCTAssertEqual(controller.settings.inputMode, .tl)
+
+        try select(Self.toggleRomanization)
+
+        XCTAssertEqual(controller.settings.inputMode, .poj)
+    }
+
+    private func language() throws -> DisplayLanguageStore {
+        try XCTUnwrap(controller.displayLanguageOverride)
     }
 
     /// A row per pane, each named after its own sidebar row, from 2026-08-21
@@ -116,12 +205,16 @@ final class TaigiInputControllerMenuTests: XCTestCase {
         XCTAssertEqual(row.keyEquivalentModifierMask, [])
     }
 
-    /// The general form of the rule above: only the doorway may claim a key. A
-    /// row that claims one the user cannot see and re-record in the 快捷鍵 pane
-    /// is a key taken from the host that no surface admits to.
-    func testOnlyTheSettingsRow_claimsAKey() throws {
+    /// The general form of the rule above: only a global-shortcut row may
+    /// claim a key. A row that claims one the user cannot see and re-record in
+    /// the 快捷鍵 pane is a key taken from the host that no surface admits to.
+    func testOnlyTheShortcutRows_claimAKey() throws {
+        let shortcutRows = [Self.toggleRomanization, Self.cycleCandidateDisplayMode, Self.openSettings]
         for row in try menu().items where !row.keyEquivalent.isEmpty {
-            XCTAssertEqual(row.action, Self.openSettings, "\(row.title) claims \(row.keyEquivalent)")
+            XCTAssertTrue(
+                row.action.map(shortcutRows.contains) ?? false,
+                "\(row.title) claims \(row.keyEquivalent)",
+            )
         }
     }
 
@@ -228,6 +321,8 @@ final class TaigiInputControllerMenuTests: XCTestCase {
     }
 
     private static let checkForUpdates = Selector(("checkForUpdates:"))
+    private static let toggleRomanization = Selector(("toggleRomanization:"))
+    private static let cycleCandidateDisplayMode = Selector(("cycleCandidateDisplayMode:"))
     /// The doorway's command: `showPreferences:` is the selector the system
     /// reserves for it (`IMKInputController.h:165-170`), so the row sends that
     /// rather than a second one of the controller's own.
