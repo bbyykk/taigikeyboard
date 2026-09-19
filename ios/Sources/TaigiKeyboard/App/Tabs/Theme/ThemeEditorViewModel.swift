@@ -166,6 +166,9 @@ final class ThemeEditorViewModel: ObservableObject {
         Binding(
             get: { self.gradient.angle },
             set: { angle in
+                // The preview drag writes at touch-sample rate; skip the no-op frames
+                // (same whole degree / snapped preset) so the preview is not rebuilt for them.
+                guard angle != self.gradient.angle else { return }
                 var next = self.gradient
                 next.angle = angle
                 self.setBackground(.gradient(next))

@@ -118,7 +118,8 @@ private const val SHADOW_MAX = 4f
 private const val SHADOW_STEP = 1f
 
 // The eight gradient direction presets, ↑ (0°) first and clockwise in 45° steps (CSS
-// angle convention, see ThemeGradient.angle). Mirrors iOS ThemeGradientDirectionRow.
+// angle convention, see ThemeGradient.angle). Mirrors iOS ThemeGradient.presetStep (there the
+// preview drag snaps onto the same eight angles).
 private val DIRECTION_PRESETS = listOf(0f, 45f, 90f, 135f, 180f, 225f, 270f, 315f)
 private val DIRECTION_BUTTON_SIZE = 32.dp
 private val DIRECTION_ARROW_SIZE = 14.dp

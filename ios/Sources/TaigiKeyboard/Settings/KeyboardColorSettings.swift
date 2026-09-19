@@ -98,14 +98,33 @@ struct ThemeGradient: Codable, Equatable {
         stops.map(\.color)
     }
 
+    /// Spacing of the eight preset directions (↑ → ↓ ← and the diagonals) the editors
+    /// offer: Android as arrow chips, iOS as snap targets of the preview drag.
+    static let presetStep: Double = 45
+
+    /// The unit direction vector of `angle` in screen coordinates (y down): `0` → (0, −1),
+    /// `90` → (1, 0). Shared by `unitPoints` and the editor's direction overlay.
+    var direction: CGVector {
+        Self.direction(degrees: angle)
+    }
+
+    static func direction(degrees: Double) -> CGVector {
+        let radians = degrees * .pi / 180
+        return CGVector(dx: sin(radians), dy: -cos(radians))
+    }
+
+    /// Inverse of `direction(degrees:)`: the angle of a screen-space vector, in `-180 ... 180`
+    /// (callers wrap it into `0 ..< 360` as they see fit).
+    static func degrees(of vector: CGVector) -> Double {
+        atan2(vector.dx, -vector.dy) * 180 / .pi
+    }
+
     /// SwiftUI `LinearGradient` start / end points for `angle`, in the unit square of the
     /// painted surface. The CSS direction vector `(sin θ, -cos θ)` (y down) is normalised by
     /// its larger component so the diagonal presets run corner to corner (135° = top-left →
     /// bottom-right) and the axis presets run edge to edge (180° = top-centre → bottom-centre).
     var unitPoints: (start: UnitPoint, end: UnitPoint) {
-        let radians = angle * .pi / 180
-        let dx = sin(radians)
-        let dy = -cos(radians)
+        let (dx, dy) = (direction.dx, direction.dy)
         let magnitude = max(abs(dx), abs(dy))
         let halfX = dx / magnitude / 2
         let halfY = dy / magnitude / 2

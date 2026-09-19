@@ -4394,7 +4394,7 @@
       }
     },
     "i18n_theme_gradientDirection": {
-      "comment": "Theme editor row label: the gradient direction (eight arrow presets, 45° apart).",
+      "comment": "Gradient direction. Android: theme editor row label above the eight arrow presets. iOS: VoiceOver label of the drag pointer over the preview (no visible row).",
       "extractionState": "manual",
       "localizations": {
         "en": {

@@ -67,11 +67,15 @@ USER request (2026-09-19, five points, verbatim intent): (1) 候選詞列背景 
 | Bitmap cache keyed by path, evicted on theme change | trime `data/theme/ColorManager.kt:96-167` | per-process decoded-image cache keyed by file name, dropped on theme revision |
 | 8-orientation gradient drawable on the View seam | Android `GradientDrawable.Orientation` (already used in `KeyboardThemeSurfaceController.kt`) | the 8 presets map 1:1 to `Orientation` on the View seam; Compose uses unit points |
 
-**Deliberately not adopted**: a free 0–360° angle dial (heavier UI + a11y for a keyboard-sized surface; 8 presets cover Figma's rotate-45° affordance); a saturation slider (fixed cap + one 淡化 knob, USER 2026-09-19); per-scheme light / dark colour pairs for user themes (USER point 4); keeping `candidateBackgroundColor` as a hidden field (USER point 1 — one surface). YAGNI: multi-stop gradients (two stops), radial gradients, image position / zoom controls.
+**Deliberately not adopted**: a free 0–360° angle *dial* (heavier UI + a11y for a keyboard-sized surface); a saturation slider (fixed cap + one 淡化 knob, USER 2026-09-19); per-scheme light / dark colour pairs for user themes (USER point 4); keeping `candidateBackgroundColor` as a hidden field (USER point 1 — one surface). YAGNI: multi-stop gradients (two stops), radial gradients, image position / zoom controls.
 
 #### Dogfood
 
 S54 (background surface / gradient direction / scheme-invariant colours / editor order) and S55 (photo background) in `docs/architecture/dogfood-checklist.md`, both platforms.
+
+#### Follow-up E — drag the preview to set the gradient direction (USER 2026-09-19 「用手指拖曳選擇漸層中心，取代用按鈕」; option 1 of 3 picked, iOS first)
+
+Direct manipulation replaces the 8 arrow buttons: while the background kind is 漸層, dragging on the pinned live preview sets `ThemeGradient.angle` to the direction centre → finger (any whole degree; ±6° snap onto the 45° presets with a selection click). Model / JSON / rendering unchanged (`angle` was already a free `Double`; `unitPoints` handles any angle). No 方向 row on iOS (USER 2026-09-19 「不需要「方向」那一欄，因為使用者只要點選後，看到下方的指針，就知道如何調整了」); VoiceOver keeps the presets via an adjustable action on the pointer itself. iOS PR first; Android port (same `ThemeGradient.angle: Float`, `PaintDrawable` shader already takes any angle) is a later PR — until then Android keeps the 8 chips. Dogfood: S54 gains a drag row (iOS).
 
 ---
 
