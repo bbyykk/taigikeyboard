@@ -80,6 +80,14 @@ fn num_face(reading: &str, form: SpellingForm) -> (String, Vec<u32>) {
     (out, ends)
 }
 
+/// Whether `c` is a stop coda `p t k h` (either case) — the letter that
+/// closes a checked syllable, the only kind that carries tone 4 or 8. One
+/// owner for the rule `normalize_input` (default tone 4 vs 1) and the
+/// desktop Telex pair keys (`composing::telex`) both apply.
+pub fn is_stop_coda(c: char) -> bool {
+    matches!(c.to_ascii_lowercase(), 'p' | 't' | 'k' | 'h')
+}
+
 pub fn strip_tone_mark(text: &str) -> (String, String) {
     // Fast path: pure-ASCII input cannot carry combining marks. NFD/NFC are
     // no-ops on ASCII, so skip the allocation. This is the common case for

@@ -146,14 +146,16 @@ the dialect finals `ir` / `er` are in the dictionary). Six of them carry tones, 
 
 | Key | Meaning | TL | POJ |
 |---|---|---|---|
-| `v` `y` `d` `w` `x` `q` | tone 2 3 5 7 8 9 | `tev` → té | `pay` → pà |
+| `x` `v` | tone 1 / 4, tone 2 / 8 — the checked tone after a stop coda `p t k h`, the open tone otherwise (2026-09-19, roadmap § Follow-up tone 1 / 4) | `taix` → tai1, `titv` → ti̍t | `sitx` → sit4 |
+| `y` `d` `w` `q` | tone 3 5 7 9 | `tev` → té | `pay` → pà |
 | `z` | affricate initial | `z` → `ts`, `zh` → `tsh` | `z` → `ch`, `zh` → `chh` |
 | `f` | hyphen | `taidfgiv` → tâi-gí | same |
 | `1`–`9` | candidate slot | | |
 
-This is the kahiok scheme (madmaxieee/taigi-telex) minus its `c` → `tsh` key. Uppercase tone
-keys carry the same tone; `Z` → `Ts` / `Ch`. Tone 6 is not offered (no free letter; USER 2026-09-08
-accepted). `nn` / `oo` are native spellings the engine already handles. khiin-rs (`s f l j w`) and
+This is the kahiok scheme (madmaxieee/taigi-telex) minus its `c` → `tsh` key, with the coda
+pairing added 2026-09-19 (until then `x` was tone 8 alone and tones 1 / 4 had no key). Uppercase
+tone keys carry the same tone; `Z` → `Ts` / `Ch`. Tone 6 is not offered (no free letter; USER
+2026-09-08 accepted, reaffirmed 2026-09-19). `nn` / `oo` are native spellings the engine already handles. khiin-rs (`s f l j w`) and
 the Cathaylab Keyman keyboards (`s f w x v`) were rejected because `s` / `l` / `j` are TL initials
 and need escape rules.
 

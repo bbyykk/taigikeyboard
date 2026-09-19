@@ -98,48 +98,52 @@ Full design (grounded in code), rounds and dogfood text: [`docs/reports/desktop-
 **Status**: all rounds MERGED 2026-09-09 — P1 #17 `6888be67`, P2 #18 `cbee26d1`, P3 #19 `447154ea`, P4 #20 `938994fa`, guide P5 #21 `544d77a2`, P6 #22. Dogfood pending: S32 + S33 + S34.
 Full design, rounds, the Telex-guide follow-up and dogfood text: [`docs/reports/desktop-3.6.x-design-notes.md`](reports/desktop-3.6.x-design-notes.md) § Desktop Telex. The tone-1/4 follow-up below stays here as the live design record.
 
-#### Follow-up: Telex keys for tone 1 and tone 4 (USER-decided 2026-09-11, revised 2026-09-12, NOT scheduled)
+#### Follow-up: Telex keys for tone 1 and tone 4 (USER-decided 2026-09-19)
 
-A user reported that Telex has no key for tone 1 or tone 4. USER 2026-09-11: 「先寫成文件,之後的版本
-再處理」 — design recorded here, no round opened; the USER schedules it.
+**Status**: round open 2026-09-19 — branch `feat/telex-tone-1-4-pairing`, one PR (engine + both
+guide tables + docs). Dogfood pending: S57 (plus S32 / S34, whose examples were updated).
+
+A user reported that Telex has no key for tone 1 or tone 4 (2026-09-11). A second user proposed
+pairing the tones by coda: 「第一調 kap 第四調 ē-tàng 用同一个位。第 8 調會當 kap 第二調用同一个位」
+(2026-09-12). USER 2026-09-19 evaluated user-customizable Telex keys, rejected them as complexity
+(the free pool is eight letters, so a custom table can only permute them), and adopted the fixed
+table below: 「1.依據你的建議, 2.不要與其他快速齒衝突,ok,go」.
 
 **Why a key at all.** Tones 1 / 4 are unmarked, so the raw buffer `tai` already reads as tone 1.
 The key is an explicit pin: it narrows candidates (`tai` matches every tone, `tai1` only tone 1)
 and ends a syllable in continuous input, exactly what the digits `1` / `4` do in the Standard
 scheme. The buffer stays numeric-tone (`tai1`, `sit4`), so nothing downstream changes.
 
-**Design (revised 2026-09-12).** A user proposed pairing the tones by coda: 「第一調 kap 第四調
-ē-tàng 用同一个位。第 8 調會當 kap 第二調用同一个位」. USER 2026-09-12: 「先記錄」. The pairing is
-phonotactically airtight: a checked syllable (coda `p / t / k / h`) can only carry tone 4 or 8, an
-unchecked syllable can only carry 1 / 2 / 3 / 5 / 7 / 9, so one key never has to choose. This
-supersedes the 2026-09-11 two-key design (`c` = 1, `r` = 4): `r` is no longer touched, so the
-`ir` / `er` dialect-final gate and its twelve-final fixture are not needed.
+**Letter arithmetic.** The free letters are `d f q v w x y z` (`c` is POJ `ch`, `r` the `ir` /
+`er` finals). Seven open tones (1 2 3 5 6 7 9) each need their own key — two open tones on one key
+cannot be told apart — plus `z` and `f` makes nine, one more than the pool. The coda pairing is
+what frees the two: a syllable ending in a stop `p t k h` can only carry tone 4 or 8, any other
+only an open tone, so a key may carry one open + one checked tone. Tone 1 (with 4, ~30 % of the
+dictionary's syllables) takes the freed slot; tone 6 (2 060 syllables, Lukang / Quanzhou
+dialects) stays unoffered as decided 2026-09-08 and is typed under Standard (`tai6`).
 
-| Key | Tail before caret | Meaning |
+| Key | Open tail (any other coda) | Checked tail (`p t k h`) |
 |---|---|---|
-| `c` | empty, ends in `-`, or already ends in a tone digit | literal `c` — POJ `chia`, `tai5chia`, `taifchia` still type |
-| `c` | ends in a stop coda `p` / `t` / `k` / `h` | append `4` (`sit` → `sit4`, `irk` → `irk4`) |
-| `c` | any other complete syllable | append `1` (`tai` → `tai1`) |
-| `v` | ends in a stop coda | append `8` (`tit` → `tit8`) — today `x` |
-| `v` | any other complete syllable | append `2` (unchanged) |
-| `y d w q` | | tone 3 5 7 9, unchanged |
-| `x` | | **freed** |
+| `x` | tone 1 (`tai` → `tai1`) | tone 4 (`sit` → `sit4`) |
+| `v` | tone 2 (`te` → `te2`) | tone 8 (`tit` → `tit8`) |
+| `y` `d` `w` `q` | tone 3 5 7 9, no coda test | same |
+| `z` / `f` | unchanged | unchanged |
 
-The residual ambiguity is `c` alone: `tai` + `c` meant as the start of POJ `chia` pins `tai1`
-instead — type `z` (already `ch` / `chh` in Telex) or tone the previous syllable first, which Telex
-asks for anyway.
+Engine gate (`engine/composing/src/telex.rs`): strip one trailing tone digit, read the last letter
+case-insensitively, `p t k h` → checked digit, else open; then the shipped rules (append / replace
+a different digit / same digit no-op / empty or `-`-ended tail no-op). `sit8` + `x` → `sit4`;
+`sit4` + `v` → `sit8`. An initial-only tail (`kh`, `tsh`) reads as checked — no tone makes it a
+syllable, so the digit does not matter. `TELEX_KEYS` is unchanged, so neither desktop classifier,
+the shortcut recorder's bare-letter refusal nor the slot keys move (USER: no shortcut conflicts).
 
-**Open, USER-decided when the round opens**: (1) what the freed `x` (and the untouched `r`) carry —
-tone 6 (dialect; dropped in 2026-09-08 for lack of a letter), a single `tsh` key, or nothing yet;
-(2) whether `x` stays an alias for tone 8 for a while, since `x` = 8 shipped in desktop 3.6.8.
+**Behaviour change**: `x` on a checked syllable wrote tone 8 in desktop 3.6.8 (`sitx` → `si̍t`),
+now tone 4; tone 8 moves to `v`. Chosen over the zero-regression pairing (`x` = 1/8, `v` = 2/4)
+because "one key = the two unmarked tones" is what the guide can teach in one row; Telex is opt-in
+and eight days old. No alias period.
 
-**Rejected**: `;` / `'` (free in Telex since digits pick slots, but not letters — inconsistent with
-the other tone keys); dropping the `ir` / `er` finals (Core Principle #3).
-
-**When opened**: feature round. Engine `telex.rs` (`c` in `TELEX_KEYS`, the coda gate shared by
-`c` and `v`, tests covering both codas per `taigi-incidents.md` § Trace before assert), `TelexKey`
-proto unchanged; macOS + Windows classifiers add `c` → `.telexKey`; Telex guide rows + i18n; S32
-gains `taic` → tai1, `sitc` → sit4, `titv` → tit8, `chia` unchanged.
+**Rejected**: `c` = 1/4 (2026-09-12 draft) — under POJ, `kong` + `chhia` would pin `kong1` and
+break `hhia` on every untoned syllable before a `ch` word; `;` / `'` (not letters); dropping the
+`ir` / `er` finals (Core Principle #3); a user-customizable key table (2026-09-19).
 
 ---
 

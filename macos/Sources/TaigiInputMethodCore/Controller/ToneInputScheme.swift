@@ -29,7 +29,8 @@ enum ToneInputScheme: String, CaseIterable, Sendable {
         self == .telex ? .digits : .bareKeys
     }
 
-    /// Lower-case Telex keys: `v y d w x q` for tones 2 3 5 7 8 9, `z` for
+    /// Lower-case Telex keys: `x v y d w q` for tones 1/4 2/8 3 5 7 9 (`x` and `v` split
+    /// their pair by the coda, engine-side), `z` for
     /// the affricate initial (`ts` / `ch`; `zh` then spells `tsh` / `chh`),
     /// `f` for the hyphen. Mirrors the engine's `composing::telex::TELEX_KEYS`
     /// — the two lists must name the same keys, or a key classified as Telex

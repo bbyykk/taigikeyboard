@@ -89,7 +89,7 @@ fn normalize_syllable(syllable: &str, add_default_tone: bool) -> String {
     }
     if add_default_tone && tone_number.is_empty() {
         if let Some(last_char) = without_tone.chars().last() {
-            tone_number = if matches!(last_char, 'p' | 't' | 'k' | 'h') {
+            tone_number = if crate::syllable::is_stop_coda(last_char) {
                 "4".to_string()
             } else {
                 "1".to_string()

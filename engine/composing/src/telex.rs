@@ -4,6 +4,13 @@
 //! The buffer stays numeric-tone (`tai5`): a tone letter writes the digit the
 //! standard scheme would have typed, so the syllabifier, the literal-roman
 //! candidate and auto-space see nothing new.
+//!
+//! Two keys carry a tone pair, split by the coda (USER 2026-09-19): a
+//! syllable that ends in a stop `p t k h` can only carry tone 4 or 8, any
+//! other only 1 2 3 5 7 9, so `x` writes 1 / 4 and `v` writes 2 / 8 without
+//! ever having to choose. The free letters are `d f q v w x y z` — seven
+//! open tones plus `z` and `f` would need nine — and the pairing is what
+//! gives the two unmarked tones a key at all.
 
 use phonetics::InputMode;
 
@@ -14,7 +21,12 @@ pub const TELEX_KEYS: &str = "vydwxqzf";
 /// What one Telex key means, independent of the buffer.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum TelexKey {
-    Tone(char),
+    /// The digit written on an open tail and the one written on a tail that
+    /// ends in a stop coda `p t k h`. Equal for the keys that carry one tone.
+    Tone {
+        open: char,
+        checked: char,
+    },
     /// `z` → the unaspirated affricate initial (`ts` / `ch`); `zh` then
     /// spells the aspirated one because `h` is an ordinary letter.
     Affricate {
@@ -30,17 +42,29 @@ fn resolve(key: &str) -> Option<TelexKey> {
         return None;
     }
     Some(match letter {
-        'v' | 'V' => TelexKey::Tone('2'),
-        'y' | 'Y' => TelexKey::Tone('3'),
-        'd' | 'D' => TelexKey::Tone('5'),
-        'w' | 'W' => TelexKey::Tone('7'),
-        'x' | 'X' => TelexKey::Tone('8'),
-        'q' | 'Q' => TelexKey::Tone('9'),
+        'x' | 'X' => tone('1', '4'),
+        'v' | 'V' => tone('2', '8'),
+        'y' | 'Y' => tone('3', '3'),
+        'd' | 'D' => tone('5', '5'),
+        'w' | 'W' => tone('7', '7'),
+        'q' | 'Q' => tone('9', '9'),
         'z' => TelexKey::Affricate { uppercase: false },
         'Z' => TelexKey::Affricate { uppercase: true },
         'f' | 'F' => TelexKey::Hyphen,
         _ => return None,
     })
+}
+
+const fn tone(open: char, checked: char) -> TelexKey {
+    TelexKey::Tone { open, checked }
+}
+
+/// Whether the syllable `letters` ends (no tone digit) closes on a stop coda
+/// `p t k h`, the only syllables that carry tone 4 or 8. An initial-only
+/// tail (`kh`, `tsh`) reads as checked too: no tone makes it a syllable, so
+/// the digit chosen does not matter.
+fn ends_in_stop_coda(letters: &str) -> bool {
+    letters.chars().last().is_some_and(phonetics::is_stop_coda)
 }
 
 /// Apply one Telex key to the pending tail `raw`. `None` means the key
@@ -51,23 +75,27 @@ fn resolve(key: &str) -> Option<TelexKey> {
 ///
 /// A tone on a tail that already ends in a different digit replaces it;
 /// the same digit is left alone so a held key cannot flip-flop (Backspace
-/// removes the digit). Nailed segments are never part of `raw`.
+/// removes the digit). A paired key reads the coda of the letters under the
+/// digit, so `sit8` + `x` → `sit4`. Nailed segments are never part of `raw`.
 pub fn apply_telex_key(raw: &str, key: &str, mode: InputMode) -> Option<String> {
     match resolve(key)? {
-        TelexKey::Tone(digit) => {
+        TelexKey::Tone { open, checked } => {
             let last = raw.chars().last()?;
             if last == '-' {
                 return None;
             }
-            if last.is_ascii_digit() {
-                if last == digit {
-                    return None;
-                }
-                let mut next = raw[..raw.len() - 1].to_string();
-                next.push(digit);
-                return Some(next);
+            let letters = raw
+                .strip_suffix(|c: char| c.is_ascii_digit())
+                .unwrap_or(raw);
+            let digit = if ends_in_stop_coda(letters) {
+                checked
+            } else {
+                open
+            };
+            if last == digit {
+                return None;
             }
-            Some(format!("{raw}{digit}"))
+            Some(format!("{letters}{digit}"))
         }
         TelexKey::Affricate { uppercase } => {
             let initial = match (mode, uppercase) {
@@ -93,13 +121,13 @@ mod tests {
 
     #[test]
     fn tone_letters_append_their_digit() {
-        // trace: v y d w x q → 2 3 5 7 8 9
+        // trace: open tail "te" — x v y d w q → 1 2 3 5 7 9
         for (key, digit) in [
+            ("x", '1'),
             ("v", '2'),
             ("y", '3'),
             ("d", '5'),
             ("w", '7'),
-            ("x", '8'),
             ("q", '9'),
         ] {
             assert_eq!(
@@ -108,6 +136,71 @@ mod tests {
                 "key {key}"
             );
         }
+    }
+
+    #[test]
+    fn paired_keys_write_the_checked_tone_on_a_stop_coda() {
+        // trace: x = 1 / 4, v = 2 / 8; the coda is the last letter, any of
+        // p t k h in either case; the single-tone keys ignore the coda.
+        for tail in ["sit", "tsap", "bak", "ah", "annh", "SIT"] {
+            assert_eq!(
+                apply_telex_key(tail, "x", InputMode::Tl),
+                Some(format!("{tail}4")),
+                "{tail}"
+            );
+            assert_eq!(
+                apply_telex_key(tail, "v", InputMode::Tl),
+                Some(format!("{tail}8")),
+                "{tail}"
+            );
+            assert_eq!(
+                apply_telex_key(tail, "y", InputMode::Tl),
+                Some(format!("{tail}3")),
+                "{tail}"
+            );
+        }
+        // Open codas — vowel, nasal `nn`, `ng`, `m` — take the open tone.
+        for tail in ["tai", "tinn", "kang", "m", "oo"] {
+            assert_eq!(
+                apply_telex_key(tail, "x", InputMode::Tl),
+                Some(format!("{tail}1")),
+                "{tail}"
+            );
+            assert_eq!(
+                apply_telex_key(tail, "v", InputMode::Tl),
+                Some(format!("{tail}2")),
+                "{tail}"
+            );
+        }
+    }
+
+    #[test]
+    fn paired_key_reads_the_coda_under_an_existing_digit() {
+        // trace: strip the digit, "sit" ends in t → checked: 8 → 4, 4 → 4
+        // (same digit, no-op); "tai5" → open: 5 → 1.
+        assert_eq!(
+            apply_telex_key("sit8", "x", InputMode::Tl),
+            Some("sit4".into())
+        );
+        assert_eq!(apply_telex_key("sit4", "x", InputMode::Tl), None);
+        assert_eq!(
+            apply_telex_key("sit4", "v", InputMode::Tl),
+            Some("sit8".into())
+        );
+        assert_eq!(apply_telex_key("sit8", "v", InputMode::Tl), None);
+        assert_eq!(
+            apply_telex_key("tai5", "x", InputMode::Tl),
+            Some("tai1".into())
+        );
+    }
+
+    #[test]
+    fn initial_only_tail_reads_as_checked() {
+        // trace: "kh" ends in h → 4; no tone makes `kh` a syllable either way.
+        assert_eq!(
+            apply_telex_key("kh", "x", InputMode::Tl),
+            Some("kh4".into())
+        );
     }
 
     #[test]
