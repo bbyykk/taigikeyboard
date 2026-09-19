@@ -3,14 +3,14 @@
 > **Type**: Planning (forward-looking)
 > **Keywords**: `roadmap`, `planning`, `released versions`, `release trains`
 > **Status**: Active
-> **Last updated**: 2026-09-19 (mobile custom theme background round added; desktop 3.6.x sections collapsed into `docs/reports/desktop-3.6.x-design-notes.md`; repository-size record retired — rationale + timings in `docs/architecture/build-artifacts.md`; released-versions index through mobile / desktop 3.6.8)
+> **Last updated**: 2026-09-20 (mobile custom theme background round A–D merged, dogfood S54/S55 pending; desktop 3.6.x sections collapsed into `docs/reports/desktop-3.6.x-design-notes.md`; repository-size record retired — rationale + timings in `docs/architecture/build-artifacts.md`; released-versions index through mobile / desktop 3.6.8)
 
 ---
 
 ## Summary
 
 - **Forward-looking work items only.** Shipped detail lives in `docs/releases/<version>/plan.md` + `changelog/<version>.md` + Claude auto-memory.
-- **Active**: Mobile custom theme background round (PR A–D, USER-scoped 2026-09-19); Telex tone-1/4 keys design (USER 2026-09-11「之後的版本再處理」). Merged desktop 3.6.x items below await dogfood only.
+- **Active**: Telex tone-1/4 keys design (USER 2026-09-11「之後的版本再處理」). Merged desktop 3.6.x items below await dogfood only.
 - **No open deferred TODO**: the keyboard theme picker (the last 2026-06-01 candidate) shipped in v3.6.2; the one design-locked, unscheduled item is 變換後羅馬字 commit (§ Out of scope / deferred).
 - **Release scope / timing / tag is user-gated** per [`~/.claude/rules/diagnosis-discipline.md` § No unilateral release scope].
 
@@ -24,7 +24,7 @@ kautian subcollections (腔調 + 姓名附錄 toggles + 語音差異 詞級擴�
 
 ### Mobile custom theme — one background surface, gradient direction, photo background (USER-scoped 2026-09-19)
 
-**Status**: Phase 0 (this section + project memory `project_mobile_custom_theme_background.md`) on main. PR A–D pending. Dogfood item S54 written with PR A.
+**Status**: all phases MERGED 2026-09-20 — A iOS #90 `ee5e41ab`, B Android #91 `31447804`, C iOS photo #92 `4bfddae5`, D Android photo #93. Dogfood pending: S54 (background surface / gradient / seed / editor order) + S55 (photo background), both platforms. Project memory: `project_mobile_custom_theme_background.md`.
 
 USER request (2026-09-19, five points, verbatim intent): (1) 候選詞列背景 and 鍵盤背景 merge into ONE colour; (2) background gradient with a Figma-like selectable direction and selectable colours; (3) upload a photo as the keyboard background — resize / aspect ratio handled, saturation must not be distracting; (4) a custom theme has no light / dark split — same colours in both modes; (5) re-order the editor controls, clean, simple, elegant. Editor sections = 3 (背景 / 按鍵 / 候選詞), photo tone-down = fixed saturation cap + one 淡化 slider, gradient direction = 8 arrow presets (USER picks 2026-09-19).
 
@@ -52,11 +52,11 @@ USER request (2026-09-19, five points, verbatim intent): (1) 候選詞列背景 
 
 | Phase | Scope | Status |
 |---|---|---|
-| 0 | roadmap section + project memory | on main |
-| A | iOS: `ThemeBackground` model + decode compat, candidate-bg removal, gradient angle + 8-direction row, seeded user themes, editor re-order, i18n keys, tests, `docs/ui/theme.md` | pending |
-| B | Android port of A (model, render, editor, tests) | pending |
-| C | iOS photo background (`PhotosPicker`, image store, render, editor rows) | pending |
-| D | Android photo background (`PickVisualMedia`, image store, render, editor rows) | pending |
+| 0 | roadmap section + project memory | `f68a360e` |
+| A | iOS: `ThemeBackground` model + decode compat, candidate-bg removal, gradient angle + 8-direction row, seeded user themes, editor re-order, i18n keys, tests, `docs/ui/theme.md` | MERGED #90 `ee5e41ab` |
+| B | Android port of A (model, render, editor, tests) | MERGED #91 `31447804` |
+| C | iOS photo background (`PhotosPicker`, image store, render, editor rows) | MERGED #92 `4bfddae5` |
+| D | Android photo background (`PickVisualMedia`, image store, render, editor rows) | MERGED #93 |
 
 #### Best practices alignment
 
@@ -71,7 +71,7 @@ USER request (2026-09-19, five points, verbatim intent): (1) 候選詞列背景 
 
 #### Dogfood
 
-S54 (written with PR A; per-platform rows added by B / C / D).
+S54 (background surface / gradient direction / scheme-invariant colours / editor order) and S55 (photo background) in `docs/architecture/dogfood-checklist.md`, both platforms.
 
 ---
 
