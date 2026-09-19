@@ -75,7 +75,7 @@ S54 (background surface / gradient direction / scheme-invariant colours / editor
 
 #### Follow-up E — drag the preview to set the gradient direction (USER 2026-09-19 「用手指拖曳選擇漸層中心，取代用按鈕」; option 1 of 3 picked, iOS first)
 
-Direct manipulation replaces the 8 arrow buttons: while the background kind is 漸層, dragging on the pinned live preview sets `ThemeGradient.angle` to the direction centre → finger (any whole degree; ±6° snap onto the 45° presets with a selection click). Model / JSON / rendering unchanged (`angle` was already a free `Double`; `unitPoints` handles any angle). VoiceOver keeps the presets via an adjustable 方向 row. iOS PR first; Android port (same `ThemeGradient.angle: Float`, `PaintDrawable` shader already takes any angle) is a later PR — until then Android keeps the 8 chips. Dogfood: S54 gains a drag row (iOS).
+Direct manipulation replaces the 8 arrow buttons: while the background kind is 漸層, dragging on the pinned live preview sets `ThemeGradient.angle` to the direction centre → finger (any whole degree; ±6° snap onto the 45° presets with a selection click). Model / JSON / rendering unchanged (`angle` was already a free `Double`; `unitPoints` handles any angle). No 方向 row on iOS (USER 2026-09-19 「不需要「方向」那一欄，因為使用者只要點選後，看到下方的指針，就知道如何調整了」); VoiceOver keeps the presets via an adjustable action on the pointer itself. iOS PR first; Android port (same `ThemeGradient.angle: Float`, `PaintDrawable` shader already takes any angle) is a later PR — until then Android keeps the 8 chips. Dogfood: S54 gains a drag row (iOS).
 
 ---
 

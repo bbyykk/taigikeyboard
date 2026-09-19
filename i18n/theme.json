@@ -112,14 +112,9 @@
       "values": { "hanji": "淡化", "tailo": "Tām-huà", "poj": "Tām-hòa", "en": "Fade", "ja": "淡くする" }
     },
     "gradientDirection": {
-      "comment": "Theme editor row label: the gradient direction, shown as whole degrees (iOS: set by dragging the preview; Android: eight arrow presets, 45° apart).",
+      "comment": "Gradient direction. Android: theme editor row label above the eight arrow presets. iOS: VoiceOver label of the drag pointer over the preview (no visible row).",
       "scope": { "platforms": ["android", "ios"], "surfaces": ["host"] },
       "values": { "hanji": "方向", "tailo": "Hong-hiòng", "poj": "Hong-hiòng", "en": "Direction", "ja": "方向" }
-    },
-    "gradientDragHint": {
-      "comment": "Theme editor caption under the 方向 row: the gradient direction is set by dragging a finger on the live keyboard preview.",
-      "scope": { "platforms": ["ios"], "surfaces": ["host"] },
-      "values": { "hanji": "拖曳預覽調整方向", "tailo": "Thua ī-lám tiâu-tsíng hong-hiòng", "poj": "Thoa ū-lám tiâu-chéng hong-hiòng", "en": "Drag the preview to set the direction", "ja": "プレビューをドラッグして方向を調整" }
     },
     "colorKeySection": {
       "comment": "Theme editor section header: the key-surface group (key colors + sizing).",

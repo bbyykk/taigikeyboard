@@ -242,7 +242,6 @@ enum StringKey: String {
     case themePhotoChange = "i18n_theme_photoChange"
     case themePhotoDim = "i18n_theme_photoDim"
     case themeGradientDirection = "i18n_theme_gradientDirection"
-    case themeGradientDragHint = "i18n_theme_gradientDragHint"
     case themeColorKeySection = "i18n_theme_colorKeySection"
     case themeCandidateSection = "i18n_theme_candidateSection"
     case themeColorKeyboardBackground = "i18n_theme_colorKeyboardBackground"

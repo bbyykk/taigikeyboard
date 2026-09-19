@@ -1,5 +1,5 @@
 // The theme editor's gradient direction control: the drag surface over the live
-// preview, the finger → angle math behind it, and the 方向 row that reads it out.
+// preview and the finger → angle math behind it.
 
 import SwiftUI
 
@@ -51,8 +51,11 @@ enum GradientDirectionDrag {
 /// swallows the preview keys' touches, draws the current direction as an axis
 /// through the centre with an arrowhead at the gradient's end, and writes every
 /// drag position through `GradientDirectionDrag` into `angle`. Snapping into a
-/// preset clicks.
+/// preset clicks. The pointer is the whole control (USER 2026-09-19: no 方向 row —
+/// seeing the pointer is enough); for VoiceOver it is one adjustable element
+/// labelled `label` that steps through the 45° presets.
 struct GradientDirectionOverlay: View {
+    let label: String
     @Binding var angle: Double
 
     var body: some View {
@@ -69,8 +72,13 @@ struct GradientDirectionOverlay: View {
                         },
                 )
         }
-        .accessibilityHidden(true)
         .sensoryFeedback(.selection, trigger: angle) { _, new in GradientDirectionDrag.isPreset(new) }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(label)
+        .accessibilityValue("\(Int(angle))°")
+        .accessibilityAdjustableAction { direction in
+            angle = GradientDirectionDrag.steppedPreset(from: angle, clockwise: direction == .increment)
+        }
     }
 }
 
@@ -123,39 +131,5 @@ private struct GradientDirectionAxis: View, Equatable {
 private extension CGSize {
     var center: CGPoint {
         CGPoint(x: width / 2, y: height / 2)
-    }
-}
-
-// MARK: - 方向 row
-
-/// The 方向 row of the user-theme editor's 背景 › 漸層 group: the current angle in
-/// whole degrees (CSS convention, see `ThemeGradient.angle`) and a caption telling
-/// the user to drag the live preview, which is where the direction is actually set
-/// (`GradientDirectionOverlay`). For VoiceOver the row is one adjustable element
-/// stepping through the eight 45° presets.
-struct ThemeGradientDirectionRow: View {
-    let label: String
-    let hint: String
-    @Binding var angle: Double
-
-    var body: some View {
-        let degrees = "\(Int(angle))°"
-        VStack(alignment: .leading, spacing: 4) {
-            HStack {
-                Text(label)
-                Spacer()
-                Text(degrees)
-                    .monospacedDigit()
-                    .foregroundColor(.secondary)
-            }
-            Text(hint)
-                .font(.footnote)
-                .foregroundColor(.secondary)
-        }
-        .accessibilityElement(children: .combine)
-        .accessibilityValue(degrees)
-        .accessibilityAdjustableAction { direction in
-            angle = GradientDirectionDrag.steppedPreset(from: angle, clockwise: direction == .increment)
-        }
     }
 }
