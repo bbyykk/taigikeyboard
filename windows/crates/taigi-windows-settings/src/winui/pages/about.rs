@@ -31,9 +31,9 @@ pub fn view(
     strings: &StringResolver,
     context: &mut ViewContext<SettingsWindow>,
 ) -> View {
-    // Centred, no heading (USER 2026-09-20 「不需要『台語齒盤』標題」
-    // 「文案置中」): the window title already names the page, and the two
-    // lines read as a statement rather than a form.
+    // No heading (USER 2026-09-20 「不需要『台語齒盤』標題」): the window
+    // title already names the page. Leading-aligned like the cards under
+    // it (USER 2026-09-20 「文案改為靠左」).
     let introduction = cards::frame(StackPanel::new().spacing(PARAGRAPH_SPACING).children((
         paragraph(strings.resolve(StringKey::DesktopAboutIntroProject)),
         paragraph(strings.resolve(StringKey::DesktopAboutIntroMaintainer)),
@@ -93,11 +93,6 @@ fn paragraph(text: &str) -> View {
     TextBlock::new()
         .text(text)
         .text_wrapping(TextWrapping::Wrap)
-        // The block centred, not each line: this pinned `windows-reactor`
-        // exposes no `TextAlignment`, so a paragraph that wraps stays
-        // ragged-right while a short one centres. Not a departure the Mac
-        // shares — revisit when the pin moves.
-        .horizontal_alignment(HorizontalAlignment::Center)
         .into()
 }
 

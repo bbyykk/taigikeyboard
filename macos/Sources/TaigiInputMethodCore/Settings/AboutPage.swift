@@ -14,16 +14,15 @@ struct AboutPage: View {
 
     var body: some View {
         Form {
-            // Centred, no heading (USER 2026-09-20 「不需要『台語齒盤』標題」
-            // 「文案置中」): the window title already names the page, and the
-            // two lines read as a statement rather than a form.
+            // No heading (USER 2026-09-20 「不需要『台語齒盤』標題」): the window
+            // title already names the page. Leading-aligned like the rows
+            // under it (USER 2026-09-20 「文案改為靠左」).
             Section {
-                VStack(spacing: Metrics.paragraphSpacing) {
+                VStack(alignment: .leading, spacing: Metrics.paragraphSpacing) {
                     Text(language.string(.desktopAboutIntroProject))
                     Text(language.string(.desktopAboutIntroMaintainer))
                 }
-                .multilineTextAlignment(.center)
-                .frame(maxWidth: .infinity)
+                .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.vertical, Metrics.cardInset)
             }
 
