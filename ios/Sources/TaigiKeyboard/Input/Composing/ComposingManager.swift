@@ -157,14 +157,17 @@ public class ComposingManager: ComposingStateProvider, ContinuousCandidateFetche
     /// the swap signal because the engine receives TPS as `"tl"`/`"poj"`
     /// `input_mode` (its own `input_mode == "tps"` branch never fires
     /// from the platform).
+    /// `hyphenlessRoman` (無連字符, §49) rides along already TPS-folded by
+    /// `SharedSettings.isHyphenlessRomanEnabled`.
     // CROSS-PLATFORM INVARIANT — mirrors android/app/src/main/java/com/siansiansu/taigikeyboard/ime/text/composing/ComposingManager.kt continuousSpacingFlags.
     // Drift causes silent divergence (hanji-first spurious word-boundary spaces).
     private static func continuousSpacingFlags(
         _ settings: EngineSettings,
-    ) -> (effectiveSwapped: Bool, outputBothScripts: Bool) {
+    ) -> (effectiveSwapped: Bool, outputBothScripts: Bool, hyphenlessRoman: Bool) {
         (
             effectiveSwapped: settings.isTranslateSwapped || settings.inputMode == .tps,
             outputBothScripts: settings.isOutputBothScripts,
+            hyphenlessRoman: settings.isHyphenlessRomanEnabled,
         )
     }
 
@@ -281,6 +284,7 @@ public class ComposingManager: ComposingStateProvider, ContinuousCandidateFetche
             effectiveSwapped: spacing.effectiveSwapped,
             outputBothScripts: spacing.outputBothScripts,
             candidateDisplayMode: settings.candidateDisplayMode,
+            hyphenlessRoman: spacing.hyphenlessRoman,
             generation: generation,
             customEntries: customEntries,
             enabledSourcesBitmask: enabledSourcesBitmask,
@@ -320,6 +324,7 @@ public class ComposingManager: ComposingStateProvider, ContinuousCandidateFetche
             effectiveSwapped: spacing.effectiveSwapped,
             outputBothScripts: spacing.outputBothScripts,
             candidateDisplayMode: settings.candidateDisplayMode,
+            hyphenlessRoman: spacing.hyphenlessRoman,
             generation: generation,
             frequencyEntries: entries,
             nowMs: nowMs,
@@ -497,6 +502,7 @@ public class ComposingManager: ComposingStateProvider, ContinuousCandidateFetche
             effectiveSwapped: spacing.effectiveSwapped,
             outputBothScripts: spacing.outputBothScripts,
             candidateDisplayMode: settings.candidateDisplayMode,
+            hyphenlessRoman: spacing.hyphenlessRoman,
             generation: currentGeneration,
         )
         // Inspect transition BEFORE dispatching effects so we can return an
@@ -583,6 +589,7 @@ public class ComposingManager: ComposingStateProvider, ContinuousCandidateFetche
             effectiveSwapped: spacing.effectiveSwapped,
             outputBothScripts: spacing.outputBothScripts,
             candidateDisplayMode: settings.candidateDisplayMode,
+            hyphenlessRoman: spacing.hyphenlessRoman,
             generation: currentGeneration,
         ))
     }
@@ -605,6 +612,7 @@ public class ComposingManager: ComposingStateProvider, ContinuousCandidateFetche
             effectiveSwapped: spacing.effectiveSwapped,
             outputBothScripts: spacing.outputBothScripts,
             candidateDisplayMode: settings.candidateDisplayMode,
+            hyphenlessRoman: spacing.hyphenlessRoman,
             generation: currentGeneration,
         ))
     }
@@ -623,6 +631,7 @@ public class ComposingManager: ComposingStateProvider, ContinuousCandidateFetche
             effectiveSwapped: spacing.effectiveSwapped,
             outputBothScripts: spacing.outputBothScripts,
             candidateDisplayMode: settings.candidateDisplayMode,
+            hyphenlessRoman: spacing.hyphenlessRoman,
             generation: currentGeneration,
         ))
     }
@@ -638,6 +647,7 @@ public class ComposingManager: ComposingStateProvider, ContinuousCandidateFetche
             effectiveSwapped: spacing.effectiveSwapped,
             outputBothScripts: spacing.outputBothScripts,
             candidateDisplayMode: settings.candidateDisplayMode,
+            hyphenlessRoman: spacing.hyphenlessRoman,
             generation: currentGeneration,
         ))
     }

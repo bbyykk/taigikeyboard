@@ -342,6 +342,10 @@ class PrefHelper(
     // §34/S22 — 顯示當咧拍的字 toggle. Default true (on; USER 2026-09-03).
     var literalRomanCandidateEnabled: Boolean by preference(PreferenceKeys.LITERAL_ROMAN_CANDIDATE, true)
 
+    // 無連字符 (§49) — the STORED switch the settings toggle binds; the
+    // engine-facing `isHyphenlessRomanEnabled` folds TPS on top of it.
+    var storedHyphenlessRomanEnabled: Boolean by preference(PreferenceKeys.HYPHENLESS_ROMAN, false)
+
     // Taigi-specific settings
     var enableDoubleTapOO: Boolean by preference(PreferenceKeys.ENABLE_DOUBLE_TAP_OO, true)
 
@@ -607,6 +611,13 @@ class PrefHelper(
     // `ComposingManager` inverts it into `FetchAtPos.literalRomanCandidateDisabled`.
     override val isLiteralRomanCandidateEnabled: Boolean
         get() = literalRomanCandidateEnabled
+
+    // Effective 無連字符 — never under a TPS layout: the engine receives TPS
+    // as "tl"/"poj" and the strip would break the platform's `-` re-split
+    // of the candidate roman for bopomofo (`tlDisplayToTps`).
+    // CROSS-PLATFORM INVARIANT — mirrors ios SharedSettings.isHyphenlessRomanEnabled (inputMode != .tps && …).
+    override val isHyphenlessRomanEnabled: Boolean
+        get() = !isTpsLayout && storedHyphenlessRomanEnabled
 
     override val isAssociationRecordingEnabled: Boolean
         get() = associationRecordingEnabled

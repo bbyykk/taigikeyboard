@@ -134,21 +134,23 @@ class CandidateClickHandler(
 
             appendAutoSpaceIfEarned(taigikeyboard, ic, textToCommit, resolved.wroteRomanization)
 
-            // Record usage frequency. R5 pair-key (#7): the candidate's
-            // canonical-TL reading from the metadata sidechannel keeps
-            // 一字多音 in separate buckets; "" only on wire skew / TPS-OOV.
+            // R5 pair-key (#7): the candidate's canonical-TL reading from the
+            // metadata sidechannel keeps 一字多音 in separate buckets; "" only
+            // on wire skew / TPS-OOV / English rows.
+            val canonicalTl = selectedWord.additionalInfo[TaigiWord.MetadataKeys.CANONICAL_TL] ?: ""
             if (prefs.frequencyRecordingEnabled) {
-                val canonicalTl = selectedWord.additionalInfo[TaigiWord.MetadataKeys.CANONICAL_TL] ?: ""
                 scope.launch {
                     userFreq.recordUsage(selectedWord.displayText, canonicalTl)
                 }
             }
 
-            // NextWord prediction
+            // NextWord learns the canonical reading, not the rendered `roman`
+            // (無連字符 strips its hyphens, §49) — mirrors iOS
+            // ActionHandler+Suggestions.swift `associationRoman` (`additionalInfo["tl"]`).
             onNextWordPrediction(
                 selectedWord.displayText,
                 textToCommit,
-                selectedWord.roman,
+                canonicalTl.ifEmpty { selectedWord.roman },
                 selectedWord.hanzi,
                 capturedRawInput,
             )
@@ -254,20 +256,20 @@ class CandidateClickHandler(
 
         appendAutoSpaceIfEarned(taigikeyboard, ic, textToCommit, resolved.wroteRomanization)
 
-        // Record usage frequency. R5 pair-key (#7): canonical-TL reading
-        // from the metadata sidechannel; "" only on wire skew / TPS-OOV.
+        // R5 pair-key (#7): canonical-TL reading from the metadata
+        // sidechannel; "" only on wire skew / TPS-OOV / English rows.
+        val canonicalTl = word.additionalInfo[TaigiWord.MetadataKeys.CANONICAL_TL] ?: ""
         if (prefs.frequencyRecordingEnabled) {
-            val canonicalTl = word.additionalInfo[TaigiWord.MetadataKeys.CANONICAL_TL] ?: ""
             scope.launch {
                 userFreq.recordUsage(word.displayText, canonicalTl)
             }
         }
 
-        // NextWord prediction
+        // NextWord learns the canonical reading (§49) — see the strip path above.
         onNextWordPrediction(
             word.displayText,
             textToCommit,
-            word.roman,
+            canonicalTl.ifEmpty { word.roman },
             word.hanzi,
             "",
         )

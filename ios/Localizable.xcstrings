@@ -3421,6 +3421,42 @@
         }
       }
     },
+    "i18n_settings_hyphenlessRoman": {
+      "comment": "Toggle label: render candidate / committed romanization without the dictionary's inter-syllable hyphen, 輕聲 -- as · (tâi-uân → tâiuân, hōo--guá → hōo·guá). All four platforms, host settings only.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No Hyphens"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ハイフンなし"
+          }
+        }
+      }
+    },
+    "i18n_settings_hyphenlessRomanInfo": {
+      "comment": "Help text for the 無連字符 toggle (mobile host app).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shows and commits romanization without hyphens between syllables (tâi-uân → tâiuân); the neutral-tone marker -- becomes · (hōo--guá → hōo·guá). Hyphens you type yourself are unaffected."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "候補と確定するローマ字から音節間のハイフンを省きます（tâi-uân → tâiuân）。軽声記号 -- は · になります（hōo--guá → hōo·guá）。自分で入力したハイフンは変わりません。"
+          }
+        }
+      }
+    },
     "i18n_settings_inputMode": {
       "comment": "Settings row + sub-screen title for selecting the active input mode (mobile). The desktop 一般 pane labels its TL / POJ picker inputScript instead.",
       "extractionState": "manual",

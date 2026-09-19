@@ -301,6 +301,7 @@ public extension RustEngineBridge {
         effectiveSwapped: Bool = false,
         outputBothScripts: Bool = false,
         candidateDisplayMode: CandidateDisplayMode = .sideBySide,
+        hyphenlessRoman: Bool = false,
         generation: UInt64,
     ) -> ComposingTransition {
         composingDispatch(
@@ -313,6 +314,7 @@ public extension RustEngineBridge {
                 effectiveSwapped: effectiveSwapped,
                 outputBothScripts: outputBothScripts,
                 candidateDisplayMode: candidateDisplayMode,
+                hyphenlessRoman: hyphenlessRoman,
             ),
         )
     }
@@ -333,6 +335,7 @@ public extension RustEngineBridge {
         effectiveSwapped: Bool = false,
         outputBothScripts: Bool = false,
         candidateDisplayMode: CandidateDisplayMode = .sideBySide,
+        hyphenlessRoman: Bool = false,
         generation: UInt64,
     ) -> ComposingTransition {
         var payload = Taigi_Engine_SelectSuggestion()
@@ -347,6 +350,7 @@ public extension RustEngineBridge {
                 effectiveSwapped: effectiveSwapped,
                 outputBothScripts: outputBothScripts,
                 candidateDisplayMode: candidateDisplayMode,
+                hyphenlessRoman: hyphenlessRoman,
             ),
         )
     }
@@ -370,6 +374,7 @@ public extension RustEngineBridge {
         effectiveSwapped: Bool = false,
         outputBothScripts: Bool = false,
         candidateDisplayMode: CandidateDisplayMode = .sideBySide,
+        hyphenlessRoman: Bool = false,
         generation: UInt64,
     ) -> ComposingTransition {
         var payload = Taigi_Engine_CommitPreeditThenInsertExternal()
@@ -384,6 +389,7 @@ public extension RustEngineBridge {
                 effectiveSwapped: effectiveSwapped,
                 outputBothScripts: outputBothScripts,
                 candidateDisplayMode: candidateDisplayMode,
+                hyphenlessRoman: hyphenlessRoman,
             ),
         )
     }
@@ -479,6 +485,7 @@ public extension RustEngineBridge {
         effectiveSwapped: Bool = false,
         outputBothScripts: Bool = false,
         candidateDisplayMode: CandidateDisplayMode = .sideBySide,
+        hyphenlessRoman: Bool = false,
         generation: UInt64,
         frequencyEntries: [Taigi_Engine_FrequencyEntry] = [],
         nowMs: Int64 = 0,
@@ -509,6 +516,7 @@ public extension RustEngineBridge {
                 effectiveSwapped: effectiveSwapped,
                 outputBothScripts: outputBothScripts,
                 candidateDisplayMode: candidateDisplayMode,
+                hyphenlessRoman: hyphenlessRoman,
             ),
         )
     }
@@ -537,6 +545,7 @@ public extension RustEngineBridge {
         effectiveSwapped: Bool = false,
         outputBothScripts: Bool = false,
         candidateDisplayMode: CandidateDisplayMode = .sideBySide,
+        hyphenlessRoman: Bool = false,
         generation: UInt64,
     ) -> ComposingTransition {
         var payload = Taigi_Engine_CommitContinuous()
@@ -557,6 +566,7 @@ public extension RustEngineBridge {
                 effectiveSwapped: effectiveSwapped,
                 outputBothScripts: outputBothScripts,
                 candidateDisplayMode: candidateDisplayMode,
+                hyphenlessRoman: hyphenlessRoman,
             ),
         )
     }
@@ -608,9 +618,11 @@ public extension RustEngineBridge {
         effectiveSwapped: Bool,
         outputBothScripts: Bool,
         candidateDisplayMode: CandidateDisplayMode,
+        hyphenlessRoman: Bool,
     ) -> Taigi_Engine_AppConfig {
         var cfg = appConfig(mode: mode, toggles: toggles)
         cfg.candidateDisplayMode = candidateDisplayMode.engineValue
+        cfg.hyphenlessRoman = hyphenlessRoman
         cfg.isTranslateSwapped = effectiveSwapped
         cfg.outputBothScripts = outputBothScripts
         return cfg

@@ -335,6 +335,21 @@ pub fn tl_display_to_poj_display(text: &str) -> String {
     rewrite_display(text, System::Poj, false)
 }
 
+/// 無連字符 (`AppConfig.hyphenless_roman`, `behavioral-invariants.md` §49)
+/// — the rendered form of a dictionary-supplied romanization with the
+/// inter-syllable `-` dropped and the 輕聲 marker `--` written as
+/// [`crate::tps::KHINSIANN_DOT`] (`tâi-uân` → `tâiuân`, `hōo--guá` →
+/// `hōo·guá`). Spaces (word boundaries) are kept. Display only: identity
+/// keys (`display_text`, `canonical_tl`) never pass through here, and
+/// user-typed hyphens are rendered by `to_tone_marks` as typed.
+pub fn hyphenless_display(roman: &str) -> String {
+    roman
+        .replace("--", crate::tps::KHINSIANN_DOT)
+        .chars()
+        .filter(|&c| c != '-')
+        .collect()
+}
+
 /// v3.5.9 B-4 — mode-aware canonicalizer for the `user_frequency.db`
 /// commit key (`RawCandidate.display_text`). Folds Taigi-script
 /// romanization onto canonical TL display form so a romanization-only
@@ -479,6 +494,21 @@ fn rewrite_token(token: &str, target: System, keep_tl_finals: bool) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn hyphenless_display_drops_hyphens_and_dots_the_khinsiann_marker() {
+        assert_eq!(hyphenless_display("tâi-uân"), "tâiuân");
+        assert_eq!(hyphenless_display("tshit-niû-má-senn"), "tshitniûmásenn");
+        assert_eq!(hyphenless_display("hōo--guá"), "hōo\u{00b7}guá");
+        assert_eq!(hyphenless_display("--ah"), "\u{00b7}ah");
+        assert_eq!(
+            hyphenless_display("tsáu--tshut-khì"),
+            "tsáu\u{00b7}tshutkhì"
+        );
+        // Word boundaries and hyphen-free input are left alone.
+        assert_eq!(hyphenless_display("tâi gí"), "tâi gí");
+        assert_eq!(hyphenless_display("keng-lâm su-īⁿ"), "kenglâm suīⁿ");
+    }
 
     /// The premise `composing::derived::display_caret_utf16` aligns raw and
     /// display on: the chain may insert combining marks, drop a character

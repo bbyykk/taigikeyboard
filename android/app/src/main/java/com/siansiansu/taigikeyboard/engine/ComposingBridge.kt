@@ -136,6 +136,7 @@ fun RustEngineBridge.composingCommitRaw(
     effectiveSwapped: Boolean = false,
     outputBothScripts: Boolean = false,
     candidateDisplayMode: CandidateDisplayMode = CandidateDisplayMode.SIDE_BY_SIDE,
+    hyphenlessRoman: Boolean = false,
 ): RustEngineBridge.ComposingTransition {
     val payload = com.siansiansu.taigikeyboard.engine.proto.CommitRaw
         .newBuilder()
@@ -144,7 +145,7 @@ fun RustEngineBridge.composingCommitRaw(
         methodSetter = { it.commitRaw = payload },
         op = "composingCommitRaw",
         generation = generation,
-        config = RustEngineBridge.continuousAppConfig(mode, toggles, effectiveSwapped, outputBothScripts, candidateDisplayMode),
+        config = RustEngineBridge.continuousAppConfig(mode, toggles, effectiveSwapped, outputBothScripts, candidateDisplayMode, hyphenlessRoman),
     )
 }
 
@@ -165,6 +166,7 @@ fun RustEngineBridge.composingSelectSuggestion(
     effectiveSwapped: Boolean = false,
     outputBothScripts: Boolean = false,
     candidateDisplayMode: CandidateDisplayMode = CandidateDisplayMode.SIDE_BY_SIDE,
+    hyphenlessRoman: Boolean = false,
 ): RustEngineBridge.ComposingTransition {
     val payload = com.siansiansu.taigikeyboard.engine.proto.SelectSuggestion
         .newBuilder()
@@ -174,7 +176,7 @@ fun RustEngineBridge.composingSelectSuggestion(
         methodSetter = { it.selectSuggestion = payload },
         op = "composingSelectSuggestion",
         generation = generation,
-        config = RustEngineBridge.continuousAppConfig(mode, toggles, effectiveSwapped, outputBothScripts, candidateDisplayMode),
+        config = RustEngineBridge.continuousAppConfig(mode, toggles, effectiveSwapped, outputBothScripts, candidateDisplayMode, hyphenlessRoman),
     )
 }
 
@@ -197,6 +199,7 @@ fun RustEngineBridge.composingCommitPreeditThenInsertExternal(
     effectiveSwapped: Boolean = false,
     outputBothScripts: Boolean = false,
     candidateDisplayMode: CandidateDisplayMode = CandidateDisplayMode.SIDE_BY_SIDE,
+    hyphenlessRoman: Boolean = false,
 ): RustEngineBridge.ComposingTransition {
     val payload = com.siansiansu.taigikeyboard.engine.proto
         .CommitPreeditThenInsertExternal
@@ -207,7 +210,7 @@ fun RustEngineBridge.composingCommitPreeditThenInsertExternal(
         methodSetter = { it.commitPreeditThenInsertExternal = payload },
         op = "composingCommitPreeditThenInsertExternal",
         generation = generation,
-        config = RustEngineBridge.continuousAppConfig(mode, toggles, effectiveSwapped, outputBothScripts, candidateDisplayMode),
+        config = RustEngineBridge.continuousAppConfig(mode, toggles, effectiveSwapped, outputBothScripts, candidateDisplayMode, hyphenlessRoman),
     )
 }
 
@@ -329,6 +332,7 @@ fun RustEngineBridge.composingFetchAtPos(
     literalRomanCandidateDisabled: Boolean = false,
     // 候選詞顯示 — ROMAN_ONLY makes the engine collapse same-roman rows.
     candidateDisplayMode: CandidateDisplayMode = CandidateDisplayMode.SIDE_BY_SIDE,
+    hyphenlessRoman: Boolean = false,
 ): RustEngineBridge.ContinuousFetchResult {
     val payload = com.siansiansu.taigikeyboard.engine.proto.FetchAtPos
         .newBuilder()
@@ -343,7 +347,7 @@ fun RustEngineBridge.composingFetchAtPos(
         methodSetter = { it.fetchAtPos = payload },
         op = "composingFetchAtPos",
         generation = generation,
-        config = RustEngineBridge.continuousAppConfig(mode, toggles, effectiveSwapped, outputBothScripts, candidateDisplayMode),
+        config = RustEngineBridge.continuousAppConfig(mode, toggles, effectiveSwapped, outputBothScripts, candidateDisplayMode, hyphenlessRoman),
     )
 }
 
@@ -375,6 +379,7 @@ fun RustEngineBridge.composingCommitContinuous(
     effectiveSwapped: Boolean = false,
     outputBothScripts: Boolean = false,
     candidateDisplayMode: CandidateDisplayMode = CandidateDisplayMode.SIDE_BY_SIDE,
+    hyphenlessRoman: Boolean = false,
 ): RustEngineBridge.ComposingTransition {
     val payload = com.siansiansu.taigikeyboard.engine.proto.CommitContinuous
         .newBuilder()
@@ -390,7 +395,7 @@ fun RustEngineBridge.composingCommitContinuous(
         methodSetter = { it.commitContinuous = payload },
         op = "composingCommitContinuous",
         generation = generation,
-        config = RustEngineBridge.continuousAppConfig(mode, toggles, effectiveSwapped, outputBothScripts, candidateDisplayMode),
+        config = RustEngineBridge.continuousAppConfig(mode, toggles, effectiveSwapped, outputBothScripts, candidateDisplayMode, hyphenlessRoman),
     )
 }
 

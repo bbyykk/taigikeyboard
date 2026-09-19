@@ -136,6 +136,7 @@ final class SettingsKeyTests: XCTestCase {
         XCTAssertEqual(settings.keyBorderWidth, 0)
         XCTAssertEqual(settings.colorSettings, .default)
         XCTAssertTrue(settings.isLiteralRomanCandidateEnabled, "§34/S22 顯示當咧拍的字 ships ON")
+        XCTAssertFalse(settings.isHyphenlessRomanEnabled, "無連字符 ships OFF")
     }
 
     func test_isFullAccessEnabled_absentReturnsFalse_andStoredTrueReturnsTrue() {
@@ -221,6 +222,7 @@ final class SettingsKeyTests: XCTestCase {
         settings.isToolbarAutoCollapse = false
         settings.isTpsOrMappedToER = false
         settings.isLiteralRomanCandidateEnabled = false
+        settings.storedIsHyphenlessRomanEnabled = true
         settings.isGlobeKeyEnabled = !DeviceCapabilities.prefersGlobeKeyByDefault
 
         // RawRep enums + font.
@@ -255,6 +257,7 @@ final class SettingsKeyTests: XCTestCase {
         XCTAssertFalse(settings.isOutputBothScripts)
         XCTAssertFalse(settings.isAutoSpaceEnabled)
         XCTAssertTrue(settings.isLiteralRomanCandidateEnabled)
+        XCTAssertFalse(settings.isHyphenlessRomanEnabled)
         XCTAssertTrue(settings.isMoeDictEnabled)
         XCTAssertTrue(settings.isNewwordDictEnabled)
         XCTAssertTrue(settings.isKunggeDictEnabled)

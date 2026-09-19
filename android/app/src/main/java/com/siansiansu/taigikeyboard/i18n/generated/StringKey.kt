@@ -197,6 +197,8 @@ enum class StringKey(
     SETTINGS_CANDIDATE_DISPLAY_MODE_COMBINED(R.string.i18n_settings_candidateDisplayModeCombined),
     SETTINGS_CANDIDATE_DISPLAY_MODE_ROMAN_ONLY(R.string.i18n_settings_candidateDisplayModeRomanOnly),
     SETTINGS_OUTPUT_BOTH_SCRIPTS(R.string.i18n_settings_outputBothScripts),
+    SETTINGS_HYPHENLESS_ROMAN(R.string.i18n_settings_hyphenlessRoman),
+    SETTINGS_HYPHENLESS_ROMAN_INFO(R.string.i18n_settings_hyphenlessRomanInfo),
     SETTINGS_LITERAL_ROMAN_CANDIDATE(R.string.i18n_settings_literalRomanCandidate),
     SETTINGS_LITERAL_ROMAN_CANDIDATE_INFO(R.string.i18n_settings_literalRomanCandidateInfo),
     SETTINGS_AUTO_CAPITALIZATION(R.string.i18n_settings_autoCapitalization),

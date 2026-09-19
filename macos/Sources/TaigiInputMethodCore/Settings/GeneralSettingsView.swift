@@ -55,6 +55,9 @@ struct GeneralSettingsView: View {
     @AppStorage(SettingsStore.Keys.isLiteralRomanCandidateEnabled.name)
     private var isLiteralRomanCandidateEnabled = SettingsStore.Keys.isLiteralRomanCandidateEnabled.defaultValue
 
+    @AppStorage(SettingsStore.Keys.isHyphenlessRomanEnabled.name)
+    private var isHyphenlessRomanEnabled = SettingsStore.Keys.isHyphenlessRomanEnabled.defaultValue
+
     /// Whether the system is currently refusing our notices. Re-read when this
     /// app comes back to the front rather than observed: nothing fires when the
     /// setting changes, and changing it means a trip to System Settings and back.
@@ -105,6 +108,10 @@ struct GeneralSettingsView: View {
                     Text(language.string(.settingsOutputScriptRoman)).tag(false)
                 }
                 .disabled(!candidateDisplayMode.allowsSwapToggle)
+
+                // 無連字符 (§49), directly under 輸出文字 — it describes that
+                // output's shape.
+                Toggle(language.string(.settingsHyphenlessRoman), isOn: $isHyphenlessRomanEnabled)
 
                 // Which keys type a tone is a fact about how the syllable is
                 // spelled, not a shortcut (USER 2026-09-08), and the slot

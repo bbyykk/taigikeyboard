@@ -949,6 +949,7 @@ pub(crate) fn assemble_candidates(
     custom: &[CustomEntry],
     mode: phonetics::InputMode,
     enabled_sources_bitmask: u32,
+    hyphenless_roman: bool,
 ) -> Vec<RawCandidate> {
     let raw_len = raw.len() as u32;
     // Whole-buffer tone pin (§17 typed digits / §41 space-closed TPS
@@ -1360,7 +1361,7 @@ pub(crate) fn assemble_candidates(
                 candidates.extend(abbrev);
             }
         }
-        // ---- Step 5: POJ presentation pass.
+        // ---- Step 5: presentation pass (POJ render, 無連字符).
         // v3.5.8 — POJ-display render. The Continuous platform
         // builders are mode-agnostic by design (Item 13: "the
         // engine owns input-mode handling"); mirror the engine-side
@@ -1378,6 +1379,22 @@ pub(crate) fn assemble_candidates(
             for cand in &mut candidates {
                 cand.roman = recase_tl_as_poj_display(&cand.roman);
             }
+        }
+        // 無連字符 (§49) — same presentation seam, same field: only
+        // `roman`, for dictionary, custom and walker rows alike;
+        // `display_text` / `canonical_tl` keep the dictionary form. After
+        // the POJ render (which splits on `-`), before the rendered
+        // dedupe (which keys on what the cell shows) and before the §34
+        // literal prepend in dispatch (the literal keeps typed hyphens).
+        // The platform sends `false` under a TPS layout.
+        if hyphenless_roman {
+            for cand in &mut candidates {
+                if cand.roman.contains('-') {
+                    cand.roman = phonetics::api::hyphenless_display(&cand.roman);
+                }
+            }
+        }
+        if mode == phonetics::InputMode::Poj || hyphenless_roman {
             dedupe_rendered_continuous(&mut candidates);
         }
         // TPS visual-dedupe — TPS UI hides romanization so two rows

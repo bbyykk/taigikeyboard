@@ -131,6 +131,10 @@ pub(crate) const ZHUYIN_TONES_ENCODE_SAFE: &[(&str, &str)] = &[
     ("9", "\u{02c6}"),
 ];
 
+/// The 輕聲 marker as TPS writes it (`--` → `·` U+00B7, `zhuyin.js:204`);
+/// 無連字符 romanization (`api::hyphenless_display`) writes the same glyph.
+pub(crate) const KHINSIANN_DOT: &str = "\u{00b7}";
+
 const PUNCTUATION_CHARS: &[&str] = &[
     "\u{ff0e}", "\u{300c}", "\u{300d}", "\u{ff0c}", "\u{3002}", "\u{ff1f}", "--", ",", ".", "?",
     "\"",
@@ -670,7 +674,7 @@ pub fn to_zhuyin(text: &str, encode_safe: bool, or_maps_to_er: bool) -> String {
         }
     }
 
-    result.replace("--", "\u{00b7}")
+    result.replace("--", KHINSIANN_DOT)
 }
 
 /// Convert a TPS string to a TL tone-numbered string. Mirrors `fromZhuyin` in

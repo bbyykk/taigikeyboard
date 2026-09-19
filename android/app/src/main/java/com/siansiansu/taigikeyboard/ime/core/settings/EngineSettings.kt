@@ -82,6 +82,14 @@ interface EngineSettings {
     val isLiteralRomanCandidateEnabled: Boolean
 
     /**
+     * 無連字符 (`behavioral-invariants.md` §49), EFFECTIVE: the stored switch
+     * with TPS folded off. Forwarded verbatim as `AppConfig.hyphenless_roman`.
+     */
+    // CROSS-PLATFORM INVARIANT — mirrors ios/Sources/TaigiKeyboard/Settings/EngineSettings.swift:isHyphenlessRomanEnabled.
+    // Drift causes silent divergence (one platform still shows hyphens).
+    val isHyphenlessRomanEnabled: Boolean
+
+    /**
      * POJ preprocessing toggles bundled as a live-read value so
      * `ComposingState` / `ToneConverter` can stay Kotlin-stdlib-pure.
      */

@@ -85,4 +85,10 @@ public interface AppConfigOrBuilder extends
    * @return The candidateDisplayMode.
    */
   com.siansiansu.taigikeyboard.engine.proto.CandidateDisplayMode getCandidateDisplayMode();
+
+  /**
+   * <code>bool hyphenless_roman = 10;</code>
+   * @return The hyphenlessRoman.
+   */
+  boolean getHyphenlessRoman();
 }

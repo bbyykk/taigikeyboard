@@ -407,6 +407,7 @@ mod tests {
             platform_id: platform as i32,
             output_both_scripts: false,
             candidate_display_mode: 0,
+            hyphenless_roman: false,
         }
     }
 

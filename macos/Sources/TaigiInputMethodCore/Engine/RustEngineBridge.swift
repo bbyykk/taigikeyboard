@@ -179,6 +179,9 @@ enum RustEngineBridge {
         case .combined: .combined
         case .romanOnly: .romanOnly
         }
+        // Base config for the same reason: the candidate fetch and the next-word
+        // filter both shape their romanization by it (§49).
+        config.hyphenlessRoman = settings.isHyphenlessRomanEnabled
         return config
     }
 

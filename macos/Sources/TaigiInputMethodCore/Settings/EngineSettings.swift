@@ -153,6 +153,14 @@ struct EngineSettings: Equatable, Sendable {
     /// Drift changes which candidate leads the list on a fresh install.
     let isLiteralRomanCandidateEnabled: Bool
 
+    /// 無連字符 (`behavioral-invariants.md` §49) — sent as
+    /// `AppConfig.hyphenless_roman` on the base config; no TPS layout here,
+    /// so no fold.
+    /// CROSS-PLATFORM INVARIANT — mirrors `isHyphenlessRomanEnabled` in
+    /// ios/Sources/TaigiKeyboard/Settings/SharedSettings.swift and
+    /// `hyphenlessRomanEnabled` in android/…/ime/core/PrefHelper.kt, both OFF.
+    let isHyphenlessRomanEnabled: Bool
+
     /// Whether committing a candidate counts towards its ranking next time.
     /// Read on the write path only — the boost itself is always applied to
     /// whatever counts have been learned, so turning this off freezes the
@@ -205,6 +213,7 @@ struct EngineSettings: Equatable, Sendable {
             isFullWidthPunctuation: mode.effectiveFullWidthPunctuation(stored: storedSwap),
             candidateDisplayMode: mode,
             isLiteralRomanCandidateEnabled: true,
+            isHyphenlessRomanEnabled: false,
             isFrequencyRecordingEnabled: true,
             isAssociationRecordingEnabled: true,
             isCustomDictEnabled: true,

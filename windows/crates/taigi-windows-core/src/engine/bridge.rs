@@ -91,9 +91,10 @@ pub(super) fn record_failure(op: &str, message: &str) {
 /// `ⁿ` keys, a hardware keyboard has not, so switching the fold off would
 /// leave both graphemes untypable in POJ (`RustEngineBridge.swift:161-175`).
 ///
-/// `candidate_display_mode` rides on the BASE config: the engine collapses
-/// same-roman rows under roman-only in both the candidate fetch and the
-/// next-word filter, and the two derived configs below inherit it.
+/// `candidate_display_mode` and `hyphenless_roman` ride on the BASE config:
+/// the engine collapses same-roman rows under roman-only, and shapes the
+/// romanization hyphenless (§49), in both the candidate fetch and the
+/// next-word filter, and the two derived configs below inherit them.
 pub(super) fn app_config(settings: &EngineSettings) -> AppConfig {
     AppConfig {
         input_mode: settings.input_mode.wire().to_owned(),
@@ -101,6 +102,7 @@ pub(super) fn app_config(settings: &EngineSettings) -> AppConfig {
         nn_doubletap_enabled: true,
         platform_id: Platform::Windows as i32,
         candidate_display_mode: settings.candidate_display_mode.wire() as i32,
+        hyphenless_roman: settings.is_hyphenless_roman_enabled,
         ..Default::default()
     }
 }
@@ -187,6 +189,17 @@ mod tests {
         assert!(app_config(&settings).is_roman_only_display());
         assert!(continuous_app_config(&settings).is_roman_only_display());
         assert!(nextword_config(&settings).is_roman_only_display());
+    }
+
+    #[test]
+    fn hyphenless_roman_reaches_every_config_through_the_base_one() {
+        let settings = EngineSettings {
+            is_hyphenless_roman_enabled: true,
+            ..EngineSettings::default()
+        };
+        assert!(app_config(&settings).hyphenless_roman);
+        assert!(continuous_app_config(&settings).hyphenless_roman);
+        assert!(nextword_config(&settings).hyphenless_roman);
     }
 
     #[test]

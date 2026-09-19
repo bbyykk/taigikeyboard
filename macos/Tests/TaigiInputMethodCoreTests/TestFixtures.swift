@@ -223,6 +223,7 @@ enum TestFixtures {
             // §34/S22 ships ON; a case that wants it off writes the real
             // setting with `withSetting`, which is the path production reads.
             isLiteralRomanCandidateEnabled: true,
+            isHyphenlessRomanEnabled: false,
             isFrequencyRecordingEnabled: frequencyRecording,
             isAssociationRecordingEnabled: associationRecording,
             isCustomDictEnabled: customDict,

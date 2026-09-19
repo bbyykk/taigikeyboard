@@ -200,6 +200,7 @@ fun RustEngineBridge.nextwordFilter(
     associationRecordingEnabled: Boolean,
     generation: Long,
     candidateDisplayMode: CandidateDisplayMode = CandidateDisplayMode.SIDE_BY_SIDE,
+    hyphenlessRoman: Boolean = false,
 ): RustEngineBridge.NextWordFilterResult {
     val builder = com.siansiansu.taigikeyboard.engine.proto.FilterPredictions
         .newBuilder()
@@ -226,9 +227,10 @@ fun RustEngineBridge.nextwordFilter(
         methodSetter = { it.filterPredictions = builder.build() },
         op = "nextwordFilter",
         generation = generation,
-        // Field 9 rides only the filter request — the sole nextword reader
-        // (`nextword/src/filter.rs` collapses same-roman predictions under ROMAN_ONLY).
-        config = nextwordConfig(mode, translateSwapped, associationRecordingEnabled, candidateDisplayMode),
+        // Fields 9 / 10 ride only the filter request — the sole nextword reader
+        // (`nextword/src/filter.rs` collapses same-roman predictions under ROMAN_ONLY
+        // and shapes `text` hyphenless under 無連字符).
+        config = nextwordConfig(mode, translateSwapped, associationRecordingEnabled, candidateDisplayMode, hyphenlessRoman),
     ) ?: return RustEngineBridge.NextWordFilterResult(emptyList(), wasStale = false)
     if (!resp.hasFilter()) {
         RustEngineBridge.recordFailure("nextwordFilter", "missing filter result")
@@ -315,6 +317,7 @@ private fun nextwordConfig(
     translateSwapped: Boolean,
     associationRecordingEnabled: Boolean,
     candidateDisplayMode: CandidateDisplayMode = CandidateDisplayMode.SIDE_BY_SIDE,
+    hyphenlessRoman: Boolean = false,
 ): AppConfig =
     AppConfig
         .newBuilder()
@@ -327,6 +330,7 @@ private fun nextwordConfig(
         ).setOoDoubletapEnabled(false)
         .setNnDoubletapEnabled(false)
         .setCandidateDisplayMode(candidateDisplayMode.toProto())
+        .setHyphenlessRoman(hyphenlessRoman)
         .setIsTranslateSwapped(translateSwapped)
         .setIsAssociationRecordingEnabled(associationRecordingEnabled)
         .setPlatformId(Platform.PLATFORM_ANDROID)

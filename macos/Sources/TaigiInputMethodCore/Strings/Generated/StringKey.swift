@@ -162,6 +162,7 @@ enum StringKey: String {
     case settingsOutputScript = "i18n_settings_outputScript"
     case settingsOutputScriptHanji = "i18n_settings_outputScriptHanji"
     case settingsOutputScriptRoman = "i18n_settings_outputScriptRoman"
+    case settingsHyphenlessRoman = "i18n_settings_hyphenlessRoman"
     case settingsCandidateWindow = "i18n_settings_candidateWindow"
     case settingsLiteralRomanCandidate = "i18n_settings_literalRomanCandidate"
     case settingsToneInputScheme = "i18n_settings_toneInputScheme"

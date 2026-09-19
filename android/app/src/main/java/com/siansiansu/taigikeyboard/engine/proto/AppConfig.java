@@ -14,6 +14,18 @@ package com.siansiansu.taigikeyboard.engine.proto;
  * read it; the other request families ignore it. Platforms keep sending the
  * derived `is_translate_swapped` / `output_both_scripts` pair (both `false`
  * under 羅馬字) so spacing / recording semantics need no new reader.
+ *
+ * 2026-09-20 added `hyphenless_roman` (無連字符, USER): the rendered
+ * romanization drops the inter-syllable `-` and writes the 輕聲 marker `--`
+ * as `·` U+00B7 (`tâi-uân` → `tâiuân`, `hōo--guá` → `hōo·guá`). Rendering
+ * only — `phonetics::api::hyphenless_display` is applied to the candidate
+ * `roman` (`composing::dispatch`), the prediction `text`
+ * (`nextword::filter`) and the engine-synthesised compound joiner
+ * (`composing::api::nailed_prefix`); identity fields (`display_text`,
+ * `canonical_tl`, `tl`) and user-typed text keep their hyphens. The
+ * platform sends `false` under a TPS layout (the engine sees TPS as
+ * `"tl"` / `"poj"` and the platform re-splits `roman` on `-` for bopomofo),
+ * exactly as it folds TPS into `is_translate_swapped`.
  * </pre>
  *
  * Protobuf type {@code taigi.engine.AppConfig}
@@ -338,6 +350,32 @@ public  final class AppConfig extends
     candidateDisplayMode_ = 0;
   }
 
+  public static final int HYPHENLESS_ROMAN_FIELD_NUMBER = 10;
+  private boolean hyphenlessRoman_;
+  /**
+   * <code>bool hyphenless_roman = 10;</code>
+   * @return The hyphenlessRoman.
+   */
+  @java.lang.Override
+  public boolean getHyphenlessRoman() {
+    return hyphenlessRoman_;
+  }
+  /**
+   * <code>bool hyphenless_roman = 10;</code>
+   * @param value The hyphenlessRoman to set.
+   */
+  private void setHyphenlessRoman(boolean value) {
+
+    hyphenlessRoman_ = value;
+  }
+  /**
+   * <code>bool hyphenless_roman = 10;</code>
+   */
+  private void clearHyphenlessRoman() {
+
+    hyphenlessRoman_ = false;
+  }
+
   public static com.siansiansu.taigikeyboard.engine.proto.AppConfig parseFrom(
       java.nio.ByteBuffer data)
       throws com.google.protobuf.InvalidProtocolBufferException {
@@ -430,6 +468,18 @@ public  final class AppConfig extends
    * read it; the other request families ignore it. Platforms keep sending the
    * derived `is_translate_swapped` / `output_both_scripts` pair (both `false`
    * under 羅馬字) so spacing / recording semantics need no new reader.
+   *
+   * 2026-09-20 added `hyphenless_roman` (無連字符, USER): the rendered
+   * romanization drops the inter-syllable `-` and writes the 輕聲 marker `--`
+   * as `·` U+00B7 (`tâi-uân` → `tâiuân`, `hōo--guá` → `hōo·guá`). Rendering
+   * only — `phonetics::api::hyphenless_display` is applied to the candidate
+   * `roman` (`composing::dispatch`), the prediction `text`
+   * (`nextword::filter`) and the engine-synthesised compound joiner
+   * (`composing::api::nailed_prefix`); identity fields (`display_text`,
+   * `canonical_tl`, `tl`) and user-typed text keep their hyphens. The
+   * platform sends `false` under a TPS layout (the engine sees TPS as
+   * `"tl"` / `"poj"` and the platform re-splits `roman` on `-` for bopomofo),
+   * exactly as it folds TPS into `is_translate_swapped`.
    * </pre>
    *
    * Protobuf type {@code taigi.engine.AppConfig}
@@ -777,6 +827,34 @@ public  final class AppConfig extends
       return this;
     }
 
+    /**
+     * <code>bool hyphenless_roman = 10;</code>
+     * @return The hyphenlessRoman.
+     */
+    @java.lang.Override
+    public boolean getHyphenlessRoman() {
+      return instance.getHyphenlessRoman();
+    }
+    /**
+     * <code>bool hyphenless_roman = 10;</code>
+     * @param value The hyphenlessRoman to set.
+     * @return This builder for chaining.
+     */
+    public Builder setHyphenlessRoman(boolean value) {
+      copyOnWrite();
+      instance.setHyphenlessRoman(value);
+      return this;
+    }
+    /**
+     * <code>bool hyphenless_roman = 10;</code>
+     * @return This builder for chaining.
+     */
+    public Builder clearHyphenlessRoman() {
+      copyOnWrite();
+      instance.clearHyphenlessRoman();
+      return this;
+    }
+
     // @@protoc_insertion_point(builder_scope:taigi.engine.AppConfig)
   }
   @java.lang.Override
@@ -802,10 +880,11 @@ public  final class AppConfig extends
             "platformId_",
             "outputBothScripts_",
             "candidateDisplayMode_",
+            "hyphenlessRoman_",
           };
           java.lang.String info =
-              "\u0000\t\u0000\u0000\u0001\t\t\u0000\u0000\u0000\u0001\u0208\u0002\u0208\u0003\u0007" +
-              "\u0004\u0007\u0005\u0007\u0006\u0007\u0007\f\b\u0007\t\f";
+              "\u0000\n\u0000\u0000\u0001\n\n\u0000\u0000\u0000\u0001\u0208\u0002\u0208\u0003\u0007" +
+              "\u0004\u0007\u0005\u0007\u0006\u0007\u0007\f\b\u0007\t\f\n\u0007";
           return newMessageInfo(DEFAULT_INSTANCE, info, objects);
       }
       case GET_DEFAULT_INSTANCE: {

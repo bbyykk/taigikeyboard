@@ -898,12 +898,15 @@ object RustEngineBridge {
         effectiveSwapped: Boolean,
         outputBothScripts: Boolean,
         candidateDisplayMode: CandidateDisplayMode,
+        hyphenlessRoman: Boolean,
     ): AppConfig =
         appConfig(mode, toggles)
             .toBuilder()
             .setIsTranslateSwapped(effectiveSwapped)
             .setOutputBothScripts(outputBothScripts)
             .setCandidateDisplayMode(candidateDisplayMode.toProto())
+            // Proto field 10 — 無連字符; the caller already folded TPS to `false`.
+            .setHyphenlessRoman(hyphenlessRoman)
             .build()
 
     private const val LEVEL_ERROR = 0
