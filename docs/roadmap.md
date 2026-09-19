@@ -172,7 +172,7 @@ Audit outcome, rejected alternatives (do not re-propose) and gate note: [`docs/r
 ### Desktop input-source menu — global shortcut rows (USER-scoped 2026-09-19)
 
 **Status**: PR open (macOS + Windows in one PR). Dogfood pending: S59 (both platforms).
-The menu-bar / tray menu lists the three global shortcuts a click can stand in for (切換台羅/白話字 · 切換候選詞顯示 · 拍開 Telex 說明), each printing the chord the 快速齒 pane holds for it, then 設定, then 檢查更新. Labels reuse the pane's i18n keys (USER 2026-09-19: no new strings). Excluded on purpose: 切換漢字/羅馬字模式 (bare-backtick default — a macOS menu key equivalent is dispatched by the text-input menu agent system-wide, so a bare key there is a key the user can no longer type; the rule generalises: a row re-recorded onto a bare key prints no chord) and 拍開符號選單 (needs the caret a click has no hold of). Windows resolves the focused context after the popup closes (`ITfThreadMgr::GetFocus` → `GetTop`) so the guide row has a context to belong to.
+The menu-bar / tray menu lists the two global shortcuts a click can stand in for (切換台羅/白話字 · 切換候選詞顯示), each printing the chord the 快速齒 pane holds for it, then 設定, then 檢查更新. Labels reuse the pane's i18n keys (USER 2026-09-19: no new strings). Excluded on purpose: 切換漢字/羅馬字模式 (bare-backtick default — a macOS menu key equivalent is dispatched by the text-input menu agent system-wide, so a bare key there is a key the user can no longer type; the rule generalises: a row re-recorded onto a bare key prints no chord) 拍開符號選單 (needs the caret a click has no hold of) and 拍開 Telex 說明 (USER 2026-09-20: 「極少人使用」). Windows resolves the focused context after the popup closes (`ITfThreadMgr::GetFocus` → `GetTop`) so the click re-presents that context's open list.
 
 ---
 

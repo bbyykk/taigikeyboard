@@ -1088,10 +1088,10 @@ impl ITfLangBarItemButton_Impl for TextService_Impl {
                         // A shortcut row does what its chord does, through
                         // the same doorway (`perform_global`), against the
                         // context focused NOW — resolved after the popup's
-                        // modal loop, not before it — so the guide has a
-                        // token to belong to. No focused context is the
-                        // `OnPreservedKey` case: identity 0, the switches
-                        // still flip, the guide declines.
+                        // modal loop, not before it — so the open list of
+                        // that context is the one re-presented. No focused
+                        // context is the `OnPreservedKey` case: identity 0,
+                        // the switches still flip.
                         Some(action) => {
                             let identity = self.focused_context_identity();
                             self.perform_global(action, identity);

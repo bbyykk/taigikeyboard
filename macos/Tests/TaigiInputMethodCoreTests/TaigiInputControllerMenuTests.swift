@@ -79,14 +79,14 @@ final class TaigiInputControllerMenuTests: XCTestCase {
         // The literal oracle for this surface: the copy is the authored Hanji.
         XCTAssertEqual(
             items.map(\.title),
-            ["切換台羅/白話字", "切換候選詞顯示", "拍開 Telex 說明", "", "設定", "", "檢查更新"],
+            ["切換台羅/白話字", "切換候選詞顯示", "", "設定", "", "檢查更新"],
         )
         XCTAssertEqual(items.filter(\.isSeparatorItem).count, 2)
         XCTAssertFalse(try XCTUnwrap(items.first).isSeparatorItem)
         XCTAssertFalse(try XCTUnwrap(items.last).isSeparatorItem)
         XCTAssertEqual(
             items.filter { !$0.isSeparatorItem }.map(\.action),
-            [Self.toggleRomanization, Self.cycleCandidateDisplayMode, Self.showTelexGuide, Self.openSettings, Self.checkForUpdates],
+            [Self.toggleRomanization, Self.cycleCandidateDisplayMode, Self.openSettings, Self.checkForUpdates],
         )
     }
 
@@ -94,19 +94,21 @@ final class TaigiInputControllerMenuTests: XCTestCase {
     /// and a bare key equivalent here would be eaten by the agent everywhere
     /// this input source is selected — so the row could never print the one
     /// chord it is known by. The picker stays off too: it needs the caret a
-    /// click has no hold of.
-    func testMenu_hasNoRowForTheSwapOrThePicker() throws {
+    /// click has no hold of. And the Telex guide: a row for the few who use
+    /// the scheme is a row everyone else reads past (USER 2026-09-20).
+    func testMenu_hasNoRowForTheSwapThePickerOrTheGuide() throws {
         let titles = try menu().items.map(\.title)
 
-        XCTAssertFalse(titles.contains(ShortcutAction.toggleTranslateSwapped.label(try language())))
-        XCTAssertFalse(titles.contains(ShortcutAction.showSymbolPicker.label(try language())))
+        for action in [ShortcutAction.toggleTranslateSwapped, .showSymbolPicker, .showTelexGuide] {
+            XCTAssertFalse(titles.contains(action.label(try language())), "\(action)")
+        }
     }
 
     /// Each shortcut row prints its recorded chord, like the doorway does.
     func testTheShortcutRows_printTheirDefaultChords() throws {
         let menu = try menu()
 
-        for (action, key) in [(Self.toggleRomanization, "c"), (Self.cycleCandidateDisplayMode, "h"), (Self.showTelexGuide, "/")] {
+        for (action, key) in [(Self.toggleRomanization, "c"), (Self.cycleCandidateDisplayMode, "h")] {
             let row = try item(action: action, in: menu)
             XCTAssertEqual(row.keyEquivalent, key, "\(action)")
             XCTAssertEqual(row.keyEquivalentModifierMask, [.control, .command], "\(action)")
@@ -131,14 +133,14 @@ final class TaigiInputControllerMenuTests: XCTestCase {
     /// A shortcut row follows a re-recording and a clearing the way the
     /// doorway does: the menu is rebuilt on every draw.
     func testAShortcutRow_printsTheRecordedChord_andNothingOnceCleared() throws {
-        KeyboardShortcuts.setShortcut(.init(.j, modifiers: [.control, .option]), for: .showTelexGuide)
-        let recorded = try item(action: Self.showTelexGuide, in: menu())
+        KeyboardShortcuts.setShortcut(.init(.j, modifiers: [.control, .option]), for: .cycleCandidateDisplayMode)
+        let recorded = try item(action: Self.cycleCandidateDisplayMode, in: menu())
         XCTAssertEqual(recorded.keyEquivalent, "j")
         XCTAssertEqual(recorded.keyEquivalentModifierMask, [.control, .option])
 
-        KeyboardShortcuts.setShortcut(nil, for: .showTelexGuide)
-        let cleared = try item(action: Self.showTelexGuide, in: menu())
-        XCTAssertEqual(cleared.title, "拍開 Telex 說明")
+        KeyboardShortcuts.setShortcut(nil, for: .cycleCandidateDisplayMode)
+        let cleared = try item(action: Self.cycleCandidateDisplayMode, in: menu())
+        XCTAssertEqual(cleared.title, "切換候選詞顯示")
         XCTAssertEqual(cleared.keyEquivalent, "")
         XCTAssertEqual(cleared.keyEquivalentModifierMask, [])
     }
@@ -207,7 +209,7 @@ final class TaigiInputControllerMenuTests: XCTestCase {
     /// claim a key. A row that claims one the user cannot see and re-record in
     /// the 快捷鍵 pane is a key taken from the host that no surface admits to.
     func testOnlyTheShortcutRows_claimAKey() throws {
-        let shortcutRows = [Self.toggleRomanization, Self.cycleCandidateDisplayMode, Self.showTelexGuide, Self.openSettings]
+        let shortcutRows = [Self.toggleRomanization, Self.cycleCandidateDisplayMode, Self.openSettings]
         for row in try menu().items where !row.keyEquivalent.isEmpty {
             XCTAssertTrue(
                 row.action.map(shortcutRows.contains) ?? false,
@@ -321,7 +323,6 @@ final class TaigiInputControllerMenuTests: XCTestCase {
     private static let checkForUpdates = Selector(("checkForUpdates:"))
     private static let toggleRomanization = Selector(("toggleRomanization:"))
     private static let cycleCandidateDisplayMode = Selector(("cycleCandidateDisplayMode:"))
-    private static let showTelexGuide = Selector(("showTelexGuide:"))
     /// The doorway's command: `showPreferences:` is the selector the system
     /// reserves for it (`IMKInputController.h:165-170`), so the row sends that
     /// rather than a second one of the controller's own.

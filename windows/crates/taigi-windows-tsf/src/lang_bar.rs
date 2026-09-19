@@ -1,5 +1,5 @@
 //! The tray button and its menu — the macOS input-source menu, exactly:
-//! the three global shortcuts a click can stand in for / separator / 設定 /
+//! the two global shortcuts a click can stand in for / separator / 設定 /
 //! separator / 檢查更新 (`TaigiInputController.menu()`; roadmap W6). The button sits in the standard input-mode slot
 //! (`GUID_LBI_INPUTMODE`, rakukan `language_bar.rs:21-23`).
 //!
@@ -45,17 +45,15 @@ pub const MENU_CHECK_FOR_UPDATES: u32 = 2;
 /// last recorded). One table drives both the drawing and the id → action
 /// lookup, so no row can print one action and fire another. Not the 漢羅對調
 /// swap — its default is the bare backtick, which the Mac's menu can never
-/// print (`TaigiInputController.menu()`) — and not the symbol picker, which
-/// needs the caret a click has no hold of (`needs_key_context`).
-pub const MENU_SHORTCUT_ROWS: [(u32, ShortcutAction); 3] = [
+/// print (`TaigiInputController.menu()`) — not the symbol picker, which
+/// needs the caret a click has no hold of (`needs_key_context`) — and not the
+/// Telex guide (USER 2026-09-20: 「極少人使用」).
+pub const MENU_SHORTCUT_ROWS: [(u32, ShortcutAction); 2] = [
     (3, ShortcutAction::ToggleRomanization),
     (4, ShortcutAction::CycleCandidateDisplayMode),
-    (5, ShortcutAction::ShowTelexGuide),
 ];
 const _: () = assert!(MENU_OPEN_SETTINGS != 0 && MENU_CHECK_FOR_UPDATES != 0);
-const _: () = assert!(
-    MENU_SHORTCUT_ROWS[0].0 != 0 && MENU_SHORTCUT_ROWS[1].0 != 0 && MENU_SHORTCUT_ROWS[2].0 != 0
-);
+const _: () = assert!(MENU_SHORTCUT_ROWS[0].0 != 0 && MENU_SHORTCUT_ROWS[1].0 != 0);
 
 /// The global shortcut a menu id stands for, `None` for the other rows.
 pub fn shortcut_for_menu_id(id: u32) -> Option<ShortcutAction> {
@@ -252,7 +250,7 @@ mod tests {
 
     #[test]
     fn the_menu_mirrors_the_macos_input_source_menu() {
-        // trace: TaigiInputController.menu() → [shortcuts(3)], [settings], [checkForUpdates];
+        // trace: TaigiInputController.menu() → [shortcuts(2)], [settings], [checkForUpdates];
         // the literal oracle is the authored Hanji, as in TaigiInputControllerMenuTests.
         let strings = StringResolver::new(DisplayLanguage::Hanji);
         let rows = menu_rows(&strings, &SettingsDocument::default());
@@ -265,7 +263,6 @@ mod tests {
             [
                 Some("切換台羅/白話字\tCtrl+Alt+C"),
                 Some("切換候選詞顯示\tCtrl+Alt+H"),
-                Some("拍開 Telex 說明\tCtrl+Alt+/"),
                 None,
                 Some("設定\tCtrl+Alt+S"),
                 None,
@@ -276,10 +273,7 @@ mod tests {
             .iter()
             .map(|row| row.as_ref().map(|(id, _)| *id))
             .collect();
-        assert_eq!(
-            ids,
-            [Some(3), Some(4), Some(5), None, Some(1), None, Some(2)]
-        );
+        assert_eq!(ids, [Some(3), Some(4), None, Some(1), None, Some(2)]);
         for (id, action) in MENU_SHORTCUT_ROWS {
             assert_eq!(shortcut_for_menu_id(id), Some(action));
         }
@@ -290,7 +284,7 @@ mod tests {
         ShortcutAction::ToggleRomanization.store_in(&mut cleared, None);
         let rows = menu_rows(&strings, &cleared);
         assert_eq!(rows[0].as_ref().unwrap().1, "切換台羅/白話字");
-        assert_eq!(rows[4].as_ref().unwrap().1, "設定");
+        assert_eq!(rows[3].as_ref().unwrap().1, "設定");
         // A plain tray button, whose click reaches `OnClick`. A
         // `TF_LBI_STYLE_BTN_MENU` here shows no menu at all in the
         // Windows 8+ taskbar input indicator (module header).

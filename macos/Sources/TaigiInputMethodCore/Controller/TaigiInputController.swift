@@ -431,11 +431,12 @@ public final class TaigiInputController: IMKInputController {
             }
 
             // The global shortcuts a click can stand in for (USER 2026-09-19):
-            // the switches and the guide, each under the name the 快捷鍵 pane
-            // gives it, so the menu is where a user looks up what they last
-            // recorded. Not the 漢羅對調 swap — its default is the bare
-            // backtick, which the rule above would never print — and not the
-            // symbol picker, which needs the caret a click has no hold of.
+            // the two switches, each under the name the 快捷鍵 pane gives it,
+            // so the menu is where a user looks up what they last recorded.
+            // Not the 漢羅對調 swap — its default is the bare backtick, which
+            // the rule above would never print; not the symbol picker, which
+            // needs the caret a click has no hold of; and not the Telex guide
+            // (USER 2026-09-20: 「極少人使用」).
             let shortcuts = [
                 shortcutRow(
                     .toggleRomanization,
@@ -446,11 +447,6 @@ public final class TaigiInputController: IMKInputController {
                     .cycleCandidateDisplayMode,
                     label: ShortcutAction.cycleCandidateDisplayMode.label(language),
                     selector: #selector(cycleCandidateDisplayMode(_:)),
-                ),
-                shortcutRow(
-                    .showTelexGuide,
-                    label: ShortcutAction.showTelexGuide.label(language),
-                    selector: #selector(showTelexGuide(_:)),
                 ),
             ]
             // One doorway (USER 2026-08-26). There was a row per settings pane
@@ -544,11 +540,6 @@ public final class TaigiInputController: IMKInputController {
     @objc
     private func cycleCandidateDisplayMode(_: Any!) {
         performGlobalShortcut(.cycleCandidateDisplayMode)
-    }
-
-    @objc
-    private func showTelexGuide(_: Any!) {
-        performGlobalShortcut(.showTelexGuide)
     }
 
     private func performGlobalShortcut(_ action: ShortcutAction) {
