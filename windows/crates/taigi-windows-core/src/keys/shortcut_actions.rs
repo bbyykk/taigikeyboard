@@ -735,7 +735,7 @@ mod tests {
         ShortcutConflicts::resolve_across_registries(&mut doc);
         assert_eq!(doc.revision, 0, "nothing was written");
 
-        // Two collisions at once, and an always-bound row survives being cleared.
+        // Two collisions at once, and a cleared commit row is refilled.
         let mut doc = SettingsDocument::default();
         ShortcutAction::ToggleRomanization.store_in(&mut doc, Some(&shift_tab));
         ShortcutAction::OpenLastSettingsPane
@@ -754,7 +754,7 @@ mod tests {
             .cloned();
         assert!(
             restored.is_some(),
-            "an always-bound row must not be left empty"
+            "a commit row is refilled when its default is free"
         );
         assert_ne!(restored.as_ref(), Some(&ctrl_r));
     }

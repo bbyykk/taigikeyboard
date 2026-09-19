@@ -127,10 +127,9 @@ enum CandidateSlotKeySet: CaseIterable, Sendable {
 ///   key the user composes with.
 /// - No chord is on two actions. A later action recording a chord takes it
 ///   from the earlier one, the way the System Settings keyboard pane behaves.
-/// - `ComposingAction.alwaysBound` is honoured: an action in that set that
-///   would otherwise be unbound is restored to its default chord, because
-///   between them those two are the only way to end a composition into the
-///   document.
+/// - An empty `ComposingAction.refilledFromDefault` row takes back whichever
+///   of the pair's defaults no other row holds. A chord the user put on some
+///   other row is never taken off them.
 struct ComposingKeyBindings: Sendable, Equatable {
     private(set) var chords: [ComposingAction: ComposingKeyChord]
     /// Which keys type a tone. Carried here because it is the other half of
@@ -233,37 +232,22 @@ struct ComposingKeyBindings: Sendable, Equatable {
         }
     }
 
-    /// Keeps every always-bound action reachable.
-    ///
-    /// Their default chords are a pool the always-bound actions share, and no
-    /// other action may hold one. An empty always-bound row then takes whichever
-    /// chord in that pool nobody else in the pool has — which is what makes this
-    /// terminate: filling one row can never empty another, so there is no cycle
-    /// to iterate out of.
-    ///
-    /// Sharing the pool rather than pinning each action to its own default is
-    /// what lets the two SWAP: a user who wants Return on the literal and
-    /// ⇧Return on the candidate keeps that, because both rows are full and
-    /// nothing needs restoring.
-    ///
-    /// The cost is that Return and ⇧Return cannot be moved onto anything else.
-    /// That is the trade: the two keys that end a composition into the document
-    /// stay where a user can find them.
+    /// Refills an empty commit row from the pair's shipped defaults: whichever
+    /// chord in that pool no composing row holds, its own first. A row the
+    /// user cleared gets its key back; a row holding a pool chord the user
+    /// recorded there keeps it, and the emptied commit row stays empty — the
+    /// last recording wins here as everywhere else on the pane (USER
+    /// 2026-09-19: Enter recorded on 迒模式輸出 used to be handed straight back
+    /// to 確定齒). A composition still ends on an unbound Return: it commits
+    /// before passing through to the host (`ComposingKeyIntent.hostKey`).
     private static func restoreUnbound(in resolved: inout [ComposingAction: ComposingKeyChord]) {
-        let alwaysBound = ComposingAction.allCases.filter(ComposingAction.alwaysBound.contains)
-        let pool = alwaysBound.map(\.defaultChord)
+        let refilled = ComposingAction.allCases.filter(ComposingAction.refilledFromDefault.contains)
+        let pool = refilled.map(\.defaultChord)
 
-        for (action, chord) in resolved
-            where pool.contains(chord) && !ComposingAction.alwaysBound.contains(action)
-        {
-            resolved[action] = nil
-        }
-
-        var taken = Set(alwaysBound.compactMap { resolved[$0] })
-        for action in alwaysBound where resolved[action] == nil {
-            guard let free = pool.first(where: { !taken.contains($0) }) else { continue }
+        for action in refilled where resolved[action] == nil {
+            let ownFirst = [action.defaultChord] + pool
+            guard let free = ownFirst.first(where: { !resolved.values.contains($0) }) else { continue }
             resolved[action] = free
-            taken.insert(free)
         }
     }
 }

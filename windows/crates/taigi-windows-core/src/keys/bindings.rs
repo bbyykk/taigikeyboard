@@ -13,7 +13,9 @@ use crate::settings::{keys, SettingsDocument};
 /// "Resolved" means three things have already happened, so the classifier
 /// can trust the value: every chord came through [`ComposingKeyChord::make`];
 /// no chord is on two actions (a later recording takes it from the earlier
-/// one); [`ComposingAction::ALWAYS_BOUND`] is honoured.
+/// one); an empty [`ComposingAction::REFILLED_FROM_DEFAULT`] row takes back
+/// whichever of the pair's defaults no other row holds — never a key off
+/// another row.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ComposingKeyBindings {
     chords: BTreeMap<ComposingAction, ComposingKeyChord>,
@@ -158,28 +160,30 @@ impl ComposingKeyBindings {
         }
     }
 
-    /// Keeps every always-bound action reachable. Their default chords are a
-    /// pool the always-bound actions share, and no other action may hold one;
-    /// an empty always-bound row takes whichever pool chord nobody else in the
-    /// pool has — which lets the two SWAP and makes this terminate.
+    /// Refills an empty commit row from the pair's shipped defaults: whichever
+    /// pool chord no composing row holds, its own first. A cleared row gets
+    /// its key back; a row holding a pool chord the user recorded there keeps
+    /// it, and the emptied commit
+    /// row stays empty — the last recording wins here as everywhere else on
+    /// the pane (USER 2026-09-19: Enter recorded on 迒模式輸出 used to be handed
+    /// straight back to 確定齒). An unbound Return still ends the composition:
+    /// it commits before passing through to the host
+    /// (`ComposingKeyIntent::host_key`).
     fn restore_unbound(resolved: &mut BTreeMap<ComposingAction, ComposingKeyChord>) {
-        let pool: Vec<ComposingKeyChord> = ComposingAction::ALWAYS_BOUND
+        let pool: Vec<ComposingKeyChord> = ComposingAction::REFILLED_FROM_DEFAULT
             .iter()
             .map(|action| action.default_chord())
             .collect();
-        resolved.retain(|action, chord| {
-            ComposingAction::ALWAYS_BOUND.contains(action) || !pool.contains(chord)
-        });
-        let mut taken: Vec<ComposingKeyChord> = ComposingAction::ALWAYS_BOUND
-            .iter()
-            .filter_map(|action| resolved.get(action).cloned())
-            .collect();
-        for action in ComposingAction::ALWAYS_BOUND {
+        for action in ComposingAction::REFILLED_FROM_DEFAULT {
             if resolved.contains_key(&action) {
                 continue;
             }
-            if let Some(free) = pool.iter().find(|chord| !taken.contains(chord)).cloned() {
-                taken.push(free.clone());
+            let own = action.default_chord();
+            if let Some(free) = std::iter::once(&own)
+                .chain(pool.iter())
+                .find(|chord| !resolved.values().any(|held| held == *chord))
+                .cloned()
+            {
                 resolved.insert(action, free);
             }
         }
@@ -266,55 +270,111 @@ mod tests {
     }
 
     #[test]
-    fn always_bound_actions_get_their_default_back_and_take_it_from_others() {
-        for action in ComposingAction::ALWAYS_BOUND {
+    fn commit_rows_get_their_default_back_when_cleared() {
+        for action in ComposingAction::REFILLED_FROM_DEFAULT {
             let bindings = ComposingKeyBindings::resolve(
                 &stored(&[(action, None)]),
                 ToneInputScheme::Standard,
             );
             assert_eq!(bindings.chord(action), Some(&action.default_chord()));
         }
+    }
+
+    /// The reported failure (USER 2026-09-19): Enter recorded on 迒模式輸出
+    /// was handed straight back to 確定齒. The emptied commit row takes the
+    /// pair's OTHER default when it is free and stays empty when it is not.
+    #[test]
+    fn a_row_recorded_onto_a_commit_default_keeps_it() {
+        // trace: alternate=Return (recorded) > confirm=Return (default) →
+        // confirm emptied; pool {Return, ⇧Return}: Return held by alternate,
+        // ⇧Return by literal → confirm stays empty.
         let bindings = ComposingKeyBindings::resolve(
             &stored(&[
                 (ComposingAction::ConfirmHighlighted, None),
                 (
-                    ComposingAction::PageForward,
+                    ComposingAction::CommitAlternateScript,
                     Some(chord("\r", KeyModifiers::NONE)),
                 ),
             ]),
             ToneInputScheme::Standard,
         );
         assert_eq!(
-            bindings.chord(ComposingAction::ConfirmHighlighted),
+            bindings.chord(ComposingAction::CommitAlternateScript),
             Some(&chord("\r", KeyModifiers::NONE))
         );
-        assert_eq!(bindings.chord(ComposingAction::PageForward), None);
-        let bindings = ComposingKeyBindings::resolve(
-            &stored(&[(
-                ComposingAction::NextCandidate,
-                Some(chord("\r", KeyModifiers::SHIFT)),
-            )]),
-            ToneInputScheme::Standard,
-        );
-        assert_eq!(bindings.chord(ComposingAction::NextCandidate), None);
+        assert_eq!(bindings.chord(ComposingAction::ConfirmHighlighted), None);
         assert_eq!(
             bindings.chord(ComposingAction::CommitLiteral),
             Some(&chord("\r", KeyModifiers::SHIFT))
         );
+        // trace: literal cleared, nextCandidate=⇧Return (recorded),
+        // confirm=`]`; Return is free → literal takes Return.
+        let refilled = ComposingKeyBindings::resolve(
+            &stored(&[
+                (ComposingAction::CommitLiteral, None),
+                (
+                    ComposingAction::NextCandidate,
+                    Some(chord("\r", KeyModifiers::SHIFT)),
+                ),
+                (
+                    ComposingAction::ConfirmHighlighted,
+                    Some(chord("]", KeyModifiers::NONE)),
+                ),
+            ]),
+            ToneInputScheme::Standard,
+        );
+        assert_eq!(
+            refilled.chord(ComposingAction::NextCandidate),
+            Some(&chord("\r", KeyModifiers::SHIFT))
+        );
+        assert_eq!(
+            refilled.chord(ComposingAction::CommitLiteral),
+            Some(&chord("\r", KeyModifiers::NONE))
+        );
+        // trace: both defaults recorded on ordinary rows → both commit rows
+        // cleared by the pane, nothing free → both stay empty.
+        let both_taken = ComposingKeyBindings::resolve(
+            &stored(&[
+                (ComposingAction::ConfirmHighlighted, None),
+                (ComposingAction::CommitLiteral, None),
+                (
+                    ComposingAction::PageForward,
+                    Some(chord("\r", KeyModifiers::NONE)),
+                ),
+                (
+                    ComposingAction::PageBackward,
+                    Some(chord("\r", KeyModifiers::SHIFT)),
+                ),
+            ]),
+            ToneInputScheme::Standard,
+        );
+        assert_eq!(both_taken.chord(ComposingAction::ConfirmHighlighted), None);
+        assert_eq!(both_taken.chord(ComposingAction::CommitLiteral), None);
+        assert_eq!(
+            both_taken.chord(ComposingAction::PageForward),
+            Some(&chord("\r", KeyModifiers::NONE))
+        );
     }
 
     #[test]
-    fn always_bound_actions_are_never_both_left_unbound_and_may_swap() {
-        // trace: ComposingKeyBindingsTests.swift:294-336 — every arrangement.
+    fn commit_rows_are_refilled_only_from_free_defaults_and_may_swap() {
+        // trace: ComposingKeyBindingsTests.swift — every arrangement of the
+        // two commit rows over their two chords plus a third row holding one:
+        // no chord on two rows, a recorded chord stays on its row, and a
+        // commit row is empty only when both defaults are held elsewhere.
         let candidates = [
             None,
             Some(chord("\r", KeyModifiers::NONE)),
             Some(chord("\r", KeyModifiers::SHIFT)),
             Some(chord("]", KeyModifiers::NONE)),
         ];
+        let pool: Vec<ComposingKeyChord> = ComposingAction::REFILLED_FROM_DEFAULT
+            .iter()
+            .map(|action| action.default_chord())
+            .collect();
         let others: Vec<_> = ComposingAction::ALL
             .into_iter()
-            .filter(|a| !ComposingAction::ALWAYS_BOUND.contains(a))
+            .filter(|a| !ComposingAction::REFILLED_FROM_DEFAULT.contains(a))
             .collect();
         for confirm in &candidates {
             for literal in &candidates {
@@ -328,13 +388,22 @@ mod tests {
                             ]),
                             ToneInputScheme::Standard,
                         );
-                        for action in ComposingAction::ALWAYS_BOUND {
-                            assert!(bindings.chord(action).is_some(), "{action:?} unbound: {confirm:?} {literal:?} {other:?}={other_chord:?}");
+                        let held: Vec<&ComposingKeyChord> = bindings.chords.values().collect();
+                        let distinct: std::collections::BTreeSet<_> = held.iter().collect();
+                        assert_eq!(held.len(), distinct.len(), "one chord on two rows: {confirm:?} {literal:?} {other:?}={other_chord:?}");
+                        // Two rows stored with one chord is a settings file
+                        // edited behind the pane's back; that tiebreak is
+                        // `remove_duplicates`', not this pass's.
+                        if other_chord.is_some() && other_chord != confirm && other_chord != literal
+                        {
+                            assert_eq!(bindings.chord(*other), other_chord.as_ref(), "recorded chord lost: {confirm:?} {literal:?} {other:?}={other_chord:?}");
                         }
-                        assert_ne!(
-                            bindings.chord(ComposingAction::ConfirmHighlighted),
-                            bindings.chord(ComposingAction::CommitLiteral)
-                        );
+                        if ComposingAction::REFILLED_FROM_DEFAULT
+                            .iter()
+                            .any(|action| bindings.chord(*action).is_none())
+                        {
+                            assert!(pool.iter().all(|c| held.contains(&c)), "a commit row left empty with a default free: {confirm:?} {literal:?} {other:?}={other_chord:?}");
+                        }
                     }
                 }
             }

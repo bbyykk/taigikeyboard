@@ -143,13 +143,12 @@ enum ComposingAction: String, CaseIterable, Sendable {
         [.confirmHighlighted, .commitLiteral, .commitAlternateScript],
     ]
 
-    /// Actions that must always be reachable, whatever else the user rebinds.
-    ///
-    /// Between them these two are the only way to end a composition into the
-    /// document: one takes the candidate, the other takes what was typed. A
-    /// roster that let both go unbound would leave a user with a composition
-    /// they can only cancel.
-    static let alwaysBound: Set<ComposingAction> = [.confirmHighlighted, .commitLiteral]
+    /// Actions whose row, when empty, is refilled from the pair's shipped
+    /// defaults: the two ways to end a composition into the document, one
+    /// taking the candidate and one taking what was typed. Refilled only
+    /// with a default no other composing row holds
+    /// (`ComposingKeyBindings.restoreUnbound`).
+    static let refilledFromDefault: Set<ComposingAction> = [.confirmHighlighted, .commitLiteral]
 
     /// The settings key this action's chord is stored under.
     var settingsKeyName: String {

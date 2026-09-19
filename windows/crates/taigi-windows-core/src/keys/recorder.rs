@@ -41,8 +41,6 @@ pub enum RecorderOutcome {
     Refused(ChordRejection),
     /// Escape: recording ends, the row keeps what it had.
     Blurred,
-    /// Tab: recording ends AND the key goes on to walk the form.
-    PassThrough,
     /// Swallowed with no effect (a repeat, a bare Backspace / Delete).
     Ignored,
 }
@@ -57,11 +55,13 @@ pub fn evaluate_press(tier: RecorderTier, press: &RecordedPress) -> RecorderOutc
     if press.is_repeat {
         return RecorderOutcome::Ignored;
     }
+    // Tab is recorded like any other key: it is the shipped key of 後一个候選
+    // (`ComposingAction::NextCandidate`), and a field that let it walk the
+    // form instead left 恢復預設設定 — every row at once — as the only way to
+    // put it back (USER 2026-09-19). Escape and a click outside remain the
+    // ways to leave a field.
     if press.modifiers.is_empty() {
         match press.key.as_deref() {
-            // Tab still walks the form; the cost is that Tab cannot be
-            // recorded here — the trade every shortcut field makes.
-            Some("\t") => return RecorderOutcome::PassThrough,
             // A blanked field, nothing recorded (the row's own × clears).
             Some("\u{8}") | Some("\u{7F}") => return RecorderOutcome::Ignored,
             // The way out.
@@ -154,7 +154,7 @@ mod tests {
     }
 
     #[test]
-    fn escape_tab_delete_and_repeats_end_or_swallow_without_recording() {
+    fn escape_delete_and_repeats_end_or_swallow_without_recording() {
         assert_eq!(
             evaluate_press(
                 RecorderTier::Composing,
@@ -164,7 +164,9 @@ mod tests {
         );
         assert_eq!(
             evaluate_press(RecorderTier::Composing, &press("\t", KeyModifiers::NONE)),
-            RecorderOutcome::PassThrough
+            RecorderOutcome::Recorded(
+                ComposingKeyChord::make(Some("\t"), KeyModifiers::NONE).expect("bindable")
+            )
         );
         assert_eq!(
             evaluate_press(RecorderTier::Composing, &press("\u{8}", KeyModifiers::NONE)),

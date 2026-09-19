@@ -359,9 +359,9 @@ final class CrossTierShortcutConflictTests: XCTestCase {
         XCTAssertNil(store.composingKeyBindings.chord(for: .pageForward), "] row not cleared")
     }
 
-    // MARK: - Always-bound rows survive being cleared
+    // MARK: - Commit rows refill after being cleared
 
-    func testClearingAnAlwaysBoundRow_restoresItWithoutResurrectingTheConflict() throws {
+    func testClearingACommitRow_refillsItWithoutResurrectingTheConflict() throws {
         let store = try makeScratchSettingsStore()
         // ⇧Return is `commitLiteral`'s default AND a member of the pool
         // `restoreUnbound` refills from, so this is the case where a naive
@@ -376,11 +376,11 @@ final class CrossTierShortcutConflictTests: XCTestCase {
         ShortcutConflicts.resolveAcrossRegistries(in: store)
 
         let restored = store.composingKeyBindings.chord(for: .commitLiteral)
-        XCTAssertNotNil(restored, "an always-bound row must not be left empty")
+        XCTAssertNotNil(restored, "a commit row is refilled when its default is free")
         XCTAssertNotEqual(restored, chord, "and must not be handed the conflicting chord back")
         XCTAssertNotEqual(
             restored, store.composingKeyBindings.chord(for: .confirmHighlighted),
-            "the two always-bound rows still hold different keys",
+            "the two commit rows still hold different keys",
         )
     }
 }

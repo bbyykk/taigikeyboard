@@ -419,21 +419,16 @@ final class ShortcutKeyRecorderField: NSSearchField, NSSearchFieldDelegate {
         // and over, each time re-running conflict resolution.
         guard !event.isARepeat else { return nil }
 
+        // Tab is recorded, not walked: it is the shipped key of 後一个候選
+        // (`ComposingAction.nextCandidate`), and a field that let it move the
+        // focus instead would leave 恢復預設設定 — which resets every row — as
+        // the only way to put it back (USER 2026-09-19). Escape and a click
+        // outside the field remain the ways to leave one.
         let modifiers = event.modifierFlags.intersection([.command, .control, .option, .shift])
         if modifiers.isEmpty {
-            switch event.specialKey {
-            case .tab, .backTab:
-                // Bubbled up on purpose, so Tab still walks the form. The cost
-                // is that Tab cannot be recorded here — the trade every
-                // shortcut field on the Mac makes, and the reason Tab is not
-                // among the defaults.
-                blur()
-                return event
-            case .delete, .deleteForward, .backspace:
+            if [.delete, .deleteForward, .backspace].contains(event.specialKey) {
                 stringValue = ""
                 return nil
-            default:
-                break
             }
             if event.keyCode == kVK_Escape {
                 // The way out. While a field has focus it swallows every key,
@@ -472,8 +467,9 @@ final class ShortcutKeyRecorderField: NSSearchField, NSSearchFieldDelegate {
         NSSound.beep()
     }
 
-    /// Gives up focus, which is what ends recording — `resignFirstResponder`
-    /// takes the monitor down.
+    /// Gives up focus, which is what ends recording — the field editor
+    /// detaching posts `controlTextDidEndEditing`, which takes the monitor
+    /// down.
     private func blur() {
         window?.makeFirstResponder(nil)
     }
