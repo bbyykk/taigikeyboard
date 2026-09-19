@@ -79,7 +79,6 @@ enum StringKey: String {
     case desktopShortcutRejectedNoKey = "i18n_desktop_shortcutRejectedNoKey"
     case desktopCopyrightLine = "i18n_desktop_copyrightLine"
     case desktopAboutIntroProject = "i18n_desktop_aboutIntroProject"
-    case desktopAboutIntroFree = "i18n_desktop_aboutIntroFree"
     case desktopAboutIntroMaintainer = "i18n_desktop_aboutIntroMaintainer"
     case desktopSponsorLink = "i18n_desktop_sponsorLink"
     case desktopWebsiteLink = "i18n_desktop_websiteLink"

@@ -17,12 +17,9 @@ struct ExternalLinkButton: View {
     /// arrow at the trailing edge in the secondary colour — the shape System Settings
     /// gives a row that opens somewhere else.
     ///
-    /// `.button` is an ordinary bordered button: the same weight as the rows around
-    /// it, for a call to action that should not shout (USER 2026-09-20 「突兀」).
     enum Style {
         case standard
         case row(FontAwesomeGlyph)
-        case button
     }
 
     @Environment(DisplayLanguageStore.self) private var language
@@ -74,9 +71,6 @@ struct ExternalLinkButton: View {
             .accessibilityRemoveTraits(.isButton)
             .accessibilityAddTraits(.isLink)
 
-        case .button:
-            Button(language.string(titleKey), action: open)
-                .buttonStyle(.bordered)
         }
     }
 

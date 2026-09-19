@@ -4,8 +4,9 @@
 // License - https://fontawesome.com/license/free (Icons: CC BY 4.0)
 // Copyright 2024 Fonticons, Inc.
 //
-// Path data from `svgs/solid/globe.svg`, `svgs/brands/github.svg`,
-// `svgs/brands/discord.svg` and `svgs/regular/envelope.svg`, rewritten as absolute commands and scaled to a
+// Path data from `svgs/regular/heart.svg`, `svgs/solid/globe.svg`,
+// `svgs/brands/github.svg`, `svgs/brands/discord.svg` and
+// `svgs/regular/envelope.svg`, rewritten as absolute commands and scaled to a
 // 16-point height so the same string draws on Windows (`font_awesome.rs`).
 // SF Symbols carry no brand marks.
 
@@ -13,6 +14,7 @@ import AppKit
 
 /// A Font Awesome glyph; the view that shows it draws it as a template, in its own colour.
 enum FontAwesomeGlyph {
+    case heart
     case globe
     case github
     case discord
@@ -21,6 +23,7 @@ enum FontAwesomeGlyph {
     /// The glyph's image; decoded once from its SVG, then shared.
     var image: NSImage {
         switch self {
+        case .heart: Self.heartImage
         case .globe: Self.globeImage
         case .github: Self.githubImage
         case .discord: Self.discordImage
@@ -28,6 +31,7 @@ enum FontAwesomeGlyph {
         }
     }
 
+    private static let heartImage = makeImage(width: 16, path: heartPath)
     private static let globeImage = makeImage(width: 16, path: globePath)
     private static let githubImage = makeImage(width: 15.5, path: githubPath)
     private static let discordImage = makeImage(width: 20, path: discordPath)
@@ -44,6 +48,8 @@ enum FontAwesomeGlyph {
         }
         return image
     }
+
+    private static let heartPath = "M 7.05,14.63 L 6.97,14.55 L 1.5,9.47 C 0.54,8.58 0,7.33 0,6.02 L 0,5.92 C 0,3.72 1.56,1.83 3.72,1.42 C 4.95,1.18 6.21,1.46 7.21,2.17 C 7.5,2.37 7.76,2.6 8,2.87 C 8.13,2.72 8.27,2.58 8.42,2.45 C 8.53,2.35 8.65,2.26 8.78,2.17 C 8.78,2.17 8.78,2.17 8.78,2.17 C 9.78,1.46 11.04,1.18 12.27,1.41 C 14.43,1.83 15.99,3.72 16,5.92 L 16,6.02 C 16,7.33 15.45,8.58 14.49,9.47 L 9.02,14.55 L 8.94,14.63 C 8.68,14.86 8.35,15 8,15 C 7.65,15 7.31,14.87 7.05,14.63 M 7.47,4.53 C 7.45,4.52 7.45,4.5 7.44,4.49 L 6.88,3.87 L 6.88,3.86 C 6.88,3.86 6.88,3.86 6.88,3.86 C 6.15,3.05 5.06,2.69 4,2.89 C 2.55,3.17 1.5,4.44 1.5,5.92 L 1.5,6.02 C 1.5,6.91 1.87,7.76 2.52,8.37 L 8,13.45 L 13.47,8.37 C 14.12,7.76 14.5,6.91 14.5,6.02 L 14.5,5.92 C 14.5,4.44 13.45,3.17 11.99,2.89 C 10.93,2.69 9.84,3.06 9.12,3.86 C 9.12,3.86 9.12,3.86 9.11,3.87 C 9.11,3.87 9.11,3.87 9.11,3.87 L 8.55,4.5 C 8.54,4.51 8.53,4.52 8.52,4.53 C 8.38,4.67 8.19,4.75 7.99,4.75 C 7.8,4.75 7.61,4.67 7.47,4.53 L 7.47,4.53"
 
     private static let globePath = "M 11,8 C 11,8.69 10.96,9.36 10.89,10 L 5.1,10 C 5.03,9.36 5,8.69 5,8 C 5,7.3 5.04,6.63 5.1,6 L 10.89,6 C 10.96,6.63 11,7.3 11,7.99 M 11.9,6 L 15.74,6 C 15.91,6.64 16,7.3 16,8 C 16,8.69 15.91,9.35 15.74,10 L 11.89,10 C 11.96,9.35 11.99,8.68 11.99,8 C 11.99,7.31 11.96,6.64 11.89,6 L 11.9,6 M 15.41,5 L 11.77,5 C 11.45,3 10.84,1.33 10.04,0.26 C 12.49,0.9 14.48,2.68 15.41,5 L 15.41,5 M 10.75,5 L 5.24,5 C 5.43,3.86 5.72,2.85 6.08,2.04 C 6.41,1.3 6.77,0.76 7.13,0.43 C 7.48,0.09 7.77,-5.55e-17 8,0 C 8.22,0 8.51,0.1 8.86,0.43 C 9.22,0.76 9.58,1.3 9.91,2.04 C 10.27,2.85 10.56,3.85 10.75,5 L 10.75,5 M 4.22,5 L 0.58,5 C 1.51,2.68 3.5,0.9 5.95,0.26 C 5.15,1.33 4.54,3 4.22,5 L 4.22,5 M 0.25,6 L 4.1,6 C 4.03,6.64 3.99,7.31 3.99,8 C 3.99,8.68 4.03,9.35 4.1,10 L 0.25,10 C 0.08,9.35 0,8.69 0,8 C 0,7.3 0.08,6.64 0.25,6 M 6.08,13.95 C 5.72,13.14 5.43,12.13 5.24,11 L 10.75,11 C 10.56,12.13 10.27,13.14 9.91,13.95 C 9.58,14.69 9.22,15.22 8.86,15.56 C 8.51,15.9 8.22,16 8,16 C 7.77,16 7.48,15.9 7.13,15.56 C 6.77,15.23 6.41,14.69 6.08,13.95 L 6.08,13.95 M 4.22,11 C 4.54,12.99 5.15,14.66 5.95,15.73 C 3.5,15.09 1.51,13.31 0.58,11 L 4.22,11 M 15.41,11 C 14.48,13.31 12.49,15.09 10.04,15.73 C 10.84,14.66 11.45,12.99 11.77,11 L 15.42,11 L 15.41,11"
 

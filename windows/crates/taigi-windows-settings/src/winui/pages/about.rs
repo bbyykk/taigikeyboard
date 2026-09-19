@@ -1,9 +1,8 @@
 //! The 關於 page: what the project is and where to find it. Port of
 //! `AboutPage.swift`.
 //!
-//! What the tray menu's 關於 row opens (USER 2026-09-20): the three
-//! paragraphs the USER wrote and the sponsor button; the four
-//! community links as cards; the attribution line. In
+//! What the tray menu's 關於 row opens (USER 2026-09-20): two lines the
+//! USER wrote; the sponsor and the four community links as cards; the attribution line. In
 //! the same cards as every other pane (USER 2026-09-20 「用頁面式」). No app
 //! icon, no name and no version — the update row on 一般 already says which build
 //! this is.
@@ -19,9 +18,6 @@ use windows_reactor::*;
 const CAPTION_FONT_SIZE: f64 = 12.0;
 /// Between paragraphs of one text (`Metrics.paragraphSpacing`).
 const PARAGRAPH_SPACING: f64 = 10.0;
-/// Over the sponsor button, so it reads as the paragraphs' close rather
-/// than a fourth one (`Metrics.buttonGap`).
-const BUTTON_GAP: f64 = 6.0;
 /// A link card's mark, the size of a sidebar icon (`Metrics.rowGlyphSize`).
 const MARK_SIZE: f64 = 16.0;
 /// Between the last card and the attribution under it (`Metrics.footerGap`).
@@ -36,25 +32,24 @@ pub fn view(
     context: &mut ViewContext<SettingsWindow>,
 ) -> View {
     // Centred, no heading (USER 2026-09-20 「不需要『台語齒盤』標題」
-    // 「文案置中」): the window title already names the page, and the three
-    // paragraphs read as a statement rather than a form.
-    let introduction = cards::frame(
-        StackPanel::new().spacing(PARAGRAPH_SPACING).children((
-            paragraph(strings.resolve(StringKey::DesktopAboutIntroProject)),
-            paragraph(strings.resolve(StringKey::DesktopAboutIntroFree)),
-            paragraph(strings.resolve(StringKey::DesktopAboutIntroMaintainer)),
-            // An ordinary button, the same weight as the cards around it
-            // (`ExternalLinkButton.Style.button`).
-            Button::new()
-                .on_click(context.callback(|()| Message::OpenUrl(SPONSOR_URL.to_owned())))
-                .horizontal_alignment(HorizontalAlignment::Center)
-                .margin(Thickness::new(0.0, BUTTON_GAP, 0.0, 0.0))
-                .content(strings.resolve(StringKey::DesktopSponsorLink)),
-        )),
-    );
+    // 「文案置中」): the window title already names the page, and the two
+    // lines read as a statement rather than a form.
+    let introduction = cards::frame(StackPanel::new().spacing(PARAGRAPH_SPACING).children((
+        paragraph(strings.resolve(StringKey::DesktopAboutIntroProject)),
+        paragraph(strings.resolve(StringKey::DesktopAboutIntroMaintainer)),
+    )));
     View::fragment((
         introduction,
         cards::section_gap(),
+        // Every action a row, the sponsor link first (USER 2026-09-20: no
+        // lone button on the page).
+        link_card(
+            strings,
+            context,
+            FontAwesomeGlyph::Heart,
+            StringKey::DesktopSponsorLink,
+            SPONSOR_URL,
+        ),
         link_card(
             strings,
             context,
