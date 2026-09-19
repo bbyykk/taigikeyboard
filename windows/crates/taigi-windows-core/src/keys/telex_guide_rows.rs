@@ -42,15 +42,18 @@ impl RowSpec {
 
 /// Row order is reading order: the tones by number, then the two consonant
 /// keys, then the hyphen. The digit row went 2026-09-09 (USER) — the
-/// candidate window already draws the key beside each candidate.
+/// candidate window already draws the key beside each candidate. `x` and
+/// `v` each carry a pair split by the coda (`engine/composing/src/telex.rs`):
+/// 1 / 4 and 2 / 8, the open tone on any other syllable, the checked one
+/// after `p t k h`.
 /// CROSS-PLATFORM INVARIANT —
 /// mirrors `TelexGuidePanel.swift` `rows`, row for row.
 const ROWS: [RowSpec; 9] = [
-    RowSpec::new("v", Meaning::Tone("2")),
+    RowSpec::new("x", Meaning::Tone("1 / 4")),
+    RowSpec::new("v", Meaning::Tone("2 / 8")),
     RowSpec::new("y", Meaning::Tone("3")),
     RowSpec::new("d", Meaning::Tone("5")),
     RowSpec::new("w", Meaning::Tone("7")),
-    RowSpec::new("x", Meaning::Tone("8")),
     RowSpec::new("q", Meaning::Tone("9")),
     RowSpec::new(
         "z",
@@ -102,37 +105,41 @@ mod tests {
 
     #[test]
     fn the_table_is_the_mac_panels_row_for_row() {
-        // trace: TelexGuidePanel.swift `rows` — ten rows, keys in reading order.
+        // trace: TelexGuidePanel.swift `rows` — nine rows, keys in reading
+        // order of the tone they write; the paired keys lead.
         let keys: Vec<_> = rows(InputMode::Tl).iter().map(|row| row.key).collect();
-        assert_eq!(keys, ["v", "y", "d", "w", "x", "q", "z", "zh", "f"]);
+        assert_eq!(keys, ["x", "v", "y", "d", "w", "q", "z", "zh", "f"]);
     }
 
     #[test]
     fn meanings_come_from_the_display_language() {
-        // trace: Hanji `desktop.telexGuideTone` = "第 {0} 聲",
-        // `telexGuideHyphen` = "連字號".
+        // trace: Hanji `desktop.telexGuideTone` = "第 {0} 調" (generated.rs),
+        // the pair rows feed "1 / 4" and "2 / 8" as the tone;
+        // `telexGuideHyphen` = "連劃".
         let tl = rows(InputMode::Tl);
-        assert_eq!(tl[0].meaning, "第 2 聲");
-        assert_eq!(tl[5].meaning, "第 9 聲");
-        assert_eq!(tl[8].meaning, "連字號");
+        assert_eq!(tl[0].meaning, "第 1 / 4 調");
+        assert_eq!(tl[1].meaning, "第 2 / 8 調");
+        assert_eq!(tl[5].meaning, "第 9 調");
+        assert_eq!(tl[8].meaning, "連劃");
         let en = telex_guide_rows(
             InputMode::Tl,
             &StringResolver::new(DisplayLanguage::English),
         );
-        assert_eq!(en[0].meaning, "Tone 2");
-        assert_eq!(en[6].meaning, "Initial ts");
+        assert_eq!(en[0].meaning, "Tone 1 / 4");
+        assert_eq!(en[6].meaning, "ts");
     }
 
     #[test]
     fn the_affricate_rows_follow_the_romanization() {
         // trace: `z` spells ts / ch, `zh` spells tsh / chh — the meaning
-        // carries the spelling now that the example column is gone.
+        // carries the spelling now that the example column is gone;
+        // `desktop.telexGuideInitial` = "{0}" in every language.
         let tl = rows(InputMode::Tl);
-        assert_eq!(tl[6].meaning, "聲母 ts");
-        assert_eq!(tl[7].meaning, "聲母 tsh");
+        assert_eq!(tl[6].meaning, "ts");
+        assert_eq!(tl[7].meaning, "tsh");
         let poj = rows(InputMode::Poj);
-        assert_eq!(poj[6].meaning, "聲母 ch");
-        assert_eq!(poj[7].meaning, "聲母 chh");
+        assert_eq!(poj[6].meaning, "ch");
+        assert_eq!(poj[7].meaning, "chh");
         // Every other row reads the same under both.
         for index in [0, 5, 8] {
             assert_eq!(tl[index], poj[index], "row {index}");

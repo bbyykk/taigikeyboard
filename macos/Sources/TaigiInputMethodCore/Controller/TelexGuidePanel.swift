@@ -65,13 +65,15 @@ final class TelexGuidePanel {
     private static let maxWidth: CGFloat = 520
 
     /// Row order is reading order: the tones by number, then the two
-    /// consonant keys, then the hyphen, then the digits.
+    /// consonant keys, then the hyphen. `x` and `v` each carry a pair split
+    /// by the coda (`engine/composing/src/telex.rs`): 1 / 4 and 2 / 8, the
+    /// open tone on any other syllable, the checked one after `p t k h`.
     private static let rows: [TelexGuideRow] = [
-        TelexGuideRow(key: "v", meaning: .tone("2")),
+        TelexGuideRow(key: "x", meaning: .tone("1 / 4")),
+        TelexGuideRow(key: "v", meaning: .tone("2 / 8")),
         TelexGuideRow(key: "y", meaning: .tone("3")),
         TelexGuideRow(key: "d", meaning: .tone("5")),
         TelexGuideRow(key: "w", meaning: .tone("7")),
-        TelexGuideRow(key: "x", meaning: .tone("8")),
         TelexGuideRow(key: "q", meaning: .tone("9")),
         TelexGuideRow(key: "z", meaning: .initial(tl: "ts", poj: "ch")),
         TelexGuideRow(key: "zh", meaning: .initial(tl: "tsh", poj: "chh")),
