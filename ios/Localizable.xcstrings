@@ -4394,7 +4394,7 @@
       }
     },
     "i18n_theme_gradientDirection": {
-      "comment": "Theme editor row label: the gradient direction (eight arrow presets, 45° apart).",
+      "comment": "Theme editor row label: the gradient direction, shown as whole degrees (iOS: set by dragging the preview; Android: eight arrow presets, 45° apart).",
       "extractionState": "manual",
       "localizations": {
         "en": {
@@ -4407,6 +4407,24 @@
           "stringUnit": {
             "state": "translated",
             "value": "方向"
+          }
+        }
+      }
+    },
+    "i18n_theme_gradientDragHint": {
+      "comment": "Theme editor caption under the 方向 row: the gradient direction is set by dragging a finger on the live keyboard preview.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Drag the preview to set the direction"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "プレビューをドラッグして方向を調整"
           }
         }
       }

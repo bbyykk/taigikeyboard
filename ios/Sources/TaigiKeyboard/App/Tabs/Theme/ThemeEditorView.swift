@@ -3,7 +3,8 @@ import SwiftUI
 
 /// The user-theme editor: the full appearance bundle + a live draft preview
 /// pinned at the bottom. Pushed as a child page (uses the parent `NavigationStack`);
-/// reuses `ThemeColorRow` / `ThemeSliderRow` / `ThemeGradientDirectionRow`.
+/// reuses `ThemeColorRow` / `ThemeSliderRow` / `ThemeGradientDirectionRow`. A
+/// gradient's direction is set by dragging on the preview (`GradientDirectionOverlay`).
 ///
 /// Three sections, one per visual surface (USER 2026-09-19): **背景** (type
 /// 純色 / 漸層 / 照片 and its rows — the keyboard and the candidate bar share this
@@ -56,6 +57,7 @@ struct ThemeEditorView: View {
                         ColorPicker(lang.string(.themeGradientEndColor), selection: viewModel.gradientStopBinding(1), supportsOpacity: false)
                         ThemeGradientDirectionRow(
                             label: lang.string(.themeGradientDirection),
+                            hint: lang.string(.themeGradientDragHint),
                             angle: viewModel.gradientAngleBinding,
                         )
                     case .image:
@@ -112,12 +114,18 @@ struct ThemeEditorView: View {
             // keyboard sits on screen). The editor has no inline text input (name is
             // entered in an alert at save time), so the software keyboard never
             // appears to squeeze it. User themes own shadow (slider 0 = flat) →
-            // `appliesThemeShadow: true`.
+            // `appliesThemeShadow: true`. While the background is a gradient the
+            // preview doubles as the direction control: drag on it to set the angle.
             KeyboardPreviewPanel(
                 appearance: viewModel.appearance,
                 appliesThemeShadow: true,
                 colorScheme: colorScheme,
             )
+            .overlay {
+                if viewModel.backgroundKind == .gradient {
+                    GradientDirectionOverlay(angle: viewModel.gradientAngleBinding)
+                }
+            }
         }
         .navigationTitle(viewModel.isEditing ? lang.string(.themeEditorTitleEdit) : lang.string(.themeEditorTitleNew))
         .navigationBarTitleDisplayMode(.inline)
