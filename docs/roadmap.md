@@ -100,8 +100,8 @@ Full design, rounds, the Telex-guide follow-up and dogfood text: [`docs/reports/
 
 #### Follow-up: Telex keys for tone 1 and tone 4 (USER-decided 2026-09-19)
 
-**Status**: round open 2026-09-19 — branch `feat/telex-tone-1-4-pairing`, one PR (engine + both
-guide tables + docs). Dogfood pending: S57 (plus S32 / S34, whose examples were updated).
+**Status**: MERGED 2026-09-19 — #98 `17850f17` (engine + both guide tables + docs). Dogfood
+pending: S57 (plus S32 / S34, whose examples were updated).
 
 A user reported that Telex has no key for tone 1 or tone 4 (2026-09-11). A second user proposed
 pairing the tones by coda: 「第一調 kap 第四調 ē-tàng 用同一个位。第 8 調會當 kap 第二調用同一个位」
