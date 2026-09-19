@@ -21,11 +21,6 @@
       "scope": { "platforms": ["android", "ios"], "surfaces": ["host"] },
       "values": { "hanji": "功能設定", "tailo": "Kong-lîng siat-tīng", "poj": "Kong-lêng siat-tēng", "en": "Feature Settings", "ja": "機能設定" }
     },
-    "faq": {
-      "comment": "Home section header above the FAQ / other list.",
-      "scope": { "platforms": ["android", "ios"], "surfaces": ["host"] },
-      "values": { "hanji": "其他", "tailo": "Kî-thann", "poj": "Kî-thaⁿ", "en": "More", "ja": "その他" }
-    },
     "setupGuide": {
       "comment": "Setup-guide navigation row label + sub-page title.",
       "scope": { "platforms": ["android", "ios"], "surfaces": ["host"] },

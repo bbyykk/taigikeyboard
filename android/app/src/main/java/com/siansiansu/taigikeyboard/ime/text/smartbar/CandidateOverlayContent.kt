@@ -461,7 +461,7 @@ private fun ControlPanel(
             Spacer(Modifier.height(25.dp))
             ControlButton(
                 iconRes = R.drawable.ic_translate,
-                contentDescription = stringRes(StringKey.KEYBOARD_TRANSLATE_TOGGLE),
+                contentDescription = stringRes(StringKey.COMMON_TOGGLE_TRANSLATE_SWAPPED),
                 colors = colors,
                 modifier = Modifier.size(PageButtonSize),
                 iconPadding = 10.dp,

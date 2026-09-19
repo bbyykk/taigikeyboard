@@ -211,11 +211,6 @@
       "scope": { "platforms": ["android", "ios"], "surfaces": ["host"] },
       "values": { "hanji": "套用", "tailo": "Thò-iōng", "poj": "Thò-iōng", "en": "Apply", "ja": "適用" }
     },
-    "cardMenuEdit": {
-      "comment": "Custom-theme card action-menu item: edit this theme.",
-      "scope": { "platforms": ["android", "ios"], "surfaces": ["host"] },
-      "values": { "hanji": "編輯", "tailo": "Pian-tsi̍p", "poj": "Pian-chi̍p", "en": "Edit", "ja": "編集" }
-    },
     "capReachedTitle": {
       "comment": "Title of the alert shown when the custom-theme count cap (5) is reached.",
       "scope": { "platforms": ["android", "ios"], "surfaces": ["host"] },

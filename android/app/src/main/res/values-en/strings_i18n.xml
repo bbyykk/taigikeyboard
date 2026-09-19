@@ -10,6 +10,9 @@
     <string name="i18n_common_pageNext">Next Page</string>
     <string name="i18n_common_info">Info</string>
     <string name="i18n_common_close">Close</string>
+    <string name="i18n_common_other">Other</string>
+    <string name="i18n_common_edit">Edit</string>
+    <string name="i18n_common_toggleTranslateSwapped">Switch Hanji or Romanization</string>
     <string name="i18n_common_back">Back</string>
     <string name="i18n_common_viewWebsite">Official Website</string>
     <string name="i18n_common_exportFailed">Export failed</string>
@@ -126,7 +129,6 @@
     <string name="i18n_home_setupKeyboard">Enable the keyboard to start using it</string>
     <string name="i18n_home_typingGuide">Typing Guide</string>
     <string name="i18n_home_newFeatures">Feature Settings</string>
-    <string name="i18n_home_faq">More</string>
     <string name="i18n_home_setupGuide">How to Enable</string>
     <string name="i18n_home_setupGuideDescription">Your phone requires third-party keyboards to be enabled manually. Follow the steps below to finish setup.</string>
     <string name="i18n_home_setupInfoMessage">\"Allow Full Access\" lets the keyboard share settings and usage data with the app. Taigi Keyboard does not send what you type over the network.</string>
@@ -155,7 +157,6 @@
     <string name="i18n_home_accentDictCredit">Compiled and provided by 實齋</string>
     <string name="i18n_home_devSupplementCredit">Compiled and provided by 建中</string>
     <string name="i18n_keyboard_expandCandidates">Expand or collapse the candidate list</string>
-    <string name="i18n_keyboard_translateToggle">Switch Hanji or romanization</string>
     <string name="i18n_keyboard_morePopupHint">Long-press for more characters</string>
     <string name="i18n_keyboard_toggleToolbar">Expand or collapse the toolbar</string>
     <string name="i18n_keyboard_symbolPanel">Symbol panel</string>
@@ -262,7 +263,6 @@
     <string name="i18n_theme_namePlaceholder">Enter a theme name</string>
     <string name="i18n_theme_editorResetAll">Reset to Defaults</string>
     <string name="i18n_theme_cardMenuApply">Apply</string>
-    <string name="i18n_theme_cardMenuEdit">Edit</string>
     <string name="i18n_theme_capReachedTitle">Theme Limit Reached</string>
     <string name="i18n_theme_capReachedMessage">You can save up to 5 custom themes. Delete one before adding another.</string>
     <string name="i18n_theme_cardMenu">Theme options</string>

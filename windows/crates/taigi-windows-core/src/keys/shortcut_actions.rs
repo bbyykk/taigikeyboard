@@ -158,7 +158,7 @@ impl ShortcutAction {
         match self {
             Self::OpenLastSettingsPane => StringKey::DesktopShortcutOpenSettings,
             Self::ToggleRomanization => StringKey::DesktopShortcutToggleRomanization,
-            Self::ToggleTranslateSwapped => StringKey::DesktopShortcutToggleTranslateSwapped,
+            Self::ToggleTranslateSwapped => StringKey::CommonToggleTranslateSwapped,
             Self::CycleCandidateDisplayMode => StringKey::DesktopShortcutCycleCandidateDisplayMode,
             Self::ShowSymbolPicker => StringKey::DesktopShortcutShowSymbolPicker,
             Self::ShowTelexGuide => StringKey::DesktopShortcutShowTelexGuide,

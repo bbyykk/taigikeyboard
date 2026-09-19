@@ -193,7 +193,7 @@ struct ExpandedCandidateOverlay: View {
                         iconName: "translate",
                         yOffset: 25,
                         isPressed: $isTranslateButtonPressed,
-                        accessibilityLabel: lang.string(.keyboardTranslateToggle),
+                        accessibilityLabel: lang.string(.commonToggleTranslateSwapped),
                         action: { onTranslateToggle() },
                     )
                 }

@@ -58,25 +58,6 @@
         "ja": "出力"
       }
     },
-    "shortcutSectionOther": {
-      "comment": "快捷鍵 pane, third block's header: the switches and the windows a key raises.",
-      "scope": {
-        "platforms": [
-          "macos",
-          "windows"
-        ],
-        "surfaces": [
-          "host"
-        ]
-      },
-      "values": {
-        "hanji": "其他",
-        "tailo": "Kî-thann",
-        "poj": "Kî-thaⁿ",
-        "en": "Other",
-        "ja": "その他"
-      }
-    },
     "shortcutOpenSettings": {
       "comment": "Shortcut-recorder row: the hotkey that opens the settings window on whichever pane it was last left on. Each row is authored whole rather than composed from the setting's own label.",
       "scope": {
@@ -113,25 +94,6 @@
         "poj": "Chhiat-ōaⁿ Tâi-lô / Pe̍h-ōe-jī",
         "en": "Switch Tâi-lô or Pe̍h-ōe-jī",
         "ja": "台羅／白話字を切り替える"
-      }
-    },
-    "shortcutToggleTranslateSwapped": {
-      "comment": "Shortcut-recorder row: the hotkey that flips which script is committed. 切換 rather than 輸出 (USER 2026-09-10) — it is a switch, drawn with the other switches in 其他.",
-      "scope": {
-        "platforms": [
-          "macos",
-          "windows"
-        ],
-        "surfaces": [
-          "host"
-        ]
-      },
-      "values": {
-        "hanji": "切換漢字/羅馬字",
-        "tailo": "Tshiat-uānn hàn-jī / lô-má-jī",
-        "poj": "Chhiat-ōaⁿ hàn-jī / lô-má-jī",
-        "en": "Switch Hanji or Romanization",
-        "ja": "漢字／ローマ字を切り替える"
       }
     },
     "shortcutCycleCandidateDisplayMode": {
@@ -208,25 +170,6 @@
         "poj": "Siu-chèng tng-teh phah ê jī",
         "en": "Fix What You Are Typing",
         "ja": "入力中の文字を修正"
-      }
-    },
-    "telexGuideTitle": {
-      "comment": "Title over the floating Telex guide's key table. The scheme's own name, nothing else (USER 2026-09-09: no surplus wording).",
-      "scope": {
-        "platforms": [
-          "macos",
-          "windows"
-        ],
-        "surfaces": [
-          "host"
-        ]
-      },
-      "values": {
-        "hanji": "Telex",
-        "tailo": "Telex",
-        "poj": "Telex",
-        "en": "Telex",
-        "ja": "Telex"
       }
     },
     "telexGuideTone": {
@@ -308,24 +251,6 @@
         "poj": "Tóng-àn",
         "en": "File",
         "ja": "ファイル"
-      }
-    },
-    "menuEdit": {
-      "comment": "Menu-bar Edit menu title.",
-      "scope": {
-        "platforms": [
-          "macos"
-        ],
-        "surfaces": [
-          "host"
-        ]
-      },
-      "values": {
-        "hanji": "編輯",
-        "tailo": "Pian-tsi̍p",
-        "poj": "Pian-chi̍p",
-        "en": "Edit",
-        "ja": "編集"
       }
     },
     "menuUndo": {

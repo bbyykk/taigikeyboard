@@ -10,6 +10,9 @@
     <string name="i18n_common_pageNext">次のページ</string>
     <string name="i18n_common_info">説明</string>
     <string name="i18n_common_close">閉じる</string>
+    <string name="i18n_common_other">その他</string>
+    <string name="i18n_common_edit">編集</string>
+    <string name="i18n_common_toggleTranslateSwapped">漢字／ローマ字を切り替える</string>
     <string name="i18n_common_back">戻る</string>
     <string name="i18n_common_viewWebsite">公式サイト</string>
     <string name="i18n_common_exportFailed">エクスポートに失敗しました</string>
@@ -126,7 +129,6 @@
     <string name="i18n_home_setupKeyboard">キーボードを有効にして使い始めましょう</string>
     <string name="i18n_home_typingGuide">入力ガイド</string>
     <string name="i18n_home_newFeatures">機能設定</string>
-    <string name="i18n_home_faq">その他</string>
     <string name="i18n_home_setupGuide">有効化の方法</string>
     <string name="i18n_home_setupGuideDescription">スマートフォンの仕様上、サードパーティ製キーボードは手動で有効にする必要があります。下記の手順に従って設定を完了してください。</string>
     <string name="i18n_home_setupInfoMessage">「フルアクセスを許可」すると、キーボードとアプリで設定や利用データを共有できます。台語キーボードは入力内容をネットワークへ送信しません。</string>
@@ -155,7 +157,6 @@
     <string name="i18n_home_accentDictCredit">實齋 整理・提供</string>
     <string name="i18n_home_devSupplementCredit">建中 整理・提供</string>
     <string name="i18n_keyboard_expandCandidates">候補リストを展開または折りたたむ</string>
-    <string name="i18n_keyboard_translateToggle">漢字／ローマ字を切り替える</string>
     <string name="i18n_keyboard_morePopupHint">長押しでさらに文字を入力できます</string>
     <string name="i18n_keyboard_toggleToolbar">ツールバーを展開または折りたたむ</string>
     <string name="i18n_keyboard_symbolPanel">記号パネル</string>
@@ -262,7 +263,6 @@
     <string name="i18n_theme_namePlaceholder">テーマ名を入力</string>
     <string name="i18n_theme_editorResetAll">既定値に戻す</string>
     <string name="i18n_theme_cardMenuApply">適用</string>
-    <string name="i18n_theme_cardMenuEdit">編集</string>
     <string name="i18n_theme_capReachedTitle">テーマ数の上限に達しました</string>
     <string name="i18n_theme_capReachedMessage">カスタムテーマは 5 個まで保存できます。追加する前に 1 個削除してください。</string>
     <string name="i18n_theme_cardMenu">テーマのオプション</string>

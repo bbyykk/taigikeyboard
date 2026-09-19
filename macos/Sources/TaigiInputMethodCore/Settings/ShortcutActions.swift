@@ -190,7 +190,7 @@ enum ShortcutAction: CaseIterable, Sendable {
         switch self {
         case .toggleRomanization: language.string(.desktopShortcutToggleRomanization)
         case .cycleCandidateDisplayMode: language.string(.desktopShortcutCycleCandidateDisplayMode)
-        case .toggleTranslateSwapped: language.string(.desktopShortcutToggleTranslateSwapped)
+        case .toggleTranslateSwapped: language.string(.commonToggleTranslateSwapped)
         case .showSymbolPicker: language.string(.desktopShortcutShowSymbolPicker)
         case .openLastSettingsPane: language.string(.desktopShortcutOpenSettings)
         case .showTelexGuide: language.string(.desktopShortcutShowTelexGuide)

@@ -73,6 +73,24 @@
         }
       }
     },
+    "i18n_common_edit": {
+      "comment": "Generic Edit: custom-theme card action-menu item (mobile), menu-bar Edit menu title (macOS). Merged 2026-09-20 from theme.cardMenuEdit / desktop.menuEdit.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "編集"
+          }
+        }
+      }
+    },
     "i18n_common_error": {
       "comment": "Generic error alert title (iOS backup/restore + import/export failure alerts; the alert body is localized separately). iOS-only: the Android failure surfaces are toasts that already use their own i18n keys.",
       "extractionState": "manual",
@@ -289,6 +307,24 @@
         }
       }
     },
+    "i18n_common_other": {
+      "comment": "Generic Other: home section header above the FAQ / other list (mobile), 快速齒 pane third block's header — the switches and the windows a key raises (desktop). Merged 2026-09-20 from home.faq / desktop.shortcutSectionOther.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Other"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "その他"
+          }
+        }
+      }
+    },
     "i18n_common_pageNext": {
       "comment": "Next page of candidates: mobile candidate-overlay page-down a11y label, desktop shortcut row + user-data list pager. Merged 2026-09-20 from keyboard.pageDown / desktop.actionPageForward.",
       "extractionState": "manual",
@@ -429,6 +465,24 @@
           "stringUnit": {
             "state": "translated",
             "value": "台湾植物名彙"
+          }
+        }
+      }
+    },
+    "i18n_common_toggleTranslateSwapped": {
+      "comment": "Flip which script is committed / shown first: desktop shortcut-recorder row (切換 rather than 輸出, USER 2026-09-10), mobile candidate-overlay display-swap button a11y label. Merged 2026-09-20 from desktop.shortcutToggleTranslateSwapped / keyboard.translateToggle.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Switch Hanji or Romanization"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "漢字／ローマ字を切り替える"
           }
         }
       }
@@ -2251,24 +2305,6 @@
         }
       }
     },
-    "i18n_home_faq": {
-      "comment": "Home section header above the FAQ / other list.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "More"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "その他"
-          }
-        }
-      }
-    },
     "i18n_home_freePromise": {
       "comment": "About-developer page body: the maintainer's promise that the keyboard stays free.",
       "extractionState": "manual",
@@ -2841,24 +2877,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "ツールバーを展開または折りたたむ"
-          }
-        }
-      }
-    },
-    "i18n_keyboard_translateToggle": {
-      "comment": "Candidate-overlay display-swap control-button a11y label (swaps the romanization/Hanji primary line). Android via stringRes; iOS via DisplayLanguageStore in ExpandedCandidateOverlay.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Switch Hanji or romanization"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "漢字／ローマ字を切り替える"
           }
         }
       }
@@ -4011,24 +4029,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "適用"
-          }
-        }
-      }
-    },
-    "i18n_theme_cardMenuEdit": {
-      "comment": "Custom-theme card action-menu item: edit this theme.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Edit"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "編集"
           }
         }
       }

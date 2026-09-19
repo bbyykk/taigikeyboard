@@ -116,7 +116,7 @@ struct HomeTab: View {
                         }
                     }
                 } header: {
-                    Text(lang.string(.homeFaq))
+                    Text(lang.string(.commonOther))
                         .font(AppStyle.sectionHeaderFont)
                 }
             }

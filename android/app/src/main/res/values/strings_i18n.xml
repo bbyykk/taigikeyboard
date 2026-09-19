@@ -10,6 +10,9 @@
     <string name="i18n_common_pageNext">後一頁</string>
     <string name="i18n_common_info">說明</string>
     <string name="i18n_common_close">關閉</string>
+    <string name="i18n_common_other">其他</string>
+    <string name="i18n_common_edit">編輯</string>
+    <string name="i18n_common_toggleTranslateSwapped">切換漢字/羅馬字</string>
     <string name="i18n_common_back">倒轉去</string>
     <string name="i18n_common_viewWebsite">官方網站</string>
     <string name="i18n_common_exportFailed">匯出失敗</string>
@@ -126,7 +129,6 @@
     <string name="i18n_home_setupKeyboard">齒盤愛拍開才會當使用</string>
     <string name="i18n_home_typingGuide">拍字說明</string>
     <string name="i18n_home_newFeatures">功能設定</string>
-    <string name="i18n_home_faq">其他</string>
     <string name="i18n_home_setupGuide">啟用方法</string>
     <string name="i18n_home_setupGuideDescription">手機仔系統規定第三方齒盤愛手動啟用才會當使用，請照下跤 ê 說明完成設定。</string>
     <string name="i18n_home_setupInfoMessage">「允准完整取用」予齒盤會當佮 App 共用設定佮使用資料。台語齒盤袂共你拍 ê 內容送去網路。</string>
@@ -155,7 +157,6 @@
     <string name="i18n_home_accentDictCredit">實齋整理、提供</string>
     <string name="i18n_home_devSupplementCredit">建中整理、提供</string>
     <string name="i18n_keyboard_expandCandidates">展開抑是收合候選詞列</string>
-    <string name="i18n_keyboard_translateToggle">切換漢字/羅馬字</string>
     <string name="i18n_keyboard_morePopupHint">長揤有較濟字</string>
     <string name="i18n_keyboard_toggleToolbar">展開抑是收合工具列</string>
     <string name="i18n_keyboard_symbolPanel">符號面板</string>
@@ -262,7 +263,6 @@
     <string name="i18n_theme_namePlaceholder">輸入主題名稱</string>
     <string name="i18n_theme_editorResetAll">恢復預設設定</string>
     <string name="i18n_theme_cardMenuApply">套用</string>
-    <string name="i18n_theme_cardMenuEdit">編輯</string>
     <string name="i18n_theme_capReachedTitle">已達主題數量上限</string>
     <string name="i18n_theme_capReachedMessage">自訂主題上限是 5 个，請先刪除一个才會使閣新增。</string>
     <string name="i18n_theme_cardMenu">主題選項</string>

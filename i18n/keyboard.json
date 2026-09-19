@@ -6,11 +6,6 @@
       "scope": { "platforms": ["android", "ios"], "surfaces": ["extension"] },
       "values": { "hanji": "展開抑是收合候選詞列", "tailo": "Tián-khui ah-sī siu-ha̍p hāu-suán sû lia̍t", "poj": "Tián-khui ah-sī siu-ha̍p hāu-soán sû lia̍t", "en": "Expand or collapse the candidate list", "ja": "候補リストを展開または折りたたむ" }
     },
-    "translateToggle": {
-      "comment": "Candidate-overlay display-swap control-button a11y label (swaps the romanization/Hanji primary line). Android via stringRes; iOS via DisplayLanguageStore in ExpandedCandidateOverlay.",
-      "scope": { "platforms": ["android", "ios"], "surfaces": ["extension"] },
-      "values": { "hanji": "切換漢字/羅馬字", "tailo": "Tshiat-uānn hàn-jī / lô-má-jī", "poj": "Chhiat-ōaⁿ hàn-jī / lô-má-jī", "en": "Switch Hanji or romanization", "ja": "漢字／ローマ字を切り替える" }
-    },
     "morePopupHint": {
       "comment": "Key-preview popup three-dots-indicator a11y contentDescription (long-press reveals more glyphs). Android extension popup only.",
       "scope": { "platforms": ["android"], "surfaces": ["extension"] },

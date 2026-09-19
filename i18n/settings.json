@@ -137,7 +137,7 @@
       "values": { "hanji": "數字調", "tailo": "Sòo-jī-tiāu", "poj": "Sò͘-jī-tiāu", "en": "Numeric Tones", "ja": "数字で声調" }
     },
     "toneSchemeTelex": {
-      "comment": "toneInputScheme option: the letters v y d w x q type the tone, digits 1-9 pick a candidate. A scheme name, kept as-is in every language.",
+      "comment": "toneInputScheme option: the letters v y d w x q type the tone, digits 1-9 pick a candidate. A scheme name, kept as-is in every language. Also the title over the floating Telex guide's key table — the scheme's own name, nothing else (USER 2026-09-0x; desktop.telexGuideTitle merged 2026-09-20).",
       "scope": { "platforms": ["macos", "windows"], "surfaces": ["host"] },
       "values": { "hanji": "Telex", "tailo": "Telex", "poj": "Telex", "en": "Telex", "ja": "Telex" }
     },

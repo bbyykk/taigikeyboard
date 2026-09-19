@@ -24,6 +24,12 @@ object L10n {
         @Composable get() = stringRes(StringKey.COMMON_INFO)
     val commonClose: String
         @Composable get() = stringRes(StringKey.COMMON_CLOSE)
+    val commonOther: String
+        @Composable get() = stringRes(StringKey.COMMON_OTHER)
+    val commonEdit: String
+        @Composable get() = stringRes(StringKey.COMMON_EDIT)
+    val commonToggleTranslateSwapped: String
+        @Composable get() = stringRes(StringKey.COMMON_TOGGLE_TRANSLATE_SWAPPED)
     val commonBack: String
         @Composable get() = stringRes(StringKey.COMMON_BACK)
     val commonViewWebsite: String
@@ -252,8 +258,6 @@ object L10n {
         @Composable get() = stringRes(StringKey.HOME_TYPING_GUIDE)
     val homeNewFeatures: String
         @Composable get() = stringRes(StringKey.HOME_NEW_FEATURES)
-    val homeFaq: String
-        @Composable get() = stringRes(StringKey.HOME_FAQ)
     val homeSetupGuide: String
         @Composable get() = stringRes(StringKey.HOME_SETUP_GUIDE)
     val homeSetupGuideDescription: String
@@ -310,8 +314,6 @@ object L10n {
         @Composable get() = stringRes(StringKey.HOME_DEV_SUPPLEMENT_CREDIT)
     val keyboardExpandCandidates: String
         @Composable get() = stringRes(StringKey.KEYBOARD_EXPAND_CANDIDATES)
-    val keyboardTranslateToggle: String
-        @Composable get() = stringRes(StringKey.KEYBOARD_TRANSLATE_TOGGLE)
     val keyboardMorePopupHint: String
         @Composable get() = stringRes(StringKey.KEYBOARD_MORE_POPUP_HINT)
     val keyboardToggleToolbar: String
@@ -524,8 +526,6 @@ object L10n {
         @Composable get() = stringRes(StringKey.THEME_EDITOR_RESET_ALL)
     val themeCardMenuApply: String
         @Composable get() = stringRes(StringKey.THEME_CARD_MENU_APPLY)
-    val themeCardMenuEdit: String
-        @Composable get() = stringRes(StringKey.THEME_CARD_MENU_EDIT)
     val themeCapReachedTitle: String
         @Composable get() = stringRes(StringKey.THEME_CAP_REACHED_TITLE)
     val themeCapReachedMessage: String
