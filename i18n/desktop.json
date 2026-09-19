@@ -127,11 +127,11 @@
         ]
       },
       "values": {
-        "hanji": "切換漢字/羅馬字模式",
-        "tailo": "Tshiat-uānn hàn-jī / lô-má-jī bôo-sik",
-        "poj": "Chhiat-ōaⁿ hàn-jī / lô-má-jī bô͘-sek",
-        "en": "Switch Hanji or Romanization Mode",
-        "ja": "漢字／ローマ字モードを切り替える"
+        "hanji": "切換漢字/羅馬字",
+        "tailo": "Tshiat-uānn hàn-jī / lô-má-jī",
+        "poj": "Chhiat-ōaⁿ hàn-jī / lô-má-jī",
+        "en": "Switch Hanji or Romanization",
+        "ja": "漢字／ローマ字を切り替える"
       }
     },
     "shortcutCycleCandidateDisplayMode": {
@@ -208,25 +208,6 @@
         "poj": "Siu-chèng tng-teh phah ê jī",
         "en": "Fix What You Are Typing",
         "ja": "入力中の文字を修正"
-      }
-    },
-    "shortcutCommitAlternateScriptInSlot": {
-      "comment": "Read-only row after the composing commit keys on the 快速齒 pane: Shift on a candidate slot key commits that slot in the other script (what Space does for the highlighted cell) — macOS ⇧QWDFZXVY; / ⇧123456789, Windows Shift+QWDFZXVY; / Shift+123456789, following the tone scheme. Shortened from 揀一格臨時拍羅馬字/漢字 (USER 2026-09-10): the key column already shows the slot keys, so naming them again in the label was the same fact twice. Not recordable (USER 2026-09-10: 快速齒加一個快速齒提示,類似「修正...」那個快速齒一樣,使用者不能修改). Sibling of actionCommitAlternateScript.",
-      "scope": {
-        "platforms": [
-          "macos",
-          "windows"
-        ],
-        "surfaces": [
-          "host"
-        ]
-      },
-      "values": {
-        "hanji": "迒模式輸出",
-        "tailo": "Hānn bôo-sik su-tshut",
-        "poj": "Hāⁿ bô͘-sek su-chhut",
-        "en": "Cross-Mode Output",
-        "ja": "モード横断出力"
       }
     },
     "telexGuideTitle": {
@@ -959,11 +940,11 @@
         ]
       },
       "values": {
-        "hanji": "確定齒",
-        "tailo": "Khak-tīng khí",
-        "poj": "Khak-tēng khí",
-        "en": "Confirm Key",
-        "ja": "確定キー"
+        "hanji": "確定",
+        "tailo": "Khak-tīng",
+        "poj": "Khak-tēng",
+        "en": "Confirm",
+        "ja": "確定"
       }
     },
     "actionCommitLiteral": {
@@ -986,7 +967,7 @@
       }
     },
     "actionCommitAlternateScript": {
-      "comment": "Shortcut row: commit the highlighted candidate in the other script (漢羅).",
+      "comment": "Shortcut row: commit the highlighted candidate in the other script (漢羅). Also the label of the read-only row after it on the 快速齒 pane — Shift on a candidate slot key commits that slot in the other script (macOS ⇧QWDFZXVY; / ⇧123456789, Windows Shift+QWDFZXVY; / Shift+123456789, following the tone scheme; not recordable, USER 2026-09-10). One label for both: the key column already tells Space from the slot chords (USER 2026-09-10), so a second key held the same fact twice (merged 2026-09-20).",
       "scope": {
         "platforms": [
           "macos",
@@ -1057,8 +1038,8 @@
         "hanji": "已經予佔用",
         "tailo": "Í-king hōo tsiàm-iōng",
         "poj": "Í-keng hō͘ chiàm-ēng",
-        "en": "That key is already taken",
-        "ja": "そのキーは使用済みです"
+        "en": "Already taken",
+        "ja": "使用済みです"
       }
     },
     "shortcutRejectedNoKey": {
@@ -1480,8 +1461,8 @@
         "hanji": "安裝失敗",
         "tailo": "An-tsong sit-pāi",
         "poj": "An-chong sit-pāi",
-        "en": "The update could not be installed",
-        "ja": "アップデートをインストールできませんでした"
+        "en": "Install failed",
+        "ja": "インストールに失敗しました"
       }
     },
     "clearLearningRecords": {
@@ -1552,11 +1533,11 @@
         ]
       },
       "values": {
-        "hanji": "台語齒盤猶閣予執行中的程式咧用，檔案無法度換掉。\n\n請先換做別个輸入法，登出 Windows 閣再登入，然後閣執行一擺這个安裝程式。免重新開機。",
-        "tailo": "Tâi-gí khí-puânn iáu-koh hōo tsip-hîng-tiong ê thîng-sik teh iōng, tóng-àn bô-huat-tōo uānn-tiāu.\n\nTshiánn sing uānn-tsò pa̍t ê su-ji̍p-huat, ting-tshut Windows koh-tsài ting-ji̍p, jiân-āu koh tsip-hîng tsi̍t pái tsit ê an-tsong thîng-sik. Bián tîng-sin khui-ki.",
-        "poj": "Tâi-gí khí-pôaⁿ iáu-koh hō͘ chip-hêng-tiong ê thêng-sek teh iōng, tóng-àn bô-hoat-tō͘ ōaⁿ-tiāu.\n\nChhiáⁿ seng ōaⁿ-chò pa̍t ê su-ji̍p-hoat, teng-chhut Windows koh-chài teng-ji̍p, jiân-āu koh chip-hêng chi̍t pái chit ê an-chong thêng-sek. Bián têng-sin khui-ki.",
-        "en": "TaigiKeyboard is still in use by a running application, so its files cannot be replaced.\n\nSwitch to another input method, sign out of Windows, sign in again, and run this installer once more. No restart is needed.",
-        "ja": "TaigiKeyboard は実行中のアプリケーションに使用されているため、ファイルを置き換えられません。\n\n別の入力方式に切り替えてから Windows からサインアウトし、再度サインインしてこのインストーラーを実行してください。再起動は不要です。"
+        "hanji": "台語齒盤猶咧使用中，檔案換袂掉。請先換做別个輸入法，登出 Windows 閣登入，才閣執行安裝程式。免重新開機。",
+        "tailo": "Tâi-gí khí-puânn iáu teh sú-iōng-tiong, tóng-àn uānn bē tiāu. Tshiánn sing uānn-tsò pa̍t ê su-ji̍p-huat, ting-tshut Windows koh ting-ji̍p, tsiah koh tsip-hîng an-tsong thîng-sik. Bián tîng-sin khui-ki.",
+        "poj": "Tâi-gí khí-pôaⁿ iáu teh sú-iōng-tiong, tóng-àn ōaⁿ bē tiāu. Chhiáⁿ seng ōaⁿ-chò pa̍t ê su-ji̍p-hoat, teng-chhut Windows koh teng-ji̍p, chiah koh chip-hêng an-chong thêng-sek. Bián têng-sin khui-ki.",
+        "en": "TaigiKeyboard is still in use, so its files cannot be replaced. Switch to another input method, sign out of Windows and back in, then run this installer again. No restart is needed.",
+        "ja": "TaigiKeyboard は使用中のため、ファイルを置き換えられません。別の入力方式に切り替え、Windows からサインアウトして再度サインインしてから、このインストーラーをもう一度実行してください。再起動は不要です。"
       }
     },
     "installerStepFailed": {
@@ -1573,11 +1554,11 @@
         "step": "string"
       },
       "values": {
-        "hanji": "安裝程式無法度完成這个步驟：{step}\n\n若有舊版，已經復原矣。詳細請看安裝紀錄。",
-        "tailo": "An-tsong thîng-sik bô-huat-tōo uân-sîng tsit ê pōo-tsàu: {step}\n\nNā ū kū-pán, í-king ho̍k-guân--ah. Siông-sè tshiánn khuànn an-tsong kì-lo̍k.",
-        "poj": "An-chong thêng-sek bô-hoat-tō͘ oân-sêng chit ê pō͘-chàu: {step}\n\nNā ū kū-pán, í-keng ho̍k-goân--ah. Siông-sè chhiáⁿ khòaⁿ an-chong kì-lo̍k.",
-        "en": "Setup could not complete this step: {step}\n\nThe previous version, if any, was put back. Details are in the setup log.",
-        "ja": "次の手順を完了できませんでした: {step}\n\n以前のバージョンがあれば元に戻しました。詳細はセットアップのログを参照してください。"
+        "hanji": "安裝步驟失敗：{step}\n若有舊版，已經復原。詳細請看安裝紀錄。",
+        "tailo": "An-tsong pōo-tsàu sit-pāi: {step}\nNā ū kū-pán, í-king ho̍k-guân. Siông-sè tshiánn khuànn an-tsong kì-lo̍k.",
+        "poj": "An-chong pō͘-chàu sit-pāi: {step}\nNā ū kū-pán, í-keng ho̍k-goân. Siông-sè chhiáⁿ khòaⁿ an-chong kì-lo̍k.",
+        "en": "Setup failed at: {step}\nThe previous version, if any, was put back. Details are in the setup log.",
+        "ja": "セットアップに失敗した手順: {step}\n以前のバージョンがあれば元に戻しました。詳細はセットアップのログを参照してください。"
       }
     },
     "installerSignOutNote": {
@@ -1609,11 +1590,11 @@
         ]
       },
       "values": {
-        "hanji": "無法度設定自動檢查更新。請佇設定內底檢查更新。",
-        "tailo": "Bô-huat-tōo siat-tīng tsū-tōng kiám-tsa king-sin. Tshiánn tī siat-tīng lāi-té kiám-tsa king-sin.",
-        "poj": "Bô-hoat-tō͘ siat-tēng chū-tōng kiám-cha keng-sin. Chhiáⁿ tī siat-tēng lāi-té kiám-cha keng-sin.",
-        "en": "Automatic update checks could not be set up. You can check for updates in the settings window.",
-        "ja": "更新の自動確認を設定できませんでした。設定ウィンドウから更新を確認できます。"
+        "hanji": "自動檢查更新設定袂起來，請佇設定內底手動檢查。",
+        "tailo": "Tsū-tōng kiám-tsa king-sin siat bē khí-lâi, tshiánn tī siat-tīng lāi-té tshiú-tōng kiám-tsa.",
+        "poj": "Chū-tōng kiám-cha keng-sin siat bē khí-lâi, chhiáⁿ tī siat-tēng lāi-té chhiú-tōng kiám-cha.",
+        "en": "Automatic update checks could not be set up. Check for updates in Settings instead.",
+        "ja": "更新の自動確認を設定できませんでした。設定から手動で更新を確認してください。"
       }
     },
     "customFontAdd": {
@@ -1631,8 +1612,8 @@
         "hanji": "加入字型",
         "tailo": "Ka-ji̍p jī-hîng",
         "poj": "Ka-ji̍p jī-hêng",
-        "en": "Add a Typeface…",
-        "ja": "フォントを追加…"
+        "en": "Add a Typeface",
+        "ja": "フォントを追加"
       }
     },
     "customFontMissing": {

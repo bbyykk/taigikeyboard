@@ -281,7 +281,7 @@ final class ComposingKeyBindingsTests: XCTestCase {
     }
 
     /// The reported failure (USER 2026-09-19): Enter recorded on 迒模式輸出 was
-    /// handed straight back to 確定齒. The emptied commit row takes the pair's
+    /// handed straight back to 確定. The emptied commit row takes the pair's
     /// OTHER default if that one is free, and stays empty when it is not.
     func testARowRecordedOntoACommitDefault_keepsIt() throws {
         // trace: alternate=Return (recorded) > confirm=Return (default) →

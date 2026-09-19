@@ -85,7 +85,7 @@ struct ShortcutSettingsView: View {
                 // the 漢羅 commit aimed at that slot, and the slot keys follow
                 // the tone scheme — so the row follows it too, and there is
                 // nothing to record. After the commit rows, because it is one.
-                LabeledContent(language.string(.desktopShortcutCommitAlternateScriptInSlot)) {
+                LabeledContent(language.string(.desktopActionCommitAlternateScript)) {
                     Text(Self.shiftedSlotKeysLabel(bindings.slotKeySet))
                         .foregroundStyle(.secondary)
                 }

@@ -72,7 +72,7 @@ pub fn view(
         // tone scheme — so the row follows it too, and there is nothing to
         // record. After the commit rows, because it is one.
         cards::row(
-            strings.resolve(StringKey::DesktopShortcutCommitAlternateScriptInSlot),
+            strings.resolve(StringKey::DesktopActionCommitAlternateScript),
             TextBlock::new()
                 .text(shifted_slot_keys_label(bindings.slot_key_set()))
                 .opacity(0.65)
