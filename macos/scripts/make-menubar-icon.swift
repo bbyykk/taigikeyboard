@@ -7,11 +7,13 @@
 // so generating it during a bundle would let the build machine's font version
 // and rasteriser decide what ships.
 //
-// The shape follows Apple's own CJK input methods, measured from
-// `/System/Library/Input Methods/TCIM.app/Contents/PlugIns/TCIM_Extension.appex`:
-// a two-page TIFF (16×16 at 72dpi, 32×32 at 144dpi) whose alpha is a NEGATIVE —
-// an opaque rounded square with the glyph knocked out, so that the template
-// rendering Info.plist asks for shows the menu bar through the glyph.
+// The shape follows what Apple's own input sources show in the Input menu on
+// macOS 26+: a 22×16pt keycap (measured from the 注 / A / あ rows of the menu
+// at 1×; the 16×16 TIFFs inside TCIM.app are no longer what the menu draws),
+// corner radius 5.5pt, glyph about 10pt tall centred in the cap. A two-page TIFF
+// (22×16 at 72dpi, 44×32 at 144dpi) whose alpha is a NEGATIVE — an opaque
+// rounded rectangle with the glyph knocked out, so that the template rendering
+// Info.plist asks for shows the menu bar through the glyph.
 
 import AppKit
 import CoreText
@@ -21,11 +23,12 @@ import CoreText
 // PostScript name so the same source cannot render differently on two machines.
 let glyph = "台"
 let fontPostScriptName = "PingFangTC-Semibold"
-// Fraction of the side left clear on each edge of the glyph, and the corner
-// radius as a fraction of the side (3px on Apple's 16px page).
-let glyphInsetRatio: CGFloat = 0.13
-let cornerRadiusRatio: CGFloat = 3.0 / 16.0
-let sidePoints = 16
+// Fraction of the height left clear above and below the glyph (Apple's glyphs
+// run about 10pt on the 16pt cap), and the corner radius in points.
+let glyphInsetRatio: CGFloat = 0.19
+let cornerRadiusPoints: CGFloat = 5.5
+let widthPoints = 22
+let heightPoints = 16
 let scales = [1, 2]
 
 let outputURL = URL(fileURLWithPath: #filePath)
@@ -63,39 +66,42 @@ func glyphOutline() -> CGPath {
 }
 
 func makePage(scale: Int, outline: CGPath) -> NSBitmapImageRep {
-    let pixels = sidePoints * scale
+    let pixelsWide = widthPoints * scale
+    let pixelsHigh = heightPoints * scale
     guard let page = NSBitmapImageRep(
-        bitmapDataPlanes: nil, pixelsWide: pixels, pixelsHigh: pixels,
+        bitmapDataPlanes: nil, pixelsWide: pixelsWide, pixelsHigh: pixelsHigh,
         bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true, isPlanar: false,
         colorSpaceName: .calibratedRGB, bytesPerRow: 0, bitsPerPixel: 0,
     ) else {
-        fail("could not allocate a \(pixels)×\(pixels) bitmap")
+        fail("could not allocate a \(pixelsWide)×\(pixelsHigh) bitmap")
     }
     // Point size below pixel size is what makes this the @2x page: the TIFF
     // records the ratio as its resolution, and AppKit reads it back as a scale.
-    page.size = NSSize(width: sidePoints, height: sidePoints)
+    page.size = NSSize(width: widthPoints, height: heightPoints)
     guard let context = NSGraphicsContext(bitmapImageRep: page)?.cgContext else {
-        fail("could not draw into the \(pixels)×\(pixels) bitmap")
+        fail("could not draw into the \(pixelsWide)×\(pixelsHigh) bitmap")
     }
 
     // Drawing is in points; the context already carries the scale.
-    let side = CGFloat(sidePoints)
+    let width = CGFloat(widthPoints)
+    let height = CGFloat(heightPoints)
     context.setFillColor(NSColor.black.cgColor)
     context.addPath(CGPath(
-        roundedRect: CGRect(x: 0, y: 0, width: side, height: side),
-        cornerWidth: side * cornerRadiusRatio, cornerHeight: side * cornerRadiusRatio,
+        roundedRect: CGRect(x: 0, y: 0, width: width, height: height),
+        cornerWidth: cornerRadiusPoints, cornerHeight: cornerRadiusPoints,
         transform: nil,
     ))
     context.fillPath()
 
-    // Move the ink box's origin to zero, scale it to the inset square, then
-    // centre it — as a CTM change, so the outline itself is scale-independent.
+    // Move the ink box's origin to zero, scale it to the inset square (the cap
+    // is wider than tall, so the height sets the square), then centre it — as
+    // a CTM change, so the outline itself is scale-independent.
     let ink = outline.boundingBoxOfPath
-    let inner = side * (1 - 2 * glyphInsetRatio)
+    let inner = height * (1 - 2 * glyphInsetRatio)
     let glyphScale = min(inner / ink.width, inner / ink.height)
     context.concatenate(CGAffineTransform(
-        translationX: (side - ink.width * glyphScale) / 2,
-        y: (side - ink.height * glyphScale) / 2,
+        translationX: (width - ink.width * glyphScale) / 2,
+        y: (height - ink.height * glyphScale) / 2,
     ).scaledBy(x: glyphScale, y: glyphScale)
         .translatedBy(x: -ink.minX, y: -ink.minY))
     context.setBlendMode(.destinationOut)
@@ -127,12 +133,13 @@ guard written.representations.count == scales.count else {
 }
 
 for (scale, page) in zip(scales, written.representations) {
-    let pixels = sidePoints * scale
-    guard page.pixelsWide == pixels, page.pixelsHigh == pixels,
-          page.size == NSSize(width: sidePoints, height: sidePoints)
+    let pixelsWide = widthPoints * scale
+    let pixelsHigh = heightPoints * scale
+    guard page.pixelsWide == pixelsWide, page.pixelsHigh == pixelsHigh,
+          page.size == NSSize(width: widthPoints, height: heightPoints)
     else {
-        fail("page \(scale)× is \(page.pixelsWide)×\(page.pixelsHigh) at \(page.size), expected \(pixels)×\(pixels) at \(sidePoints)pt")
+        fail("page \(scale)× is \(page.pixelsWide)×\(page.pixelsHigh) at \(page.size), expected \(pixelsWide)×\(pixelsHigh) at \(widthPoints)×\(heightPoints)pt")
     }
 }
 
-print("✓ \(outputURL.path) — \(scales.map { "\(sidePoints * $0)px" }.joined(separator: " + ")), '\(glyph)' in \(fontPostScriptName)")
+print("✓ \(outputURL.path) — \(scales.map { "\(widthPoints * $0)×\(heightPoints * $0)px" }.joined(separator: " + ")), '\(glyph)' in \(fontPostScriptName)")
