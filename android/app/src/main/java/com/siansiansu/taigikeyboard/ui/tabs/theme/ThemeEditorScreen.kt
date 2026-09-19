@@ -1,6 +1,13 @@
 package com.siansiansu.taigikeyboard.ui.tabs.theme
 
+import android.graphics.Bitmap
+import android.net.Uri
+import android.view.HapticFeedbackConstants
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -11,10 +18,13 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -37,6 +47,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -46,8 +57,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
@@ -59,11 +75,13 @@ import com.siansiansu.taigikeyboard.i18n.LocalStringResolver
 import com.siansiansu.taigikeyboard.i18n.generated.L10n
 import com.siansiansu.taigikeyboard.i18n.generated.StringKey
 import com.siansiansu.taigikeyboard.i18n.stringRes
+import com.siansiansu.taigikeyboard.ime.core.CompositionRoot
 import com.siansiansu.taigikeyboard.ime.core.KeyboardColorSettings
 import com.siansiansu.taigikeyboard.ime.core.PrefHelper
 import com.siansiansu.taigikeyboard.ime.core.ThemeAppearance
 import com.siansiansu.taigikeyboard.ime.core.ThemeBackground
 import com.siansiansu.taigikeyboard.ime.core.ThemeGradient
+import com.siansiansu.taigikeyboard.ime.core.ThemeImageBackground
 import com.siansiansu.taigikeyboard.ime.core.UserTheme
 import com.siansiansu.taigikeyboard.ime.core.UserThemeSeed
 import com.siansiansu.taigikeyboard.ui.components.ActionRow
@@ -74,7 +92,9 @@ import com.siansiansu.taigikeyboard.ui.components.SettingsDivider
 import com.siansiansu.taigikeyboard.ui.components.SliderRow
 import com.siansiansu.taigikeyboard.ui.tabs.layout.ColorPickerDialog
 import com.siansiansu.taigikeyboard.ui.tabs.layout.KeyboardPreviewPanel
+import com.siansiansu.taigikeyboard.ui.theme.AppStyle
 import com.siansiansu.taigikeyboard.ui.theme.SectionHeader
+import kotlinx.coroutines.launch
 import org.json.JSONObject
 
 // User-theme editor: edits a single draft ThemeAppearance with a live keyboard
@@ -102,6 +122,7 @@ private const val SHADOW_STEP = 1f
 private val DIRECTION_PRESETS = listOf(0f, 45f, 90f, 135f, 180f, 225f, 270f, 315f)
 private val DIRECTION_BUTTON_SIZE = 32.dp
 private val DIRECTION_ARROW_SIZE = 14.dp
+private val PHOTO_THUMBNAIL_SIZE = 44.dp
 
 // Saver so the draft survives Activity recreation (rotation / process death).
 private val appearanceSaver: Saver<ThemeAppearance, String> =
@@ -139,6 +160,24 @@ fun ThemeEditorScreen(
     // Seeded drafts always carry a background; the seed is the last-resort read.
     val background = draft.colors.background ?: UserThemeSeed.BACKGROUND
     val setBackground: (ThemeBackground) -> Unit = { next -> updateColors { it.copy(background = next) } }
+    // The 背景 segmented choice. Normally `background.kind`; it runs ahead of the background
+    // while 照片 is chosen but no photo has been picked yet, so the picker row shows without
+    // the surface changing (the draft keeps its solid / gradient until a photo lands).
+    // Mirrors iOS ThemeEditorViewModel.backgroundKind.
+    var selectedKind by rememberSaveable { mutableStateOf(background.kind) }
+
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val themeImageCache = remember(context) { CompositionRoot.shared(context).themeImages }
+    val photoPicker =
+        rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri: Uri? ->
+            uri ?: return@rememberLauncherForActivityResult
+            scope.launch {
+                val file = themeImageCache.store.save(context.contentResolver, uri) ?: return@launch
+                val dim = background.asImage?.dim ?: ThemeImageBackground.DEFAULT_DIM
+                setBackground(ThemeBackground.Image(ThemeImageBackground(file, dim)))
+            }
+        }
 
     // Resolver captured for the name-dialog callback (runs outside composition), so the
     // blank-name fallback resolves under the live display language at save time.
@@ -204,23 +243,45 @@ fun ThemeEditorScreen(
                 SettingsCard {
                     Column(modifier = Modifier.padding(24.dp)) {
                         BackgroundKindRow(
-                            kind = background.kind,
+                            kind = selectedKind,
                             onKindChange = { kind ->
                                 // Switching keeps the current hue: solid -> gradient runs the solid
-                                // color into a lighter tint of it; gradient -> solid keeps the first stop.
-                                if (kind != background.kind) {
-                                    setBackground(
-                                        when (background) {
-                                            is ThemeBackground.Solid -> ThemeBackground.Gradient(ThemeGradient.seeded(background.color))
-                                            is ThemeBackground.Gradient -> ThemeBackground.Solid(background.gradient.stops[0])
-                                        },
-                                    )
+                                // color into a lighter tint of it; gradient -> solid keeps the first
+                                // stop; leaving a photo lands on the seed colour. Choosing 照片
+                                // changes nothing until a photo is picked.
+                                selectedKind = kind
+                                if (kind == background.kind) return@BackgroundKindRow
+                                val solidColor = (background as? ThemeBackground.Solid)?.color ?: background.asGradient?.stops?.get(0) ?: UserThemeSeed.SOLID_COLOR
+                                when (kind) {
+                                    ThemeBackground.Kind.SOLID -> setBackground(ThemeBackground.Solid(solidColor))
+                                    ThemeBackground.Kind.GRADIENT -> setBackground(ThemeBackground.Gradient(ThemeGradient.seeded(solidColor)))
+                                    ThemeBackground.Kind.IMAGE -> Unit
                                 }
                             },
                         )
                         SettingsDivider(Modifier.padding(vertical = 8.dp))
-                        when (background) {
-                            is ThemeBackground.Solid ->
+                        when {
+                            selectedKind == ThemeBackground.Kind.IMAGE -> {
+                                val photo = background.asImage
+                                PhotoRow(
+                                    label = if (photo == null) L10n.themePhotoPick else L10n.themePhotoChange,
+                                    bitmap = photo?.let { themeImageCache.bitmap(it.file) },
+                                    onClick = { photoPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) },
+                                )
+                                if (photo != null) {
+                                    SettingsDivider(Modifier.padding(vertical = 8.dp))
+                                    SliderRow(
+                                        label = L10n.themePhotoDim,
+                                        value = photo.dim,
+                                        valueFrom = ThemeImageBackground.DIM_MIN,
+                                        valueTo = ThemeImageBackground.DIM_MAX,
+                                        stepSize = ThemeImageBackground.DIM_STEP,
+                                        defaultValue = ThemeImageBackground.DEFAULT_DIM,
+                                        onValueChange = { setBackground(ThemeBackground.Image(photo.copy(dim = it))) },
+                                    )
+                                }
+                            }
+                            background is ThemeBackground.Solid ->
                                 RoleColorRow(
                                     labelKey = StringKey.THEME_COLOR_KEYBOARD_BACKGROUND,
                                     currentColor = background.color,
@@ -228,7 +289,7 @@ fun ThemeEditorScreen(
                                     onColorChange = { setBackground(ThemeBackground.Solid(it)) },
                                     onPickerOpen = { colorPickerTarget = it },
                                 )
-                            is ThemeBackground.Gradient -> {
+                            background is ThemeBackground.Gradient -> {
                                 val gradient = background.gradient
                                 // The editor authors two-stop gradients; the two stops ARE the
                                 // gradient, not overrides of a seed -> no reset icon.
@@ -373,7 +434,10 @@ fun ThemeEditorScreen(
                         label = L10n.themeEditorResetAll,
                         // Draft-only: resets the appearance to the seed, keeps the name, persists
                         // nothing and never touches the applied theme until Save.
-                        onClick = { draft = ThemeAppearance.USER_THEME_SEED },
+                        onClick = {
+                            draft = ThemeAppearance.USER_THEME_SEED
+                            selectedKind = UserThemeSeed.BACKGROUND.kind
+                        },
                         textColor = MaterialTheme.colorScheme.error,
                     )
                 }
@@ -470,11 +534,71 @@ private fun BackgroundKindRow(
                 when (it) {
                     ThemeBackground.Kind.SOLID -> L10n.themeBackgroundTypeSolid
                     ThemeBackground.Kind.GRADIENT -> L10n.themeBackgroundTypeGradient
+                    ThemeBackground.Kind.IMAGE -> L10n.themeBackgroundTypePhoto
                 }
             },
         selectedIndex = kinds.indexOf(kind),
         onSelect = { onKindChange(kinds[it]) },
     )
+}
+
+// The photo picker row: a thumbnail of the current theme photo (or a placeholder while none
+// is picked) beside the 選擇照片 / 更換照片 label; tapping the row opens the system photo
+// picker (no storage permission needed). Mirrors iOS ThemePhotoRow.
+@Composable
+private fun PhotoRow(
+    label: String,
+    bitmap: Bitmap?,
+    onClick: () -> Unit,
+) {
+    val view = LocalView.current
+    // Row-sized thumbnail scaled once per photo (the cached photo is 1280 px).
+    val thumbnailPx = with(LocalDensity.current) { PHOTO_THUMBNAIL_SIZE.roundToPx() * 2 }
+    val thumbnail =
+        remember(bitmap, thumbnailPx) {
+            bitmap?.let { Bitmap.createScaledBitmap(it, thumbnailPx, thumbnailPx * it.height / it.width, true).asImageBitmap() }
+        }
+    Row(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .heightIn(min = 48.dp)
+                .clickable {
+                    view.performHapticFeedback(HapticFeedbackConstants.CONTEXT_CLICK)
+                    onClick()
+                },
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            modifier =
+                Modifier
+                    .size(PHOTO_THUMBNAIL_SIZE)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(MaterialTheme.colorScheme.surfaceContainerHighest),
+        ) {
+            if (thumbnail != null) {
+                Image(
+                    bitmap = thumbnail,
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
+        }
+        Spacer(Modifier.width(12.dp))
+        Text(
+            text = label,
+            modifier = Modifier.weight(1f),
+            color = MaterialTheme.colorScheme.onSurface,
+            style = MaterialTheme.typography.bodyLarge,
+        )
+        Icon(
+            painter = painterResource(R.drawable.ic_photo),
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.size(AppStyle.selectionIconSize),
+        )
+    }
 }
 
 // The eight direction presets as arrow chips, ↑ first and clockwise; the selected preset is

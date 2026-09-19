@@ -72,14 +72,73 @@ data class ThemeGradient(
     }
 }
 
+/** A rectangle in surface pixels (top-left origin). */
+data class SurfaceRect(val left: Float, val top: Float, val width: Float, val height: Float)
+
+/**
+ * A photo as the keyboard surface: [file] is the JPEG's name inside the app-private
+ * `ThemeImageStore` directory (written by the settings app, read by the IME), [dim] the
+ * opacity of the tone overlay laid over the desaturated photo so keys stay readable
+ * (USER 2026-09-19 「圖片彩度不能太搶眼」). The overlay is white when the key text is dark
+ * and black otherwise.
+ */
+// CROSS-PLATFORM INVARIANT — mirrors ios/Sources/TaigiKeyboard/Settings/KeyboardColorSettings.swift ThemeImageBackground.
+// Drift causes silent divergence.
+data class ThemeImageBackground(
+    val file: String,
+    /** Opacity of the tone overlay, within [DIM_MIN]..[DIM_MAX] (the editor slider range). */
+    val dim: Float = DEFAULT_DIM,
+) {
+    init {
+        require(file.isNotEmpty()) { "a photo background needs a file name" }
+        require(dim in DIM_MIN..DIM_MAX) { "dim $dim outside $DIM_MIN..$DIM_MAX" }
+    }
+
+    companion object {
+        /** Saturation multiplier applied to every photo (1 = untouched). */
+        const val SATURATION = 0.7f
+        const val DIM_MIN = 0f
+        const val DIM_MAX = 0.8f
+        const val DIM_STEP = 0.05f
+        const val DEFAULT_DIM = 0.35f
+
+        /**
+         * The rectangle that scales an `imageWidth`×`imageHeight` photo to cover [bounds]
+         * (aspect fill, centred) — the photo's drawn frame over the whole keyboard, from
+         * which a panel shows its slice.
+         */
+        fun coverRect(imageWidth: Float, imageHeight: Float, bounds: SurfaceRect): SurfaceRect {
+            if (imageWidth <= 0f || imageHeight <= 0f) return bounds
+            val scale = max(bounds.width / imageWidth, bounds.height / imageHeight)
+            val width = imageWidth * scale
+            val height = imageHeight * scale
+            return SurfaceRect(
+                left = bounds.left + (bounds.width - width) / 2,
+                top = bounds.top + (bounds.height - height) / 2,
+                width = width,
+                height = height,
+            )
+        }
+
+        /** Decodes `{ "file": …, "dim"?: n }`; null when the file name is empty. */
+        fun fromJson(obj: JSONObject): ThemeImageBackground? {
+            val file = obj.optString("file")
+            if (file.isEmpty()) return null
+            return ThemeImageBackground(file, obj.optDouble("dim", DEFAULT_DIM.toDouble()).toFloat().coerceIn(DIM_MIN, DIM_MAX))
+        }
+    }
+}
+
 /**
  * What paints the keyboard surface — one field, mutually exclusive cases. The
  * candidate bar is the same surface: a solid background colours both, a gradient
- * paints once behind both (the bar goes transparent). A null
+ * or photo paints once behind both (the bar goes transparent). A null
  * [KeyboardColorSettings.background] means "adaptive" (`?keyboard_bgColor`) and
- * is reserved for the 經典 預設 head.
+ * is reserved for the 經典 預設 head. Rendering lives in `Modifier.themeBackground`
+ * (Compose) and `KeyboardThemeSurfaceController` (View).
  *
- * JSON: `{"type":"solid","color":argb}` / `{"type":"gradient","stops":[…],"angle":180}`.
+ * JSON: `{"type":"solid","color":argb}` / `{"type":"gradient","stops":[…],"angle":180}` /
+ * `{"type":"image","file":"<uuid>.jpg","dim":0.35}`.
  */
 // CROSS-PLATFORM INVARIANT — mirrors ios/Sources/TaigiKeyboard/Settings/KeyboardColorSettings.swift ThemeBackground
 // (same `type` discriminator and field names; iOS stores the colour as an RGBA object). Drift causes silent divergence.
@@ -88,10 +147,13 @@ sealed class ThemeBackground {
 
     data class Gradient(val gradient: ThemeGradient) : ThemeBackground()
 
-    /** The JSON discriminator, also the editor's 純色 / 漸層 segmented choice. */
+    data class Image(val image: ThemeImageBackground) : ThemeBackground()
+
+    /** The JSON discriminator, also the editor's 純色 / 漸層 / 照片 segmented choice. */
     enum class Kind(val jsonValue: String) {
         SOLID("solid"),
         GRADIENT("gradient"),
+        IMAGE("image"),
     }
 
     val kind: Kind
@@ -99,29 +161,46 @@ sealed class ThemeBackground {
             when (this) {
                 is Solid -> Kind.SOLID
                 is Gradient -> Kind.GRADIENT
+                is Image -> Kind.IMAGE
             }
 
     val asGradient: ThemeGradient?
         get() = (this as? Gradient)?.gradient
+
+    val asImage: ThemeImageBackground?
+        get() = (this as? Image)?.image
 
     fun toJson(): JSONObject =
         JSONObject().put("type", kind.jsonValue).apply {
             when (this@ThemeBackground) {
                 is Solid -> put("color", color)
                 is Gradient -> put("stops", JSONArray(gradient.stops)).put("angle", gradient.angle.toDouble())
+                is Image -> put("file", image.file).put("dim", image.dim.toDouble())
             }
         }
 
     companion object {
-        /** Decodes one background; null for an unknown `type` (a newer build) or a non-renderable gradient. */
+        /** Decodes one background; null for an unknown `type` (a newer build), a non-renderable gradient or an empty photo file. */
         fun fromJson(obj: JSONObject): ThemeBackground? =
             when (obj.optString("type")) {
                 Kind.SOLID.jsonValue -> obj.optIntOrNull("color")?.let(::Solid)
                 Kind.GRADIENT.jsonValue -> ThemeGradient.fromJson(obj)?.let(::Gradient)
+                Kind.IMAGE.jsonValue -> ThemeImageBackground.fromJson(obj)?.let(::Image)
                 else -> null
             }
     }
 }
+
+/**
+ * A custom keyboard surface together with the tone its photo overlay takes — resolved once
+ * from [KeyboardColorSettings.surface] so no render site can pair a background with the
+ * wrong tone.
+ */
+data class ThemeSurface(
+    val background: ThemeBackground,
+    /** Whether a photo's dim overlay is white (dark key text) rather than black. */
+    val dimsTowardWhite: Boolean,
+)
 
 /**
  * Custom keyboard color settings.
@@ -140,11 +219,19 @@ data class KeyboardColorSettings(
     val candidateTextColor: Int? = null,
 ) {
     /**
-     * The background gradient, or null for a solid / adaptive background. Single source
-     * for the candidate-tint derivation and the built-in theme tests.
+     * The background gradient, or null for a solid / photo / adaptive background. Single
+     * source for the candidate-tint derivation and the built-in theme tests.
      */
     val backgroundGradient: ThemeGradient?
         get() = background?.asGradient
+
+    /**
+     * The custom surface to paint, or null for the adaptive default. The photo tone
+     * overlay is white when the key text is dark and black otherwise (the seed's black
+     * text is the fallback, so an unset role reads as "light").
+     */
+    val surface: ThemeSurface?
+        get() = background?.let { ThemeSurface(it, isDarkArgb(keyTextColor ?: UserThemeSeed.KEY_TEXT)) }
 
     /**
      * Fills every null role from [UserThemeSeed]. Applied when a user theme is decoded
@@ -205,6 +292,17 @@ data class KeyboardColorSettings(
 }
 
 private fun JSONObject.optIntOrNull(key: String): Int? = if (has(key) && !isNull(key)) getInt(key) else null
+
+/**
+ * Perceived luminance below mid-grey (Rec. 601 weighting). Mirrors iOS `CodableColor.isDark`;
+ * used to pick a photo's tone overlay from the key-text colour.
+ */
+fun isDarkArgb(argb: Int): Boolean {
+    val r = (argb shr 16 and 0xFF) / 255.0
+    val g = (argb shr 8 and 0xFF) / 255.0
+    val b = (argb and 0xFF) / 255.0
+    return 0.299 * r + 0.587 * g + 0.114 * b < 0.5
+}
 
 /**
  * The concrete light palette every user theme starts from, so a user theme never

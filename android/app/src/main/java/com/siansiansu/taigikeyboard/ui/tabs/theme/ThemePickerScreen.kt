@@ -68,6 +68,7 @@ import com.siansiansu.taigikeyboard.ime.core.BuiltInTheme
 import com.siansiansu.taigikeyboard.ime.core.BuiltInThemes
 import com.siansiansu.taigikeyboard.ime.core.PrefHelper
 import com.siansiansu.taigikeyboard.ime.core.ThemeAppearance
+import com.siansiansu.taigikeyboard.ime.core.CompositionRoot
 import com.siansiansu.taigikeyboard.ime.core.ThemeId
 import com.siansiansu.taigikeyboard.ime.core.UserTheme
 import com.siansiansu.taigikeyboard.ime.core.UserThemeSeed
@@ -116,9 +117,7 @@ fun ThemePickerScreen(prefs: PrefHelper) {
         .collectAsStateWithLifecycle(initialValue = prefs.loadUserThemes())
 
     // Delete is the only in-place mutation (add/edit go through the editor Activity).
-    val userThemeStore = remember(prefs) {
-        UserThemeStore(read = { prefs.userThemes }, write = { prefs.userThemes = it })
-    }
+    val userThemeStore = remember(prefs, context) { CompositionRoot.shared(context).userThemeStore(prefs) }
 
     val applyTheme: (String) -> Unit = { id ->
         if (selectedThemeId != id) prefs.selectedThemeId = id
@@ -462,7 +461,7 @@ private fun CreateNewThemeCard(onClick: () -> Unit) {
     }
 }
 
-// A custom-theme card preview: the theme background (solid or gradient, same surface
+// A custom-theme card preview: the theme background (solid, gradient or photo, same surface
 // painting as the keyboard) with one large centered key applying the theme's full
 // button style — fill, glyph, corner radius, border, and shadow — so the saved key
 // look reads at a glance. User themes are seeded at decode, so a null role only occurs
@@ -480,7 +479,7 @@ private fun CustomThemeButtonPreview(appearance: ThemeAppearance) {
         modifier =
             Modifier
                 .fillMaxSize()
-                .themeBackground(colors.background, fallback = Color(UserThemeSeed.SOLID_COLOR)),
+                .themeBackground(colors.surface, fallback = Color(UserThemeSeed.SOLID_COLOR)),
         contentAlignment = Alignment.Center,
     ) {
         Box(

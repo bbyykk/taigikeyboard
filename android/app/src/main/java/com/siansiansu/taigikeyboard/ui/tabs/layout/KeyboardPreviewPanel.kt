@@ -73,12 +73,12 @@ fun KeyboardPreviewPanel(
     // control) and stays flat.
     keyShadowIntensity: Float = ThemeAppearance.DEFAULT_KEY_SHADOW_INTENSITY,
 ) {
-    // The theme surface (solid / gradient) is painted once behind candidate row + keys, as
+    // The theme surface (solid / gradient / photo) is painted once behind candidate row + keys, as
     // the IME paints it on `text_input_content`; both children stay transparent over it.
     val isDarkTheme = isSystemInDarkTheme()
     val context = LocalContext.current
     val adaptiveBackground = remember(isDarkTheme) { resolveKeyboardThemeColor(context, R.attr.keyboard_bgColor) }
-    Column(modifier = Modifier.fillMaxWidth().themeBackground(colorSettings.background, fallback = adaptiveBackground)) {
+    Column(modifier = Modifier.fillMaxWidth().themeBackground(colorSettings.surface, fallback = adaptiveBackground)) {
         CandidatePreviewRow(
             colorSettings = colorSettings,
             candidateTextSizeScale = candidateTextSizeScale,

@@ -3,6 +3,10 @@ package com.siansiansu.taigikeyboard.ime.core
 import org.json.JSONArray
 import org.json.JSONObject
 
+/** The theme-photo file names the saved themes still reference — what a sweep keeps. */
+fun List<UserTheme>.referencedPhotoFiles(): Set<String> =
+    mapNotNullTo(mutableSetOf()) { it.appearance.colors.background?.asImage?.file }
+
 /**
  * A user-created, named, persisted keyboard theme: id + name + the full
  * [ThemeAppearance] bundle + epoch-millis timestamps. Persisted as a JSON list

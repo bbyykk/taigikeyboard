@@ -65,7 +65,7 @@ fun SymbolOverlayContent(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .themeBackground(appearance.background, appearance.solidBackground, topInsetPx),
+            .themeBackground(appearance.surface, appearance.solidBackground, topInsetPx),
     ) {
         PrimaryTabRow(
             selectedTabIndex = selectedIndex,

@@ -5,6 +5,7 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import com.siansiansu.taigikeyboard.ime.core.PrefHelper
+import com.siansiansu.taigikeyboard.ime.core.CompositionRoot
 import com.siansiansu.taigikeyboard.ime.core.ThemeAppearance
 import com.siansiansu.taigikeyboard.ime.core.UserTheme
 import com.siansiansu.taigikeyboard.ime.core.UserThemeStore
@@ -35,7 +36,7 @@ class ThemeEditorActivity : ComponentActivity() {
 
         val prefs = PrefHelper(this)
         prefs.warmUp()
-        val store = UserThemeStore(read = { prefs.userThemes }, write = { prefs.userThemes = it })
+        val store = CompositionRoot.shared(this).userThemeStore(prefs)
 
         // Create mode = no id; edit mode = a requested id loaded fresh from the store
         // (never a stale snapshot). An edit request whose theme no longer exists (e.g.
@@ -58,6 +59,17 @@ class ThemeEditorActivity : ComponentActivity() {
                 onSave = { name, appearance -> saveTheme(prefs, store, editing, name, appearance) },
                 onNavigateBack = { onBackPressedDispatcher.onBackPressed() },
             )
+        }
+    }
+
+    // A photo picked in the editor is only kept once its theme is saved: when the editor
+    // really closes (not a rotation — the draft survives that with its photo) drop every
+    // photo no saved theme references. Mutations sweep through the store's own hook.
+    override fun onDestroy() {
+        super.onDestroy()
+        if (isFinishing) {
+            val root = CompositionRoot.shared(this)
+            root.themeImages.sweep(root.userThemeStore(PrefHelper(this)).load())
         }
     }
 

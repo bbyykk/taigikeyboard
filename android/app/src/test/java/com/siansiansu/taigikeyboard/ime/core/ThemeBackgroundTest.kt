@@ -118,6 +118,54 @@ class ThemeBackgroundTest {
 
     // endregion
 
+    // region Photo background
+
+    // `{"type":"image","file":"a.jpg","dim":0.5}` round-trips; dim clamps into 0..0.8; absent dim = default.
+    @Test
+    fun imageBackground_roundTripAndDimClamp() {
+        val colors = KeyboardColorSettings(background = ThemeBackground.Image(ThemeImageBackground("a.jpg", 0.5f)))
+        val json = colors.toJson()
+        assertEquals("image", JSONObject(json).getJSONObject("background").getString("type"))
+        assertEquals(colors, KeyboardColorSettings.fromJson(json))
+        val clampedHigh = decode("""{ "background": { "type": "image", "file": "a.jpg", "dim": 2 } }""")
+        assertEquals(ThemeImageBackground.DIM_MAX, clampedHigh.background?.asImage?.dim)
+        val clampedLow = decode("""{ "background": { "type": "image", "file": "a.jpg", "dim": -1 } }""")
+        assertEquals(0f, clampedLow.background?.asImage?.dim)
+        val absentDim = decode("""{ "background": { "type": "image", "file": "b.jpg" } }""")
+        assertEquals(ThemeBackground.Image(ThemeImageBackground("b.jpg", ThemeImageBackground.DEFAULT_DIM)), absentDim.background)
+    }
+
+    // An empty file name is not a photo -> decode degrades to adaptive (same as an unknown type).
+    @Test
+    fun imageBackground_emptyFile_degradesToAdaptive() {
+        assertNull(decode("""{ "background": { "type": "image", "file": "" } }""").background)
+    }
+
+    // Aspect-fill cover rect: a 2:1 photo over a 1:1 keyboard fills the height and centres horizontally;
+    // a 1:2 photo fills the width and centres vertically; a panel slice keeps the whole-keyboard framing.
+    @Test
+    fun coverRect_aspectFillCentred() {
+        val square = SurfaceRect(0f, 0f, 100f, 100f)
+        assertEquals(SurfaceRect(-50f, 0f, 200f, 100f), ThemeImageBackground.coverRect(200f, 100f, square))
+        assertEquals(SurfaceRect(0f, -50f, 100f, 200f), ThemeImageBackground.coverRect(100f, 200f, square))
+        val slicedKeyboard = SurfaceRect(0f, -50f, 100f, 300f)
+        assertEquals(SurfaceRect(-100f, -50f, 300f, 300f), ThemeImageBackground.coverRect(100f, 100f, slicedKeyboard))
+        assertEquals(square, ThemeImageBackground.coverRect(0f, 0f, square))
+    }
+
+    // The surface pairs the background with its photo tone: dark key text -> white overlay, light -> black;
+    // unset role = seed (black text) -> white; adaptive (no background) -> null.
+    @Test
+    fun surface_pairsBackgroundWithKeyTextTone() {
+        assertNull(KeyboardColorSettings().surface)
+        val photo = ThemeBackground.Image(ThemeImageBackground("a.jpg"))
+        assertEquals(true, KeyboardColorSettings(background = photo).surface?.dimsTowardWhite)
+        assertEquals(false, KeyboardColorSettings(background = photo, keyTextColor = WHITE).surface?.dimsTowardWhite)
+        assertEquals(ThemeSurface(photo, true), KeyboardColorSettings(background = photo, keyTextColor = 0xFF1C1C1E.toInt()).surface)
+    }
+
+    // endregion
+
     // region Seed
 
     // The seed sets every role (no null) so a user theme never follows light / dark.
