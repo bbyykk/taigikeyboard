@@ -48,7 +48,7 @@ enum MainMenu {
     private static func fileMenu(_ language: DisplayLanguageStore) -> NSMenu {
         let menu = NSMenu(title: language.string(.desktopMenuFile))
         menu.addItem(
-            withTitle: language.string(.desktopMenuClose),
+            withTitle: language.string(.commonClose),
             action: #selector(NSWindow.performClose(_:)),
             keyEquivalent: "w",
         )
@@ -56,7 +56,7 @@ enum MainMenu {
     }
 
     private static func editMenu(_ language: DisplayLanguageStore) -> NSMenu {
-        let menu = NSMenu(title: language.string(.desktopMenuEdit))
+        let menu = NSMenu(title: language.string(.commonEdit))
         // Undo and redo are declared by `NSUndoManager`'s responder chain and
         // have no Swift-visible selector to name, unlike the four below.
         menu.addItem(withTitle: language.string(.desktopMenuUndo), action: Selector(("undo:")), keyEquivalent: "z")

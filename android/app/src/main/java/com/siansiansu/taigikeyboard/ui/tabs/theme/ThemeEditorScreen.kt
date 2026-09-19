@@ -199,7 +199,7 @@ fun ThemeEditorScreen(
                             }
                         },
                     ) {
-                        Text(L10n.themeEditorSave)
+                        Text(L10n.commonSave)
                     }
                 },
                 colors =
@@ -469,7 +469,7 @@ fun ThemeEditorScreen(
                 onConfirm = { entered ->
                     showNameDialog = false
                     draftName = entered
-                    val finalName = entered.trim().ifEmpty { stringResolver.resolve(StringKey.THEME_DEFAULT_NAME) }
+                    val finalName = entered.trim().ifEmpty { stringResolver.resolve(StringKey.THEME_EDITOR_TITLE_NEW) }
                     if (!onSave(finalName, draft)) showCapDialog = true
                 },
                 onDismiss = { showNameDialog = false },
@@ -509,7 +509,7 @@ private fun ThemeNameDialog(
             )
         },
         confirmButton = {
-            TextButton(onClick = { onConfirm(name) }) { Text(L10n.themeEditorSave) }
+            TextButton(onClick = { onConfirm(name) }) { Text(L10n.commonSave) }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) { Text(L10n.commonCancel) }

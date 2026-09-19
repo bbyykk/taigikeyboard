@@ -146,7 +146,7 @@ fun InputSettingsScreen(
                 LargeTopAppBar(
                     title = {
                         Text(
-                            text = L10n.navTabSettings,
+                            text = L10n.commonSettings,
                             style = MaterialTheme.typography.headlineLarge,
                         )
                     },
@@ -317,7 +317,7 @@ fun InputSettingsScreen(
 
                 Spacer(Modifier.height(24.dp))
 
-                SectionHeader(L10n.settingsPojSettingsSectionTitle)
+                SectionHeader(L10n.settingsPojMode)
                 SettingsCard {
                     SwitchRow(
                         label = L10n.settingsDoubleTapOO,
@@ -340,7 +340,7 @@ fun InputSettingsScreen(
 
                 Spacer(Modifier.height(24.dp))
 
-                SectionHeader(L10n.settingsTpsSettingsSectionTitle)
+                SectionHeader(L10n.settingsTpsMode)
                 SettingsCard {
                     SwitchRow(
                         label = L10n.settingsTpsOrMapsToER,

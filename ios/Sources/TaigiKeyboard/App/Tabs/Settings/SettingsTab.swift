@@ -248,7 +248,7 @@ struct SettingsTab: View {
                             settings.isDoubleTapNNEnabled = newValue
                         }
                 } header: {
-                    Text(lang.string(.settingsPojSettingsSectionTitle))
+                    Text(lang.string(.settingsPojMode))
                         .font(AppStyle.sectionHeaderFont)
                 }
 
@@ -264,7 +264,7 @@ struct SettingsTab: View {
                         settings.isTpsOrMappedToER = newValue
                     }
                 } header: {
-                    Text(lang.string(.settingsTpsSettingsSectionTitle))
+                    Text(lang.string(.settingsTpsMode))
                         .font(AppStyle.sectionHeaderFont)
                 }
 

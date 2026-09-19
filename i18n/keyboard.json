@@ -6,21 +6,6 @@
       "scope": { "platforms": ["android", "ios"], "surfaces": ["extension"] },
       "values": { "hanji": "展開抑是收合候選詞列", "tailo": "Tián-khui ah-sī siu-ha̍p hāu-suán sû lia̍t", "poj": "Tián-khui ah-sī siu-ha̍p hāu-soán sû lia̍t", "en": "Expand or collapse the candidate list", "ja": "候補リストを展開または折りたたむ" }
     },
-    "pageUp": {
-      "comment": "Candidate-overlay page-up control-button a11y label (scrolls to the previous page of candidates). Android via stringRes; iOS via DisplayLanguageStore in ExpandedCandidateOverlay.",
-      "scope": { "platforms": ["android", "ios"], "surfaces": ["extension"] },
-      "values": { "hanji": "頂一頁", "tailo": "Tíng tsi̍t ia̍h", "poj": "Téng chi̍t ia̍h", "en": "Previous page", "ja": "前のページ" }
-    },
-    "pageDown": {
-      "comment": "Candidate-overlay page-down control-button a11y label (scrolls to the next page of candidates). Android via stringRes; iOS via DisplayLanguageStore in ExpandedCandidateOverlay.",
-      "scope": { "platforms": ["android", "ios"], "surfaces": ["extension"] },
-      "values": { "hanji": "後一頁", "tailo": "Āu tsi̍t ia̍h", "poj": "Āu chi̍t ia̍h", "en": "Next page", "ja": "次のページ" }
-    },
-    "translateToggle": {
-      "comment": "Candidate-overlay display-swap control-button a11y label (swaps the romanization/Hanji primary line). Android via stringRes; iOS via DisplayLanguageStore in ExpandedCandidateOverlay.",
-      "scope": { "platforms": ["android", "ios"], "surfaces": ["extension"] },
-      "values": { "hanji": "交換漢字佮羅馬字", "tailo": "Kau-uānn hàn-jī kah lô-má-jī", "poj": "Kau-ōaⁿ hàn-jī kah lô-má-jī", "en": "Swap Hanji and romanization", "ja": "漢字とローマ字を入れ替える" }
-    },
     "morePopupHint": {
       "comment": "Key-preview popup three-dots-indicator a11y contentDescription (long-press reveals more glyphs). Android extension popup only.",
       "scope": { "platforms": ["android"], "surfaces": ["extension"] },
@@ -55,16 +40,6 @@
       "comment": "Smartbar toolbar dismiss button a11y label (hides the keyboard). Android via InputView.applyAccessibilityStrings; iOS via DisplayLanguageStore in ToolShortcutsToolbar.",
       "scope": { "platforms": ["android", "ios"], "surfaces": ["extension"] },
       "values": { "hanji": "收合齒盤", "tailo": "Siu-ha̍p khí-puânn", "poj": "Siu-ha̍p khí-pôaⁿ", "en": "Hide keyboard", "ja": "キーボードを閉じる" }
-    },
-    "settings": {
-      "comment": "Smartbar toolbar settings button a11y label (opens the app settings). Android via InputView.applyAccessibilityStrings; iOS via DisplayLanguageStore in ToolShortcutsToolbar.",
-      "scope": { "platforms": ["android", "ios"], "surfaces": ["extension"] },
-      "values": { "hanji": "設定", "tailo": "Siat-tīng", "poj": "Siat-tēng", "en": "Settings", "ja": "設定" }
-    },
-    "deleteIcon": {
-      "comment": "Media-input (emoji panel) backspace View button a11y contentDescription. Android media-input View only.",
-      "scope": { "platforms": ["android"], "surfaces": ["extension"] },
-      "values": { "hanji": "刪除", "tailo": "San-tî", "poj": "San-tî", "en": "Delete", "ja": "削除" }
     }
   }
 }

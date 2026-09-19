@@ -104,8 +104,8 @@ class InputView : FrameLayout {
         setDescription(R.id.toolbar_layout_button, StringKey.KEYBOARD_SWITCH_LAYOUT)
         setDescription(R.id.toolbar_globe_button, StringKey.KEYBOARD_SWITCH_INPUT_METHOD)
         setDescription(R.id.toolbar_dismiss_button, StringKey.KEYBOARD_DISMISS_KEYBOARD)
-        setDescription(R.id.toolbar_settings_button, StringKey.KEYBOARD_SETTINGS)
+        setDescription(R.id.toolbar_settings_button, StringKey.COMMON_SETTINGS)
         setDescription(R.id.expand_toggle_button, StringKey.KEYBOARD_EXPAND_CANDIDATES)
-        setDescription(R.id.media_input_backspace_button, StringKey.KEYBOARD_DELETE_ICON)
+        setDescription(R.id.media_input_backspace_button, StringKey.COMMON_DELETE)
     }
 }

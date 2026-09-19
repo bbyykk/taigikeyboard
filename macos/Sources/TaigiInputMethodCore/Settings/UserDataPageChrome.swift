@@ -291,13 +291,13 @@ struct UserDataListPager: View {
             UserDataListControlGlyph(symbolName: "chevron.left")
         }
         .disabled(page <= 0)
-        .accessibilityLabel(language.string(.desktopActionPageBackward))
+        .accessibilityLabel(language.string(.commonPagePrevious))
 
         Button(action: onForward) {
             UserDataListControlGlyph(symbolName: "chevron.right")
         }
         .disabled(page + 1 >= pageCount)
-        .accessibilityLabel(language.string(.desktopActionPageForward))
+        .accessibilityLabel(language.string(.commonPageNext))
     }
 }
 

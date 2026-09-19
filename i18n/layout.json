@@ -6,11 +6,6 @@
       "scope": { "platforms": ["android", "ios"], "surfaces": ["host", "extension"] },
       "values": { "hanji": "羅馬字齒盤", "tailo": "Lô-má-jī khí-puânn", "poj": "Lô-má-jī khí-pôaⁿ", "en": "Romanization Keyboards", "ja": "ローマ字キーボード" }
     },
-    "taigiPhonetic": {
-      "comment": "Section header for the Taiwanese phonetic (TPS) keyboard layouts.",
-      "scope": { "platforms": ["android", "ios"], "surfaces": ["host", "extension"] },
-      "values": { "hanji": "方音符號", "tailo": "Hong-im-hû-hō", "poj": "Hong-im-hû-hō", "en": "Taiwanese Phonetic Symbols", "ja": "方音符号" }
-    },
     "standardLayout": {
       "comment": "Layout name: the standard QWERTY-style romanization layout (Lohankha).",
       "scope": { "platforms": ["android", "ios"], "surfaces": ["host", "extension"] },

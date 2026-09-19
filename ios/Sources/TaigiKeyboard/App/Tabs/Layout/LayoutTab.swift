@@ -34,7 +34,7 @@ struct LayoutTab: View {
 
                     // Section 2: Taigi phonetic
                     layoutSection(
-                        header: .layoutTaigiPhonetic,
+                        header: .settingsTpsMode,
                         layouts: [Self.tpsEntry],
                     )
                 }

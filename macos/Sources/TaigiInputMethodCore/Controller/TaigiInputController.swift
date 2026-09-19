@@ -456,7 +456,7 @@ public final class TaigiInputController: IMKInputController {
             // user left it — naming the panes is the sidebar's job.
             let settings = shortcutRow(
                 .openLastSettingsPane,
-                label: language.string(.desktopMenuSettings),
+                label: language.string(.commonSettings),
                 selector: #selector(showPreferences(_:)),
             )
             // No chord, by design: an on-demand check is a command a user

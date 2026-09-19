@@ -78,7 +78,7 @@ struct ToolShortcutsToolbar: View {
 
             ToolShortcutButton(
                 systemName: "gearshape",
-                accessibilityLabel: lang.string(.keyboardSettings),
+                accessibilityLabel: lang.string(.commonSettings),
                 action: onSettingsTap,
             )
         }

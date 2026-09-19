@@ -29,7 +29,7 @@ enum TabType: Int, CaseIterable, Hashable {
         case .theme: .navTabTheme
         case .layout: .navTabLayout
         case .dictionary: .navTabDictionary
-        case .settings: .navTabSettings
+        case .settings: .commonSettings
         }
     }
 }

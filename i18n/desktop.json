@@ -58,25 +58,6 @@
         "ja": "出力"
       }
     },
-    "shortcutSectionOther": {
-      "comment": "快捷鍵 pane, third block's header: the switches and the windows a key raises.",
-      "scope": {
-        "platforms": [
-          "macos",
-          "windows"
-        ],
-        "surfaces": [
-          "host"
-        ]
-      },
-      "values": {
-        "hanji": "其他",
-        "tailo": "Kî-thann",
-        "poj": "Kî-thaⁿ",
-        "en": "Other",
-        "ja": "その他"
-      }
-    },
     "shortcutOpenSettings": {
       "comment": "Shortcut-recorder row: the hotkey that opens the settings window on whichever pane it was last left on. Each row is authored whole rather than composed from the setting's own label.",
       "scope": {
@@ -113,25 +94,6 @@
         "poj": "Chhiat-ōaⁿ Tâi-lô / Pe̍h-ōe-jī",
         "en": "Switch Tâi-lô or Pe̍h-ōe-jī",
         "ja": "台羅／白話字を切り替える"
-      }
-    },
-    "shortcutToggleTranslateSwapped": {
-      "comment": "Shortcut-recorder row: the hotkey that flips which script is committed. 切換 rather than 輸出 (USER 2026-09-10) — it is a switch, drawn with the other switches in 其他.",
-      "scope": {
-        "platforms": [
-          "macos",
-          "windows"
-        ],
-        "surfaces": [
-          "host"
-        ]
-      },
-      "values": {
-        "hanji": "切換漢字/羅馬字",
-        "tailo": "Tshiat-uānn hàn-jī / lô-má-jī",
-        "poj": "Chhiat-ōaⁿ hàn-jī / lô-má-jī",
-        "en": "Switch Hanji or Romanization",
-        "ja": "漢字／ローマ字を切り替える"
       }
     },
     "shortcutCycleCandidateDisplayMode": {
@@ -208,25 +170,6 @@
         "poj": "Siu-chèng tng-teh phah ê jī",
         "en": "Fix What You Are Typing",
         "ja": "入力中の文字を修正"
-      }
-    },
-    "telexGuideTitle": {
-      "comment": "Title over the floating Telex guide's key table. The scheme's own name, nothing else (USER 2026-09-09: no surplus wording).",
-      "scope": {
-        "platforms": [
-          "macos",
-          "windows"
-        ],
-        "surfaces": [
-          "host"
-        ]
-      },
-      "values": {
-        "hanji": "Telex",
-        "tailo": "Telex",
-        "poj": "Telex",
-        "en": "Telex",
-        "ja": "Telex"
       }
     },
     "telexGuideTone": {
@@ -308,42 +251,6 @@
         "poj": "Tóng-àn",
         "en": "File",
         "ja": "ファイル"
-      }
-    },
-    "menuClose": {
-      "comment": "File menu item: close the front window (⌘W).",
-      "scope": {
-        "platforms": [
-          "macos"
-        ],
-        "surfaces": [
-          "host"
-        ]
-      },
-      "values": {
-        "hanji": "關閉",
-        "tailo": "Kuan-pì",
-        "poj": "Koan-pì",
-        "en": "Close",
-        "ja": "閉じる"
-      }
-    },
-    "menuEdit": {
-      "comment": "Menu-bar Edit menu title.",
-      "scope": {
-        "platforms": [
-          "macos"
-        ],
-        "surfaces": [
-          "host"
-        ]
-      },
-      "values": {
-        "hanji": "編輯",
-        "tailo": "Pian-tsi̍p",
-        "poj": "Pian-chi̍p",
-        "en": "Edit",
-        "ja": "編集"
       }
     },
     "menuUndo": {
@@ -890,44 +797,6 @@
         "ja": "前の候補"
       }
     },
-    "actionPageForward": {
-      "comment": "Shortcut row: show the next page of candidates.",
-      "scope": {
-        "platforms": [
-          "macos",
-          "windows"
-        ],
-        "surfaces": [
-          "host"
-        ]
-      },
-      "values": {
-        "hanji": "後一頁",
-        "tailo": "Āu tsi̍t ia̍h",
-        "poj": "Āu chi̍t ia̍h",
-        "en": "Next Page",
-        "ja": "次のページ"
-      }
-    },
-    "actionPageBackward": {
-      "comment": "Shortcut row: show the previous page of candidates.",
-      "scope": {
-        "platforms": [
-          "macos",
-          "windows"
-        ],
-        "surfaces": [
-          "host"
-        ]
-      },
-      "values": {
-        "hanji": "頂一頁",
-        "tailo": "Tíng tsi̍t ia̍h",
-        "poj": "Téng chi̍t ia̍h",
-        "en": "Previous Page",
-        "ja": "前のページ"
-      }
-    },
     "actionConfirmHighlighted": {
       "comment": "Shortcut row: commit the highlighted candidate.",
       "scope": {
@@ -940,11 +809,11 @@
         ]
       },
       "values": {
-        "hanji": "確定",
-        "tailo": "Khak-tīng",
-        "poj": "Khak-tēng",
-        "en": "Confirm",
-        "ja": "確定"
+        "hanji": "確定齒",
+        "tailo": "Khak-tīng khí",
+        "poj": "Khak-tēng khí",
+        "en": "Confirm Key",
+        "ja": "確定キー"
       }
     },
     "actionCommitLiteral": {
@@ -978,11 +847,11 @@
         ]
       },
       "values": {
-        "hanji": "迒模式輸出",
-        "tailo": "Hānn bôo-sik su-tshut",
-        "poj": "Hānn bô͘-sek su-chhut",
-        "en": "Cross-Mode Output",
-        "ja": "モード横断出力"
+        "hanji": "輸出另外一種文字",
+        "tailo": "Su-tshut līng-guā tsi̍t tsióng bûn-jī",
+        "poj": "Su-chhut lēng-gōa chi̍t chióng bûn-jī",
+        "en": "Output the Other Script",
+        "ja": "もう一方の文字で出力"
       }
     },
     "shortcutUnbound": {
@@ -1016,9 +885,9 @@
         ]
       },
       "values": {
-        "hanji": "揤一个鍵…",
-        "tailo": "Tshi̍h tsi̍t ê kiān…",
-        "poj": "Chhi̍h chi̍t ê kiān…",
+        "hanji": "揤一个齒…",
+        "tailo": "Tshi̍h tsi̍t ê khí…",
+        "poj": "Chhi̍h chi̍t ê khí…",
         "en": "Press a key…",
         "ja": "キーを押してください…"
       }
@@ -1054,9 +923,9 @@
         ]
       },
       "values": {
-        "hanji": "揀袂著鍵",
-        "tailo": "Kíng bē tio̍h kiān",
-        "poj": "Kéng bē tio̍h kiān",
+        "hanji": "無揤著齒",
+        "tailo": "Bô tshi̍h tio̍h khí",
+        "poj": "Bô chhi̍h tio̍h khí",
         "en": "No key to record",
         "ja": "記録できるキーがありません"
       }
@@ -1116,25 +985,6 @@
         "poj": "Kiám-cha keng-sin",
         "en": "Check for Updates",
         "ja": "アップデートを確認"
-      }
-    },
-    "menuSettings": {
-      "comment": "Input-source menu row that opens the settings window on the pane the user left it on.",
-      "scope": {
-        "platforms": [
-          "macos",
-          "windows"
-        ],
-        "surfaces": [
-          "host"
-        ]
-      },
-      "values": {
-        "hanji": "設定",
-        "tailo": "Siat-tīng",
-        "poj": "Siat-tēng",
-        "en": "Settings",
-        "ja": "設定"
       }
     },
     "updateCurrentVersionLabel": {
@@ -1365,8 +1215,8 @@
       },
       "values": {
         "hanji": "系統通知拍開，才會收著更新通知",
-        "tailo": "Hē-thóng thong-ti phah-khui, tsiah ē siu--tio̍h king-sin thong-ti",
-        "poj": "Hē-thóng thong-ti phah-khui, chiah ē siu--tio̍h keng-sin thong-ti",
+        "tailo": "Hē-thóng thong-ti phah-khui, tsiah ē siu-tio̍h king-sin thong-ti",
+        "poj": "Hē-thóng thong-ti phah-khui, chiah ē siu-tio̍h keng-sin thong-ti",
         "en": "Turn on system notifications to receive update notices",
         "ja": "システム通知をオンにすると、アップデートのお知らせを受け取れます"
       }

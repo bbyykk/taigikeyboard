@@ -482,7 +482,7 @@ struct CustomDictionaryEntrySheet: View {
             HStack {
                 Spacer()
                 Button(language.string(.commonCancel), role: .cancel) { dismiss() }
-                Button(language.string(.dictionarySave)) {
+                Button(language.string(.commonSave)) {
                     var edited = original
                     edited.roman = roman.trimmingCharacters(in: .whitespacesAndNewlines)
                     edited.hanzi = hanzi.trimmingCharacters(in: .whitespacesAndNewlines)

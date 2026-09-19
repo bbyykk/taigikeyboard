@@ -128,7 +128,7 @@ final class TelexGuidePanel {
     /// The card: the scheme's name and the two-column table, on the same HUD
     /// chrome as the mode flash.
     private static func makePanel(inputMode: InputMode, language: DisplayLanguageStore) -> NSPanel {
-        let title = NSTextField(labelWithString: language.string(.desktopTelexGuideTitle))
+        let title = NSTextField(labelWithString: language.string(.settingsToneSchemeTelex))
         title.font = .systemFont(ofSize: NSFont.systemFontSize + 2, weight: .semibold)
 
         let grid = makeGrid(inputMode: inputMode, language: language)

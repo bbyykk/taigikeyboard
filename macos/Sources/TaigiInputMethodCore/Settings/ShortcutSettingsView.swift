@@ -116,7 +116,7 @@ struct ShortcutSettingsView: View {
                     globalRecorderRow(action)
                 }
             } header: {
-                Text(language.string(.desktopShortcutSectionOther))
+                Text(language.string(.commonOther))
             }
 
             // Its own section, at the end: it acts on every block above it

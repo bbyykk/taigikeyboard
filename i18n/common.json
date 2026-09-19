@@ -44,7 +44,29 @@
       }
     },
     "delete": {
-      "comment": "Generic delete action label / a11y description (custom-theme card menu item, dictionary row delete).",
+      "comment": "Generic delete action label / a11y description (custom-theme card menu item, dictionary row delete). Also the Android media-input backspace a11y description (keyboard.deleteIcon merged 2026-09-20).",
+      "scope": {
+        "platforms": [
+          "android",
+          "ios",
+          "macos",
+          "windows"
+        ],
+        "surfaces": [
+          "host",
+          "extension"
+        ]
+      },
+      "values": {
+        "hanji": "刪除",
+        "tailo": "San-tî",
+        "poj": "San-tî",
+        "en": "Delete",
+        "ja": "削除"
+      }
+    },
+    "save": {
+      "comment": "Generic Save button: custom-dictionary add/edit entry dialog (all platforms), theme editor / name dialog (mobile). Merged 2026-09-20 from dictionary.save (儉起來) / theme.editorSave (儲存) — 儲存 matches system UI.",
       "scope": {
         "platforms": [
           "android",
@@ -57,11 +79,77 @@
         ]
       },
       "values": {
-        "hanji": "刪除",
-        "tailo": "San-tî",
-        "poj": "San-tî",
-        "en": "Delete",
-        "ja": "削除"
+        "hanji": "儲存",
+        "tailo": "Thú-tsûn",
+        "poj": "Thú-chûn",
+        "en": "Save",
+        "ja": "保存"
+      }
+    },
+    "settings": {
+      "comment": "Generic Settings label: main-app bottom-nav tab title + page title (mobile), smartbar settings button a11y label (extension), input-source menu row that opens the settings window (desktop). Merged 2026-09-20 from keyboard.settings / nav.tabSettings / desktop.menuSettings — one word, one key.",
+      "scope": {
+        "platforms": [
+          "android",
+          "ios",
+          "macos",
+          "windows"
+        ],
+        "surfaces": [
+          "host",
+          "extension"
+        ]
+      },
+      "values": {
+        "hanji": "設定",
+        "tailo": "Siat-tīng",
+        "poj": "Siat-tēng",
+        "en": "Settings",
+        "ja": "設定"
+      }
+    },
+    "pagePrevious": {
+      "comment": "Previous page of candidates: mobile candidate-overlay page-up a11y label, desktop shortcut row + user-data list pager. Merged 2026-09-20 from keyboard.pageUp / desktop.actionPageBackward.",
+      "scope": {
+        "platforms": [
+          "android",
+          "ios",
+          "macos",
+          "windows"
+        ],
+        "surfaces": [
+          "host",
+          "extension"
+        ]
+      },
+      "values": {
+        "hanji": "頂一頁",
+        "tailo": "Tíng tsi̍t ia̍h",
+        "poj": "Téng chi̍t ia̍h",
+        "en": "Previous Page",
+        "ja": "前のページ"
+      }
+    },
+    "pageNext": {
+      "comment": "Next page of candidates: mobile candidate-overlay page-down a11y label, desktop shortcut row + user-data list pager. Merged 2026-09-20 from keyboard.pageDown / desktop.actionPageForward.",
+      "scope": {
+        "platforms": [
+          "android",
+          "ios",
+          "macos",
+          "windows"
+        ],
+        "surfaces": [
+          "host",
+          "extension"
+        ]
+      },
+      "values": {
+        "hanji": "後一頁",
+        "tailo": "Āu tsi̍t ia̍h",
+        "poj": "Āu chi̍t ia̍h",
+        "en": "Next Page",
+        "ja": "次のページ"
       }
     },
     "error": {
@@ -101,21 +189,86 @@
       }
     },
     "close": {
-      "comment": "Close button a11y contentDescription (color-picker dialog dismiss). Android-only: the iOS color picker uses the system dismiss affordance.",
+      "comment": "Generic Close: Android color-picker dismiss a11y description, setup-guide full-screen close button (mobile), File menu ⌘W item (macOS). Merged 2026-09-20 from home.setupGuideCloseButton / desktop.menuClose; 關起來 → 關閉 to match them.",
       "scope": {
         "platforms": [
-          "android"
+          "android",
+          "ios",
+          "macos"
         ],
         "surfaces": [
           "host"
         ]
       },
       "values": {
-        "hanji": "關起來",
-        "tailo": "Kuainn--khí-lâi",
-        "poj": "Koaiⁿ--khí-lâi",
+        "hanji": "關閉",
+        "tailo": "Kuan-pì",
+        "poj": "Koan-pì",
         "en": "Close",
         "ja": "閉じる"
+      }
+    },
+    "other": {
+      "comment": "Generic Other: home section header above the FAQ / other list (mobile), 快速齒 pane third block's header — the switches and the windows a key raises (desktop). Merged 2026-09-20 from home.faq / desktop.shortcutSectionOther.",
+      "scope": {
+        "platforms": [
+          "android",
+          "ios",
+          "macos",
+          "windows"
+        ],
+        "surfaces": [
+          "host"
+        ]
+      },
+      "values": {
+        "hanji": "其他",
+        "tailo": "Kî-thann",
+        "poj": "Kî-thaⁿ",
+        "en": "Other",
+        "ja": "その他"
+      }
+    },
+    "edit": {
+      "comment": "Generic Edit: custom-theme card action-menu item (mobile), menu-bar Edit menu title (macOS). Merged 2026-09-20 from theme.cardMenuEdit / desktop.menuEdit.",
+      "scope": {
+        "platforms": [
+          "android",
+          "ios",
+          "macos"
+        ],
+        "surfaces": [
+          "host"
+        ]
+      },
+      "values": {
+        "hanji": "編輯",
+        "tailo": "Pian-tsi̍p",
+        "poj": "Pian-chi̍p",
+        "en": "Edit",
+        "ja": "編集"
+      }
+    },
+    "toggleTranslateSwapped": {
+      "comment": "Flip which script is committed / shown first: desktop shortcut-recorder row (切換 rather than 輸出, USER 2026-09-10), mobile candidate-overlay display-swap button a11y label. Merged 2026-09-20 from desktop.shortcutToggleTranslateSwapped / keyboard.translateToggle.",
+      "scope": {
+        "platforms": [
+          "android",
+          "ios",
+          "macos",
+          "windows"
+        ],
+        "surfaces": [
+          "host",
+          "extension"
+        ]
+      },
+      "values": {
+        "hanji": "切換漢字/羅馬字",
+        "tailo": "Tshiat-uānn hàn-jī / lô-má-jī",
+        "poj": "Chhiat-ōaⁿ hàn-jī / lô-má-jī",
+        "en": "Switch Hanji or Romanization",
+        "ja": "漢字／ローマ字を切り替える"
       }
     },
     "back": {

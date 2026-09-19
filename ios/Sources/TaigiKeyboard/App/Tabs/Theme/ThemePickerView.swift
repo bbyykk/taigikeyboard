@@ -47,7 +47,7 @@ struct ThemePickerView: View {
                             onTap: { apply(theme.id.uuidString) },
                             actions: [
                                 ThemeCardAction(title: lang.string(.themeCardMenuApply)) { apply(theme.id.uuidString) },
-                                ThemeCardAction(title: lang.string(.themeCardMenuEdit)) { editorRoute = .edit(theme) },
+                                ThemeCardAction(title: lang.string(.commonEdit)) { editorRoute = .edit(theme) },
                                 ThemeCardAction(title: lang.string(.commonDelete), role: .destructive) { delete(theme) },
                             ],
                         )

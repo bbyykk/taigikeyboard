@@ -126,7 +126,7 @@ fun LayoutOverlayContent(
         SectionHeader(L10n.layoutRomanizationKeyboard, appearance.foreground, topPadding = 0.dp)
         LayoutCardRow(RomanizationLayouts, activeKey, appearance, onSelect)
 
-        SectionHeader(L10n.layoutTaigiPhonetic, appearance.foreground, topPadding = 12.dp)
+        SectionHeader(L10n.settingsTpsMode, appearance.foreground, topPadding = 12.dp)
         LayoutCardRow(PhoneticLayouts, activeKey, appearance, onSelect)
     }
 }

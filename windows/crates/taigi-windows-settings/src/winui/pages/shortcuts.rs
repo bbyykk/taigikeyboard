@@ -87,7 +87,7 @@ pub fn view(
         //
         // One block (2026-08-25, +1 on 2026-09-02, +1 on 2026-09-09): three
         // switches, the symbol picker, the Telex guide and one doorway.
-        cards::section_title(strings.resolve(StringKey::DesktopShortcutSectionOther)),
+        cards::section_title(strings.resolve(StringKey::CommonOther)),
         global_rows(window, strings, context, &ShortcutAction::ALL),
         // Both registries at once, and no conflict pass afterwards: the
         // shipped defaults hold no chord in common

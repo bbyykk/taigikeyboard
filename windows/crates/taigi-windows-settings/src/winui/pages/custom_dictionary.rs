@@ -1030,7 +1030,7 @@ fn entry_dialog(
         } else {
             StringKey::DictionaryEditEntry
         }))
-        .primary_button_text(strings.resolve(StringKey::DictionarySave))
+        .primary_button_text(strings.resolve(StringKey::CommonSave))
         .close_button_text(strings.resolve(StringKey::CommonCancel))
         // A romanization is what the entry is found by; without one there
         // is nothing to store it under.

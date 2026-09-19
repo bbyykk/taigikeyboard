@@ -948,7 +948,7 @@ impl TextService_Impl {
                 let strings = StringResolver::new(runtime.display_language());
                 let content = TelexGuideContent {
                     title: strings
-                        .resolve(StringKey::DesktopTelexGuideTitle)
+                        .resolve(StringKey::SettingsToneSchemeTelex)
                         .to_owned(),
                     rows: telex_guide_rows(settings.choice(&keys::INPUT_MODE), &strings),
                 };

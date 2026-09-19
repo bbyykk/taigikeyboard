@@ -125,7 +125,7 @@ fun LayoutScreen(prefs: PrefHelper) {
             Spacer(Modifier.height(24.dp))
 
             LayoutSection(
-                title = L10n.layoutTaigiPhonetic,
+                title = L10n.settingsTpsMode,
                 layouts = phoneticLayouts,
                 selectedLayout = selectedLayout,
                 onLayoutSelected = { prefs.keyboardLayoutType = it },

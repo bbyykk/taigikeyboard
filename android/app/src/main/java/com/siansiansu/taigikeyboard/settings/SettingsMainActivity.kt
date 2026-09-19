@@ -105,7 +105,7 @@ class SettingsMainActivity : AppCompatActivity() {
                                 TabItem(R.drawable.ic_palette, StringKey.NAV_TAB_THEME),
                                 TabItem(R.drawable.keyboard_24, StringKey.NAV_TAB_LAYOUT),
                                 TabItem(R.drawable.dictionary_24, StringKey.NAV_TAB_DICTIONARY),
-                                TabItem(R.drawable.ic_settings, StringKey.NAV_TAB_SETTINGS),
+                                TabItem(R.drawable.ic_settings, StringKey.COMMON_SETTINGS),
                             ),
                         initialTab = initialTab,
                     ) { selectedTab ->

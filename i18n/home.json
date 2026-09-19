@@ -21,11 +21,6 @@
       "scope": { "platforms": ["android", "ios"], "surfaces": ["host"] },
       "values": { "hanji": "功能設定", "tailo": "Kong-lîng siat-tīng", "poj": "Kong-lêng siat-tēng", "en": "Feature Settings", "ja": "機能設定" }
     },
-    "faq": {
-      "comment": "Home section header above the FAQ / other list.",
-      "scope": { "platforms": ["android", "ios"], "surfaces": ["host"] },
-      "values": { "hanji": "其他", "tailo": "Kî-thann", "poj": "Kî-thaⁿ", "en": "More", "ja": "その他" }
-    },
     "setupGuide": {
       "comment": "Setup-guide navigation row label + sub-page title.",
       "scope": { "platforms": ["android", "ios"], "surfaces": ["host"] },
@@ -49,17 +44,12 @@
     "setupGuideCompletedMessage": {
       "comment": "Setup-guide full-screen closing paragraph: restart the app and switch via the globe key.",
       "scope": { "platforms": ["android", "ios"], "surfaces": ["host"] },
-      "values": { "hanji": "完成了後，重開你目前使用 ê App，予 App 重新載入新 ê 齒盤清單。紲落來，佇會當拍字 ê 所在，揤牢地球圖示切去台語齒盤", "tailo": "Uân-sîng liáu-āu, tîng-khui lí ba̍k-tsîng sú-iōng ê App, hōo App tîng-sin tsài-ji̍p sin ê khí-puânn tshing-tuann. Suà--lo̍h-lâi, tī ē-tàng phah-jī ê sóo-tsāi, tshi̍h tiâu tuē-kiû tôo-sī tshiat khì tâi-gí khí-puânn", "poj": "Oân-sêng liáu-āu, têng-khui lí ba̍k-chêng sú-iōng ê App, hō͘ App tîng-sin chài-ji̍p sin ê khí-pôaⁿ chheng-toaⁿ. Sòa--lo̍h-lâi, tī ē-tàng phah-jī ê só͘-chāi, chhi̍h tiâu tōe-kiû tô͘-sī chhiat khì tâi-gí khí-pôaⁿ", "en": "Once done, restart the app you are using so it reloads the keyboard list. Then, wherever you can type, press and hold the globe icon to switch to Taigi Keyboard.", "ja": "完了したら、使用中のアプリを再起動してキーボード一覧を読み込み直してください。その後、文字を入力できる場所で地球儀アイコンを長押しして、台湾語キーボードに切り替えます。" }
+      "values": { "hanji": "完成了後，重開你目前使用 ê App。紲落來，佇會當拍字 ê 所在揤牢地球圖示，切去台語齒盤。", "tailo": "Uân-sîng liáu-āu, tîng-khui lí ba̍k-tsîng sú-iōng ê App. Suà--lo̍h-lâi, tī ē-tàng phah-jī ê sóo-tsāi tshi̍h tiâu tuē-kiû tôo-sī, tshiat khì tâi-gí khí-puânn.", "poj": "Oân-sêng liáu-āu, têng-khui lí ba̍k-chêng sú-iōng ê App. Sòa--lo̍h-lâi, tī ē-tàng phah-jī ê só͘-chāi chhi̍h tiâu tōe-kiû tô͘-sī, chhiat khì tâi-gí khí-pôaⁿ.", "en": "Once done, restart the app you are using. Then, wherever you can type, press and hold the globe icon to switch to Taigi Keyboard.", "ja": "完了したら、使用中のアプリを再起動してください。その後、文字を入力できる場所で地球儀アイコンを長押しして、台湾語キーボードに切り替えます。" }
     },
     "setupGuideGoToSettings": {
       "comment": "Setup-guide button: open the system input-method settings page.",
       "scope": { "platforms": ["android", "ios"], "surfaces": ["host"] },
       "values": { "hanji": "去設定頁", "tailo": "Khì siat-tīng ia̍h", "poj": "Khì siat-tēng ia̍h", "en": "Open Settings", "ja": "設定を開く" }
-    },
-    "setupGuideCloseButton": {
-      "comment": "Setup-guide full-screen close button.",
-      "scope": { "platforms": ["android", "ios"], "surfaces": ["host"] },
-      "values": { "hanji": "關閉", "tailo": "Kuan pì", "poj": "Koan pì", "en": "Close", "ja": "閉じる" }
     },
     "setupGuideStep1Settings": {
       "comment": "Setup-guide step 1 title: tap 'Keyboards'.",

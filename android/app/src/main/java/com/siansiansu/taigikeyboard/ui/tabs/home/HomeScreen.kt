@@ -209,7 +209,7 @@ fun HomeScreen(
 
             Spacer(Modifier.height(AppStyle.sectionSpacing))
 
-            SectionHeader(L10n.homeFaq)
+            SectionHeader(L10n.commonOther)
             Spacer(Modifier.height(8.dp))
 
             val faqs = remember { FeatureContentLoader.loadFAQs(context) }

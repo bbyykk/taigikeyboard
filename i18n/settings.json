@@ -22,7 +22,7 @@
       "values": { "hanji": "自動", "tailo": "Tsū-tōng", "poj": "Chū-tōng", "en": "Automatic", "ja": "自動" }
     },
     "pojMode": {
-      "comment": "Input-mode option: Pe̍h-ōe-jī (白話字) romanization. Also the iOS smartbar input-mode button a11y label (extension surface).",
+      "comment": "Input-mode option: Pe̍h-ōe-jī (白話字) romanization. Also the iOS smartbar input-mode button a11y label (extension surface). Also the Pe̍h-ōe-jī settings section header (pojSettingsSectionTitle merged 2026-09-20).",
       "scope": { "platforms": ["android", "ios", "macos", "windows"], "surfaces": ["host", "extension"] },
       "values": { "hanji": "白話字", "tailo": "Pe̍h-uē-jī", "poj": "Pe̍h-ōe-jī", "en": "Pe̍h-ōe-jī", "ja": "Pe̍h-ōe-jī" }
     },
@@ -42,7 +42,7 @@
       "values": { "hanji": "台語", "tailo": "Tâi-gí", "poj": "Tâi-gí", "en": "Taigi", "ja": "台湾語" }
     },
     "tpsMode": {
-      "comment": "Input-mode option: Taiwanese Phonetic Symbols (方音符號). Also the iOS smartbar input-mode button a11y label (extension surface).",
+      "comment": "Input-mode option: Taiwanese Phonetic Symbols (方音符號). Also the iOS smartbar input-mode button a11y label (extension surface). Also the TPS settings section header and the layout page's TPS section header (tpsSettingsSectionTitle / layout.taigiPhonetic merged 2026-09-20).",
       "scope": { "platforms": ["android", "ios"], "surfaces": ["host", "extension"] },
       "values": { "hanji": "方音符號", "tailo": "Hong-im-hû-hō", "poj": "Hong-im-hû-hō", "en": "Phonetic Symbols", "ja": "方音符号" }
     },
@@ -119,7 +119,7 @@
     "literalRomanCandidateInfo": {
       "comment": "Help text for the 顯示當咧拍的字 toggle.",
       "scope": { "platforms": ["android", "ios"], "surfaces": ["host"] },
-      "values": { "hanji": "佇候選詞列第一格顯示你拍 ê 羅馬字，會當點揤抑是揤 Enter 送出。關閉了後干焦會當用 Enter 送出。", "tailo": "Tī hāu-suán sû lia̍t tē-it keh hián-sī lí phah ê lô-má-jī, ē-tàng tiám-tshi̍h ah-sī tshi̍h Enter sàng-tshut. Kuainn--khí-lâi liáu-āu kan-ta ē-tàng iōng Enter sàng-tshut.", "poj": "Tī hāu-soán sû lia̍t tē-it keh hián-sī lí phah ê lô-má-jī, ē-tàng tiám-chhi̍h ah-sī chhi̍h Enter sàng-chhut. Koaiⁿ--khí-lâi liáu-āu kan-ta ē-tàng iōng Enter sàng-chhut.", "en": "Shows what you typed in the first slot of the candidate bar. Tap it or press Enter to commit it. When off, only Enter can commit it.", "ja": "入力したローマ字を候補バーの先頭に表示します。タップするか Enter で確定できます。オフの場合は Enter でのみ確定できます。" }
+      "values": { "hanji": "候選詞列第一格顯示你拍 ê 羅馬字，點揤抑是揤 Enter 送出。關閉了後干焦會當用 Enter 送出。", "tailo": "Hāu-suán sû lia̍t tē-it keh hián-sī lí phah ê lô-má-jī, tiám-tshi̍h ah-sī tshi̍h Enter sàng-tshut. Kuainn--khí-lâi liáu-āu kan-ta ē-tàng iōng Enter sàng-tshut.", "poj": "Hāu-soán sû lia̍t tē-it keh hián-sī lí phah ê lô-má-jī, tiám-chhi̍h ah-sī chhi̍h Enter sàng-chhut. Koaiⁿ--khí-lâi liáu-āu kan-ta ē-tàng iōng Enter sàng-chhut.", "en": "Shows what you typed in the first slot of the candidate bar; tap it or press Enter to commit. When off, only Enter commits it.", "ja": "入力したローマ字を候補バーの先頭に表示し、タップか Enter で確定できます。オフの場合は Enter でのみ確定できます。" }
     },
     "autoCapitalization": {
       "comment": "Toggle label: automatic capitalization in English mode.",
@@ -137,14 +137,14 @@
       "values": { "hanji": "數字調", "tailo": "Sòo-jī-tiāu", "poj": "Sò͘-jī-tiāu", "en": "Numeric Tones", "ja": "数字で声調" }
     },
     "toneSchemeTelex": {
-      "comment": "toneInputScheme option: the letters v y d w x q type the tone, digits 1-9 pick a candidate. A scheme name, kept as-is in every language.",
+      "comment": "toneInputScheme option: the letters v y d w x q type the tone, digits 1-9 pick a candidate. A scheme name, kept as-is in every language. Also the title over the floating Telex guide's key table — the scheme's own name, nothing else (USER 2026-09-0x; desktop.telexGuideTitle merged 2026-09-20).",
       "scope": { "platforms": ["macos", "windows"], "surfaces": ["host"] },
       "values": { "hanji": "Telex", "tailo": "Telex", "poj": "Telex", "en": "Telex", "ja": "Telex" }
     },
     "autoSpace": {
       "comment": "Toggle label: auto-insert a space after committing a word.",
       "scope": { "platforms": ["android", "ios", "macos", "windows"], "surfaces": ["host", "extension"] },
-      "values": { "hanji": "自動空白", "tailo": "Tsū-tōng khàng-pe̍h", "poj": "Chū-tōng khàng-pe̍h", "en": "Auto-Space", "ja": "自動スペース" }
+      "values": { "hanji": "自動閬一个縫", "tailo": "Tsū-tōng làng tsi̍t ê phāng", "poj": "Chū-tōng làng chi̍t ê phāng", "en": "Auto-Space", "ja": "自動スペース" }
     },
     "keyboardSectionTitle": {
       "comment": "Section header for keyboard-chrome settings.",
@@ -186,11 +186,6 @@
       "scope": { "platforms": ["android", "ios"], "surfaces": ["host", "extension"] },
       "values": { "hanji": "震動反應", "tailo": "Tín-tāng huán-ìng", "poj": "Tín-tāng hoán-èng", "en": "Vibration", "ja": "バイブレーション" }
     },
-    "pojSettingsSectionTitle": {
-      "comment": "Section header for Pe̍h-ōe-jī-specific settings.",
-      "scope": { "platforms": ["android", "ios"], "surfaces": ["host"] },
-      "values": { "hanji": "白話字", "tailo": "Pe̍h-uē-jī", "poj": "Pe̍h-ōe-jī", "en": "Pe̍h-ōe-jī", "ja": "Pe̍h-ōe-jī" }
-    },
     "doubleTapOO": {
       "comment": "Toggle label: double-tap oo composes o͘ (POJ).",
       "scope": { "platforms": ["android", "ios"], "surfaces": ["host", "extension"] },
@@ -201,20 +196,15 @@
       "scope": { "platforms": ["android", "ios"], "surfaces": ["host", "extension"] },
       "values": { "hanji": "連紲拍 nn → ⁿ", "tailo": "Liân-suà phah nn -> ⁿ", "poj": "Liân-sòa phah nn -> ⁿ", "en": "Double-tap nn → ⁿ", "ja": "nn を続けて入力 → ⁿ" }
     },
-    "tpsSettingsSectionTitle": {
-      "comment": "Section header for TPS-specific settings.",
-      "scope": { "platforms": ["android", "ios"], "surfaces": ["host"] },
-      "values": { "hanji": "方音符號", "tailo": "Hong-im-hû-hō", "poj": "Hong-im-hû-hō", "en": "Phonetic Symbols", "ja": "方音符号" }
-    },
     "tpsOrMapsToER": {
       "comment": "Toggle label: render TL 'or' final as TPS ㄜ.",
       "scope": { "platforms": ["android", "ios"], "surfaces": ["host", "extension"] },
       "values": { "hanji": "or 對應 ㄜ", "tailo": "Or tuì-ìng ㄜ", "poj": "Or tùi-èng ㄜ", "en": "Map or → ㄜ", "ja": "or を ㄜ に対応" }
     },
     "tpsOrMapsToERInfo": {
-      "comment": "Help text for the or→ㄜ toggle (multi-paragraph).",
+      "comment": "Help text for the or→ㄜ toggle.",
       "scope": { "platforms": ["android", "ios"], "surfaces": ["host"] },
-      "values": { "hanji": "控制方音符號候選詞按怎顯示 or。開啟時顯示做 ㄜ，關閉時顯示做 ㄛ。這个設定袂影響揣詞結果。", "tailo": "Khòng-tsè hong-im-hû-hō hāu-suán sû án-nuá hián-sī or. Phah-khui sî hián-sī tsò ㄜ, kuainn--khí-lâi sî hián-sī tsò ㄛ. Tsit ê siat-tīng buē íng-hióng tshuē sû kiat-kó.", "poj": "Khòng-chè hong-im-hû-hō hāu-soán sû án-nóa hián-sī or. Phah-khui sî hián-sī chò ㄜ, koaiⁿ--khí-lâi sî hián-sī chò ㄛ. Chit ê siat-tēng bōe éng-hióng chhōe sû kiat-kó.", "en": "Controls how TPS candidates display 'or'. When on, 'or' appears as ㄜ; when off, it appears as ㄛ. This setting does not affect search results.", "ja": "方音符号の候補で「or」をどう表示するかを設定します。オンでは ㄜ、オフでは ㄛ と表示します。検索結果には影響しません。" }
+      "values": { "hanji": "開啟時 or 顯示做 ㄜ，關閉時顯示做 ㄛ。袂影響揣詞結果。", "tailo": "Phah-khui sî or hián-sī tsò ㄜ, kuainn--khí-lâi sî hián-sī tsò ㄛ. Buē íng-hióng tshuē sû kiat-kó.", "poj": "Phah-khui sî or hián-sī chò ㄜ, koaiⁿ--khí-lâi sî hián-sī chò ㄛ. Bōe éng-hióng chhōe sû kiat-kó.", "en": "When on, 'or' appears as ㄜ; when off, as ㄛ. Search results are unaffected.", "ja": "オンでは「or」を ㄜ、オフでは ㄛ と表示します。検索結果には影響しません。" }
     },
     "resetSettings": {
       "comment": "Destructive action row + dialog title: reset all settings and delete frequency/association records; custom words are preserved.",

@@ -70,7 +70,7 @@ internal fun EditEntryDialog(
                 },
                 enabled = canSave,
             ) {
-                Text(L10n.dictionarySave)
+                Text(L10n.commonSave)
             }
         },
         dismissButton = {

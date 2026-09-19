@@ -116,7 +116,7 @@ pub fn menu_rows(
             MENU_OPEN_SETTINGS,
             shortcut_label(
                 ShortcutAction::OpenLastSettingsPane,
-                StringKey::DesktopMenuSettings,
+                StringKey::CommonSettings,
             ),
         )),
         None,
