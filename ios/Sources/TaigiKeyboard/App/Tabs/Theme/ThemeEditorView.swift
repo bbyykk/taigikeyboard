@@ -130,7 +130,7 @@ struct ThemeEditorView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .confirmationAction) {
-                Button(lang.string(.themeEditorSave)) {
+                Button(lang.string(.commonSave)) {
                     // Cap-check NEW themes up front so the cap alert and the name
                     // alert never present back-to-back.
                     guard viewModel.canSaveNewTheme else {
@@ -156,7 +156,7 @@ struct ThemeEditorView: View {
         .onDisappear { SharedSettings.shared.sweepThemeImages() }
         .alert(lang.string(.themeNameHeader), isPresented: $showsNameAlert) {
             TextField(lang.string(.themeNamePlaceholder), text: $pendingName)
-            Button(lang.string(.themeEditorSave)) { commit() }
+            Button(lang.string(.commonSave)) { commit() }
             Button(lang.string(.commonCancel), role: .cancel) {}
         }
         .alert(lang.string(.themeCapReachedTitle), isPresented: $showsCapAlert) {
@@ -171,9 +171,9 @@ struct ThemeEditorView: View {
     /// a belt-and-braces guard for a TOCTOU race.
     private func commit() {
         let trimmed = pendingName.trimmingCharacters(in: .whitespacesAndNewlines)
-        // CROSS-PLATFORM INVARIANT — mirrors android ThemeEditorScreen.kt:343 `ifEmpty { resolve(THEME_DEFAULT_NAME) }`.
+        // CROSS-PLATFORM INVARIANT — mirrors android ThemeEditorScreen.kt:343 `ifEmpty { resolve(THEME_EDITOR_TITLE_NEW) }`.
         // Persisted name freezes the creation-language label (an editable user value); release falls back to「新主題」.
-        viewModel.name = trimmed.isEmpty ? lang.string(.themeDefaultName) : trimmed
+        viewModel.name = trimmed.isEmpty ? lang.string(.themeEditorTitleNew) : trimmed
         if viewModel.save() {
             dismiss()
         } else {

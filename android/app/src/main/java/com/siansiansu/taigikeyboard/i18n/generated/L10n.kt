@@ -12,6 +12,14 @@ object L10n {
         @Composable get() = stringRes(StringKey.COMMON_OK)
     val commonDelete: String
         @Composable get() = stringRes(StringKey.COMMON_DELETE)
+    val commonSave: String
+        @Composable get() = stringRes(StringKey.COMMON_SAVE)
+    val commonSettings: String
+        @Composable get() = stringRes(StringKey.COMMON_SETTINGS)
+    val commonPagePrevious: String
+        @Composable get() = stringRes(StringKey.COMMON_PAGE_PREVIOUS)
+    val commonPageNext: String
+        @Composable get() = stringRes(StringKey.COMMON_PAGE_NEXT)
     val commonInfo: String
         @Composable get() = stringRes(StringKey.COMMON_INFO)
     val commonClose: String
@@ -54,8 +62,6 @@ object L10n {
         @Composable get() = stringRes(StringKey.COMMON_FONT_GEN_YO_GOTHIC)
     val dictionaryClear: String
         @Composable get() = stringRes(StringKey.DICTIONARY_CLEAR)
-    val dictionarySave: String
-        @Composable get() = stringRes(StringKey.DICTIONARY_SAVE)
     val dictionaryCustomDictionary: String
         @Composable get() = stringRes(StringKey.DICTIONARY_CUSTOM_DICTIONARY)
     val dictionaryCustomDictEnabled: String
@@ -260,8 +266,6 @@ object L10n {
         @Composable get() = stringRes(StringKey.HOME_SETUP_GUIDE_COMPLETED_MESSAGE)
     val homeSetupGuideGoToSettings: String
         @Composable get() = stringRes(StringKey.HOME_SETUP_GUIDE_GO_TO_SETTINGS)
-    val homeSetupGuideCloseButton: String
-        @Composable get() = stringRes(StringKey.HOME_SETUP_GUIDE_CLOSE_BUTTON)
     val homeSetupGuideStep1Settings: String
         @Composable get() = stringRes(StringKey.HOME_SETUP_GUIDE_STEP1_SETTINGS)
     val homeSetupGuideStep2AddKeyboard: String
@@ -306,10 +310,6 @@ object L10n {
         @Composable get() = stringRes(StringKey.HOME_DEV_SUPPLEMENT_CREDIT)
     val keyboardExpandCandidates: String
         @Composable get() = stringRes(StringKey.KEYBOARD_EXPAND_CANDIDATES)
-    val keyboardPageUp: String
-        @Composable get() = stringRes(StringKey.KEYBOARD_PAGE_UP)
-    val keyboardPageDown: String
-        @Composable get() = stringRes(StringKey.KEYBOARD_PAGE_DOWN)
     val keyboardTranslateToggle: String
         @Composable get() = stringRes(StringKey.KEYBOARD_TRANSLATE_TOGGLE)
     val keyboardMorePopupHint: String
@@ -324,14 +324,8 @@ object L10n {
         @Composable get() = stringRes(StringKey.KEYBOARD_SWITCH_INPUT_METHOD)
     val keyboardDismissKeyboard: String
         @Composable get() = stringRes(StringKey.KEYBOARD_DISMISS_KEYBOARD)
-    val keyboardSettings: String
-        @Composable get() = stringRes(StringKey.KEYBOARD_SETTINGS)
-    val keyboardDeleteIcon: String
-        @Composable get() = stringRes(StringKey.KEYBOARD_DELETE_ICON)
     val layoutRomanizationKeyboard: String
         @Composable get() = stringRes(StringKey.LAYOUT_ROMANIZATION_KEYBOARD)
-    val layoutTaigiPhonetic: String
-        @Composable get() = stringRes(StringKey.LAYOUT_TAIGI_PHONETIC)
     val layoutStandardLayout: String
         @Composable get() = stringRes(StringKey.LAYOUT_STANDARD_LAYOUT)
     val layoutPhahTaigiLayout: String
@@ -350,8 +344,6 @@ object L10n {
         @Composable get() = stringRes(StringKey.NAV_TAB_LAYOUT)
     val navTabDictionary: String
         @Composable get() = stringRes(StringKey.NAV_TAB_DICTIONARY)
-    val navTabSettings: String
-        @Composable get() = stringRes(StringKey.NAV_TAB_SETTINGS)
     val settingsReset: String
         @Composable get() = stringRes(StringKey.SETTINGS_RESET)
     val settingsInputMode: String
@@ -408,14 +400,10 @@ object L10n {
         @Composable get() = stringRes(StringKey.SETTINGS_SOUND_FEEDBACK)
     val settingsVibrationFeedback: String
         @Composable get() = stringRes(StringKey.SETTINGS_VIBRATION_FEEDBACK)
-    val settingsPojSettingsSectionTitle: String
-        @Composable get() = stringRes(StringKey.SETTINGS_POJ_SETTINGS_SECTION_TITLE)
     val settingsDoubleTapOO: String
         @Composable get() = stringRes(StringKey.SETTINGS_DOUBLE_TAP_O_O)
     val settingsDoubleTapNN: String
         @Composable get() = stringRes(StringKey.SETTINGS_DOUBLE_TAP_N_N)
-    val settingsTpsSettingsSectionTitle: String
-        @Composable get() = stringRes(StringKey.SETTINGS_TPS_SETTINGS_SECTION_TITLE)
     val settingsTpsOrMapsToER: String
         @Composable get() = stringRes(StringKey.SETTINGS_TPS_OR_MAPS_TO_E_R)
     val settingsTpsOrMapsToERInfo: String
@@ -532,12 +520,8 @@ object L10n {
         @Composable get() = stringRes(StringKey.THEME_NAME_HEADER)
     val themeNamePlaceholder: String
         @Composable get() = stringRes(StringKey.THEME_NAME_PLACEHOLDER)
-    val themeEditorSave: String
-        @Composable get() = stringRes(StringKey.THEME_EDITOR_SAVE)
     val themeEditorResetAll: String
         @Composable get() = stringRes(StringKey.THEME_EDITOR_RESET_ALL)
-    val themeDefaultName: String
-        @Composable get() = stringRes(StringKey.THEME_DEFAULT_NAME)
     val themeCardMenuApply: String
         @Composable get() = stringRes(StringKey.THEME_CARD_MENU_APPLY)
     val themeCardMenuEdit: String

@@ -442,7 +442,7 @@ private fun ControlPanel(
         Spacer(Modifier.height(3.dp))
         ControlButton(
             iconRes = R.drawable.ic_arrow_triangle_up,
-            contentDescription = stringRes(StringKey.KEYBOARD_PAGE_UP),
+            contentDescription = stringRes(StringKey.COMMON_PAGE_PREVIOUS),
             colors = colors,
             modifier = Modifier.size(PageButtonSize),
             iconPadding = 10.dp,
@@ -451,7 +451,7 @@ private fun ControlPanel(
         Spacer(Modifier.height(16.dp))
         ControlButton(
             iconRes = R.drawable.ic_arrow_triangle_down,
-            contentDescription = stringRes(StringKey.KEYBOARD_PAGE_DOWN),
+            contentDescription = stringRes(StringKey.COMMON_PAGE_NEXT),
             colors = colors,
             modifier = Modifier.size(PageButtonSize),
             iconPadding = 10.dp,

@@ -170,7 +170,7 @@ struct ExpandedCandidateOverlay: View {
                     iconName: "arrowtriangle.up.fill",
                     yOffset: 2,
                     isPressed: $isUpButtonPressed,
-                    accessibilityLabel: lang.string(.keyboardPageUp),
+                    accessibilityLabel: lang.string(.commonPagePrevious),
                     action: {
                         scrollToPreviousPage { id in proxy.scrollTo(id, anchor: .top) }
                     },
@@ -180,7 +180,7 @@ struct ExpandedCandidateOverlay: View {
                     iconName: "arrowtriangle.down.fill",
                     yOffset: 16,
                     isPressed: $isDownButtonPressed,
-                    accessibilityLabel: lang.string(.keyboardPageDown),
+                    accessibilityLabel: lang.string(.commonPageNext),
                     action: {
                         scrollToNextPage { id in proxy.scrollTo(id, anchor: .top) }
                     },

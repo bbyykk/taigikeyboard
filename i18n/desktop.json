@@ -310,24 +310,6 @@
         "ja": "ファイル"
       }
     },
-    "menuClose": {
-      "comment": "File menu item: close the front window (⌘W).",
-      "scope": {
-        "platforms": [
-          "macos"
-        ],
-        "surfaces": [
-          "host"
-        ]
-      },
-      "values": {
-        "hanji": "關閉",
-        "tailo": "Kuan-pì",
-        "poj": "Koan-pì",
-        "en": "Close",
-        "ja": "閉じる"
-      }
-    },
     "menuEdit": {
       "comment": "Menu-bar Edit menu title.",
       "scope": {
@@ -890,44 +872,6 @@
         "ja": "前の候補"
       }
     },
-    "actionPageForward": {
-      "comment": "Shortcut row: show the next page of candidates.",
-      "scope": {
-        "platforms": [
-          "macos",
-          "windows"
-        ],
-        "surfaces": [
-          "host"
-        ]
-      },
-      "values": {
-        "hanji": "後一頁",
-        "tailo": "Āu tsi̍t ia̍h",
-        "poj": "Āu chi̍t ia̍h",
-        "en": "Next Page",
-        "ja": "次のページ"
-      }
-    },
-    "actionPageBackward": {
-      "comment": "Shortcut row: show the previous page of candidates.",
-      "scope": {
-        "platforms": [
-          "macos",
-          "windows"
-        ],
-        "surfaces": [
-          "host"
-        ]
-      },
-      "values": {
-        "hanji": "頂一頁",
-        "tailo": "Tíng tsi̍t ia̍h",
-        "poj": "Téng chi̍t ia̍h",
-        "en": "Previous Page",
-        "ja": "前のページ"
-      }
-    },
     "actionConfirmHighlighted": {
       "comment": "Shortcut row: commit the highlighted candidate.",
       "scope": {
@@ -1116,25 +1060,6 @@
         "poj": "Kiám-cha keng-sin",
         "en": "Check for Updates",
         "ja": "アップデートを確認"
-      }
-    },
-    "menuSettings": {
-      "comment": "Input-source menu row that opens the settings window on the pane the user left it on.",
-      "scope": {
-        "platforms": [
-          "macos",
-          "windows"
-        ],
-        "surfaces": [
-          "host"
-        ]
-      },
-      "values": {
-        "hanji": "設定",
-        "tailo": "Siat-tīng",
-        "poj": "Siat-tēng",
-        "en": "Settings",
-        "ja": "設定"
       }
     },
     "updateCurrentVersionLabel": {

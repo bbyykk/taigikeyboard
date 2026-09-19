@@ -48,7 +48,7 @@ enum MainMenu {
     private static func fileMenu(_ language: DisplayLanguageStore) -> NSMenu {
         let menu = NSMenu(title: language.string(.desktopMenuFile))
         menu.addItem(
-            withTitle: language.string(.desktopMenuClose),
+            withTitle: language.string(.commonClose),
             action: #selector(NSWindow.performClose(_:)),
             keyEquivalent: "w",
         )

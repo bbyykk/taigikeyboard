@@ -48,13 +48,13 @@ pub fn bar(
                 .children((
                     icon_button(
                         PREVIOUS_GLYPH,
-                        strings.resolve(StringKey::DesktopActionPageBackward),
+                        strings.resolve(StringKey::CommonPagePrevious),
                         is_enabled && page > 0,
                         context.callback(move |()| backward(page.saturating_sub(1))),
                     ),
                     icon_button(
                         NEXT_GLYPH,
-                        strings.resolve(StringKey::DesktopActionPageForward),
+                        strings.resolve(StringKey::CommonPageNext),
                         is_enabled && page + 1 < page_count,
                         context.callback(move |()| on_page(page + 1)),
                     ),

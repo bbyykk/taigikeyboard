@@ -159,7 +159,7 @@ fun SetupGuideScreen(
                     )
                     Spacer(Modifier.width(8.dp))
                     Text(
-                        text = L10n.homeSetupGuideCloseButton,
+                        text = L10n.commonClose,
                         color = MaterialTheme.colorScheme.onError,
                     )
                 }

@@ -20,27 +20,6 @@
         "ja": "クリア"
       }
     },
-    "save": {
-      "comment": "Save button in the custom-dictionary add/edit entry dialog.",
-      "scope": {
-        "platforms": [
-          "android",
-          "ios",
-          "macos",
-          "windows"
-        ],
-        "surfaces": [
-          "host"
-        ]
-      },
-      "values": {
-        "hanji": "儉起來",
-        "tailo": "Khiām--khí-lâi",
-        "poj": "Khiām--khí-lâi",
-        "en": "Save",
-        "ja": "保存"
-      }
-    },
     "customDictionary": {
       "comment": "Custom dictionary section/page title.",
       "scope": {
@@ -95,11 +74,11 @@
         ]
       },
       "values": {
-        "hanji": "拍開了後，自訂詞會出現佇候選詞內底；關起來了後，就袂閣出現。",
-        "tailo": "Phah-khui liáu-āu, tsū-tīng-sû ē tshut-hiān tī hāu-suán sû lāi-té; kuainn--khí-lâi liáu-āu, tsiū buē koh tshut-hiān.",
-        "poj": "Phah-khui liáu-āu, chū-tēng-sû ē chhut-hiān tī hāu-soán sû lāi-té; koaiⁿ--khí-lâi liáu-āu, chiū bōe koh chhut-hiān.",
-        "en": "When on, words you add appear among the candidates. When off, your custom words no longer show up.",
-        "ja": "オンにすると、追加した単語が候補に表示されます。オフにすると、カスタム単語は表示されなくなります。"
+        "hanji": "拍開了後，自訂詞會出現佇候選詞內底。",
+        "tailo": "Phah-khui liáu-āu, tsū-tīng-sû ē tshut-hiān tī hāu-suán sû lāi-té.",
+        "poj": "Phah-khui liáu-āu, chū-tēng-sû ē chhut-hiān tī hāu-soán sû lāi-té.",
+        "en": "When on, words you add appear among the candidates.",
+        "ja": "オンにすると、追加した単語が候補に表示されます。"
       }
     },
     "dataManagement": {
@@ -359,9 +338,9 @@
         ]
       },
       "values": {
-        "hanji": "敢確定欲刪除所有自訂詞？",
-        "tailo": "Kám khak-tīng beh san-tû sóo-iú tsū-tīng-sû?",
-        "poj": "Kám khak-tēng beh san-tû só͘-iú chū-tēng-sû?",
+        "hanji": "確定欲刪除所有自訂詞？",
+        "tailo": "Khak-tīng beh san-tû sóo-iú tsū-tīng-sû?",
+        "poj": "Khak-tēng beh san-tû só͘-iú chū-tēng-sû?",
         "en": "Delete all custom words?",
         "ja": "すべてのカスタム単語を削除しますか？"
       }
@@ -1207,11 +1186,11 @@
         ]
       },
       "values": {
-        "hanji": "詞頻紀錄可能會反映你揀過 ê 詞。匯出抑是分享進前，請先檢查敏感內容。關閉紀錄了後，齒盤袂閣學習你的候選詞排序。",
-        "tailo": "Sû pîn kì-lio̍k khó-lîng ē huán-ìng lí kíng kuè ê sû. Huē-tshut ah-sī hun-hióng tsìn-tsîng, tshiánn sian kiám-tsa bín-kám luē-iông. Kuainn--khí-lâi liáu-āu, khí-puânn buē koh ha̍k-si̍p lí ê hāu-suán sû pâi-sī.",
-        "poj": "Sû pîn kì-lio̍k khó-lêng ē hoán-èng lí kéng kòe ê sû. Hōe-chhut ah-sī hun-hióng chìn-chêng, chhiáⁿ sian kiám-cha bín-kám lōe-iông. Koaiⁿ--khí-lâi liáu-āu, khí-pôaⁿ bōe koh ha̍k-si̍p lí ê hāu-soán sû pâi-sī.",
-        "en": "Frequency records may reflect words you have selected. Check for sensitive content before exporting or sharing them. When recording is off, the keyboard stops learning your candidate ranking.",
-        "ja": "単語頻度の記録には、選んだ単語が反映される場合があります。エクスポートや共有の前に、機密情報が含まれていないか確認してください。記録をオフにすると、候補の並び順を学習しなくなります。"
+        "hanji": "詞頻紀錄可能反映你揀過 ê 詞，匯出抑是分享進前請先檢查。關閉了後，齒盤袂閣學習候選詞排序。",
+        "tailo": "Sû pîn kì-lio̍k khó-lîng huán-ìng lí kíng kuè ê sû, huē-tshut ah-sī hun-hióng tsìn-tsîng tshiánn sian kiám-tsa. Kuainn--khí-lâi liáu-āu, khí-puânn buē koh ha̍k-si̍p hāu-suán sû pâi-sī.",
+        "poj": "Sû pîn kì-lio̍k khó-lêng hoán-èng lí kéng kòe ê sû, hōe-chhut ah-sī hun-hióng chìn-chêng chhiáⁿ sian kiám-cha. Koaiⁿ--khí-lâi liáu-āu, khí-pôaⁿ bōe koh ha̍k-si̍p hāu-soán sû pâi-sī.",
+        "en": "Frequency records may reflect words you have selected; check them before exporting or sharing. When off, the keyboard stops learning your candidate ranking.",
+        "ja": "単語頻度の記録には選んだ単語が反映されることがあります。エクスポートや共有の前に確認してください。オフにすると、候補の並び順を学習しなくなります。"
       }
     },
     "clearAllFrequency": {
@@ -1245,11 +1224,11 @@
         ]
       },
       "values": {
-        "hanji": "詞關聯紀錄可能會反映你拍過 ê 詞組。匯出抑是分享進前，請先檢查敏感內容。關閉紀錄了後，齒盤袂閣學習你的下一詞使用習慣。",
-        "tailo": "Sû kuan-liân kì-lio̍k khó-lîng ē huán-ìng lí phah kuè ê sû-tsoo. Huē-tshut ah-sī hun-hióng tsìn-tsîng, tshiánn sian kiám-tsa bín-kám luē-iông. Kuainn--khí-lâi liáu-āu, khí-puânn buē koh ha̍k-si̍p lí ê ē tsi̍t ê sû sú-iōng si̍p-kuàn.",
-        "poj": "Sû koan-liân kì-lio̍k khó-lêng ē hoán-èng lí phah kòe ê sû-cho͘. Hōe-chhut ah-sī hun-hióng chìn-chêng, chhiáⁿ sian kiám-cha bín-kám lōe-iông. Koaiⁿ--khí-lâi liáu-āu, khí-pôaⁿ bōe koh ha̍k-si̍p lí ê ē chi̍t ê sû sú-iōng si̍p-koàn.",
-        "en": "Association records may reflect phrases you have typed. Check for sensitive content before exporting or sharing them. When recording is off, the keyboard stops learning your next-word habits.",
-        "ja": "単語連携の記録には、入力した語句が反映される場合があります。エクスポートや共有の前に、機密情報が含まれていないか確認してください。記録をオフにすると、次の単語の使い方を学習しなくなります。"
+        "hanji": "詞關聯紀錄可能反映你拍過 ê 詞組，匯出抑是分享進前請先檢查。關閉了後，齒盤袂閣學習下一詞習慣。",
+        "tailo": "Sû kuan-liân kì-lio̍k khó-lîng huán-ìng lí phah kuè ê sû-tsoo, huē-tshut ah-sī hun-hióng tsìn-tsîng tshiánn sian kiám-tsa. Kuainn--khí-lâi liáu-āu, khí-puânn buē koh ha̍k-si̍p ē tsi̍t ê sû si̍p-kuàn.",
+        "poj": "Sû koan-liân kì-lio̍k khó-lêng hoán-èng lí phah kòe ê sû-cho͘, hōe-chhut ah-sī hun-hióng chìn-chêng chhiáⁿ sian kiám-cha. Koaiⁿ--khí-lâi liáu-āu, khí-pôaⁿ bōe koh ha̍k-si̍p ē chi̍t ê sû si̍p-koàn.",
+        "en": "Association records may reflect phrases you have typed; check them before exporting or sharing. When off, the keyboard stops learning your next-word habits.",
+        "ja": "単語連携の記録には入力した語句が反映されることがあります。エクスポートや共有の前に確認してください。オフにすると、次の単語の使い方を学習しなくなります。"
       }
     },
     "clearAllAssociation": {

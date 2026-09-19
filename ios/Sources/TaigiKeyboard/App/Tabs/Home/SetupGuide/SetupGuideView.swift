@@ -88,7 +88,7 @@ struct SetupGuideView: View {
                     Button(role: .destructive) {
                         onComplete()
                     } label: {
-                        Label(lang.string(.homeSetupGuideCloseButton), systemImage: "xmark")
+                        Label(lang.string(.commonClose), systemImage: "xmark")
                             .frame(maxWidth: .infinity, alignment: .center)
                     }
                 }

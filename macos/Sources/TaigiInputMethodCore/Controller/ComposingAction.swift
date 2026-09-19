@@ -169,8 +169,8 @@ enum ComposingAction: String, CaseIterable, Sendable {
         switch self {
         case .nextCandidate: language.string(.desktopActionNextCandidate)
         case .previousCandidate: language.string(.desktopActionPreviousCandidate)
-        case .pageForward: language.string(.desktopActionPageForward)
-        case .pageBackward: language.string(.desktopActionPageBackward)
+        case .pageForward: language.string(.commonPageNext)
+        case .pageBackward: language.string(.commonPagePrevious)
         case .confirmHighlighted: language.string(.desktopActionConfirmHighlighted)
         case .commitLiteral: language.string(.desktopActionCommitLiteral)
         case .commitAlternateScript: language.string(.desktopActionCommitAlternateScript)

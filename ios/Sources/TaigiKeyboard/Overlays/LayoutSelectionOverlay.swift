@@ -42,7 +42,7 @@ struct LayoutSelectionOverlay: View {
 
                 // Section 2: Taigi phonetic
                 layoutSection(
-                    header: lang.string(.layoutTaigiPhonetic),
+                    header: lang.string(.settingsTpsMode),
                     layouts: [
                         (.tps, lang.string(.layoutTpsLayout), "layout_tps_preview"),
                     ],

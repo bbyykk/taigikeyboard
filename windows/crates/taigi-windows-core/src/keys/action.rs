@@ -155,8 +155,8 @@ impl ComposingAction {
         match self {
             Self::NextCandidate => StringKey::DesktopActionNextCandidate,
             Self::PreviousCandidate => StringKey::DesktopActionPreviousCandidate,
-            Self::PageForward => StringKey::DesktopActionPageForward,
-            Self::PageBackward => StringKey::DesktopActionPageBackward,
+            Self::PageForward => StringKey::CommonPageNext,
+            Self::PageBackward => StringKey::CommonPagePrevious,
             Self::ConfirmHighlighted => StringKey::DesktopActionConfirmHighlighted,
             Self::CommitLiteral => StringKey::DesktopActionCommitLiteral,
             Self::CommitAlternateScript => StringKey::DesktopActionCommitAlternateScript,

@@ -180,7 +180,7 @@ struct CustomDictionaryView: View {
             Button(lang.string(.commonCancel), role: .cancel) {
                 editingEntry = nil
             }
-            Button(lang.string(.dictionarySave)) {
+            Button(lang.string(.commonSave)) {
                 saveEntryFromAlert()
             }
         }
