@@ -71,9 +71,10 @@ pub(crate) fn strip_tps_separator_markers(raw: &str) -> String {
 ///   `o` / `n` by matching alone (`hoo|on` would land after the third `o`);
 ///   the fold is recognised by its signature instead — the matched `o` carries
 ///   the dot, or the matched letter IS a nasal marker — together with the next raw
-///   character being that same letter, and the second tap is consumed there;
-/// - it changes case (`taI2` → `tái`, `Tai5` → `Tâi`) — compared
-///   case-insensitively.
+///   character being that same letter, and the second tap is consumed there.
+///
+/// Typed case is preserved (`taI2` → `táI`, `Tai5` → `Tâi`); letters are
+/// still compared case-insensitively so the map never depends on it.
 ///
 /// Folded positions (`ho|o`, `tin|n`, the digit) share a display offset with
 /// their neighbour; the caret takes no visible step there. `caret` past the
@@ -233,10 +234,10 @@ mod tests {
 
     #[test]
     fn display_caret_hyphen_and_case_are_one_to_one() {
-        // trace: "Tai5-gI2" → "Tâi-gí". T~T→1, a~â→2, i→3, 5 dropped→3,
-        // -→4, g→5, I~í→6, 2 dropped→6.
+        // trace: "Tai5-gI2" → "Tâi-gÍ" (typed capital kept). T~T→1, a~â→2,
+        // i→3, 5 dropped→3, -→4, g→5, I~Í→6, 2 dropped→6.
         let (display, boundaries) = caret_map("Tai5-gI2", &config_tl());
-        assert_eq!(display, "T\u{e2}i-g\u{ed}");
+        assert_eq!(display, "T\u{e2}i-g\u{cd}");
         assert_eq!(boundaries, vec![0, 1, 2, 3, 3, 4, 5, 6, 6]);
     }
 
@@ -404,6 +405,20 @@ mod tests {
             }
             .raw_input(&config_poj()),
             "t\u{e9}ng"
+        );
+    }
+
+    #[test]
+    fn raw_input_composing_caps_lock_keeps_every_capital() {
+        // Caps Lock `SIANN5` must read `SIÂᴺ`, not `Siâⁿ` (Discord report
+        // 2026-09-14): the preedit is also what a commit writes.
+        assert_eq!(
+            Phase::Composing {
+                raw: "SIANN5".to_string(),
+                caret: 0,
+            }
+            .raw_input(&config_poj_doubletap()),
+            "SI\u{c2}\u{1d3a}"
         );
     }
 

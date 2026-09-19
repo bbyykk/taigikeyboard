@@ -4,7 +4,7 @@
 //! `.claude/rules/rust-best-practices.md §3a`; this module never decodes a
 //! top-level `taigi.engine.Request` or owns a panic boundary.
 
-use crate::case_transform::adjust_nasal_marker_case;
+use crate::case_transform::{adjust_nasal_marker_case, match_case};
 use crate::poj::to_poj;
 use crate::syllable::{
     is_stop_tone, normalize_to_tl, normalize_to_tl_keep_tl_finals, split_initial_final,
@@ -238,12 +238,9 @@ fn convert_syllable(syllable: &str, mode: InputMode) -> String {
         // POJ (English / TPS already returned above).
         crate::poj::apply_poj_tone_literal(&lowered, &tone)
     };
-    let first = base.chars().next().unwrap();
-    if first.is_uppercase() {
-        capitalize_first(&placed)
-    } else {
-        placed
-    }
+    // Letter by letter, so Caps Lock `SIANN5` → `SIÂⁿ` (nasal marker re-cased
+    // to `ᴺ` by `adjust_nasal_marker_case` afterwards), not `Siâⁿ`.
+    match_case(&placed, &base, mode)
 }
 
 /// Convert tone-marked text to numeric-tone form. Mirrors `toToneNumber` in
