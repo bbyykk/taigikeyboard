@@ -19,17 +19,17 @@
     "familyClassic": {
       "comment": "Built-in theme key-style family header: filled keys.",
       "scope": { "platforms": ["android", "ios"], "surfaces": ["host"] },
-      "values": { "hanji": "填色揤鈕", "tailo": "Thiām-sik tshi̍h-liú", "poj": "Thiam-sek chhi̍h-liú", "en": "Filled", "ja": "塗りつぶし" }
+      "values": { "hanji": "填色", "tailo": "Thiām-sik", "poj": "Thiam-sek", "en": "Filled", "ja": "塗りつぶし" }
     },
     "familyFramed": {
       "comment": "Built-in theme key-style family header: transparent keys with an outline border.",
       "scope": { "platforms": ["android", "ios"], "surfaces": ["host"] },
-      "values": { "hanji": "框線揤鈕", "tailo": "Khing-suànn tshi̍h-liú", "poj": "Kheng-sòaⁿ chhi̍h-liú", "en": "Outlined", "ja": "枠線" }
+      "values": { "hanji": "框線", "tailo": "Khing-suànn", "poj": "Kheng-sòaⁿ", "en": "Outlined", "ja": "枠線" }
     },
     "familyClean": {
       "comment": "Built-in theme key-style family header: transparent keys, no border.",
       "scope": { "platforms": ["android", "ios"], "surfaces": ["host"] },
-      "values": { "hanji": "無框揤鈕", "tailo": "Bô-khing tshi̍h-liú", "poj": "Bô-kheng chhi̍h-liú", "en": "Borderless", "ja": "枠なし" }
+      "values": { "hanji": "無框", "tailo": "Bô-khing", "poj": "Bô-kheng", "en": "Borderless", "ja": "枠なし" }
     },
     "paletteDefault": {
       "comment": "Built-in theme color name: the adaptive default palette (value = 'Default'). DRAFT TL/POJ (ī-siat, full dict main reading) + en/ja pending USER proofread.",

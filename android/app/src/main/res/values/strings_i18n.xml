@@ -224,9 +224,9 @@
     <string name="i18n_theme_customFont">字型設定</string>
     <string name="i18n_theme_customThemesSection">自訂主題</string>
     <string name="i18n_theme_createNewTheme">新主題…</string>
-    <string name="i18n_theme_familyClassic">填色揤鈕</string>
-    <string name="i18n_theme_familyFramed">框線揤鈕</string>
-    <string name="i18n_theme_familyClean">無框揤鈕</string>
+    <string name="i18n_theme_familyClassic">填色</string>
+    <string name="i18n_theme_familyFramed">框線</string>
+    <string name="i18n_theme_familyClean">無框</string>
     <string name="i18n_theme_paletteDefault">預設</string>
     <string name="i18n_theme_palettePink">櫻花</string>
     <string name="i18n_theme_paletteGold">金煌</string>
