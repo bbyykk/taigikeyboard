@@ -101,11 +101,6 @@
       "scope": { "platforms": ["android", "ios"], "surfaces": ["host"] },
       "values": { "hanji": "目前版本", "tailo": "Ba̍k-tsîng pán-pún", "poj": "Ba̍k-chêng pán-pún", "en": "Current Version", "ja": "現在のバージョン" }
     },
-    "versionHistory": {
-      "comment": "Home resource link + version-history page title.",
-      "scope": { "platforms": ["android", "ios"], "surfaces": ["host"] },
-      "values": { "hanji": "版本紀錄", "tailo": "Pán-pún kì-lio̍k", "poj": "Pán-pún kì-lio̍k", "en": "Version History", "ja": "更新履歴" }
-    },
     "copyrightNotice": {
       "comment": "Home resource link + copyright/acknowledgement page title.",
       "scope": { "platforms": ["android", "ios"], "surfaces": ["host"] },

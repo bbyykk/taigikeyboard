@@ -1,6 +1,6 @@
 ---
 name: release-mobile
-description: Prepare a MOBILE release (iOS + Android, one shared version) on main - rebuild generated artifacts, update the detailed changelog, write concise English iOS and Android What's New text, mirror it into both apps' version history, validate, commit, push, and tag the release commit `mobile-<version>`. Use when preparing a version for manual App Store Connect or Google Play release. Never uploads builds or submits a store release. Takes no version argument - it releases the version already in the tree (set beforehand with `make version-mobile x.y.z`); an optional argument only overrides the release base. Mobile train only; the desktop train (macOS + Windows) is `release-desktop`.
+description: Prepare a MOBILE release (iOS + Android, one shared version) on main - rebuild generated artifacts, update the detailed changelog, write concise English iOS and Android What's New text, validate, commit, push, and tag the release commit `mobile-<version>`. Use when preparing a version for manual App Store Connect or Google Play release. Never uploads builds or submits a store release. Takes no version argument - it releases the version already in the tree (set beforehand with `make version-mobile x.y.z`); an optional argument only overrides the release base. Mobile train only; the desktop train (macOS + Windows) is `release-desktop`.
 ---
 
 # Release Mobile
@@ -119,10 +119,8 @@ Update these surfaces idempotently:
 | `changelog/<target>.md` | Detailed Shared / iOS / Android / Dictionary record for the mobile train (desktop work lives in `changelog/desktop-v<version>.md`, not here) |
 | `changelog/store/<target>/ios.txt` | Canonical English iOS What's New |
 | `changelog/store/<target>/android.txt` | Canonical English Android What's New |
-| iOS `VersionHistory.swift` | Generated from `ios.txt` |
-| Android `VersionHistory.kt` | Generated from `android.txt` |
 
-If target content already exists, merge new information by topic. Refine an existing line for the same behavior; do not duplicate a topic or add a second target history entry.
+If target content already exists, merge new information by topic. Refine an existing line for the same behavior; do not duplicate a topic.
 
 Canonical store-note rules:
 
@@ -135,13 +133,6 @@ Canonical store-note rules:
 - Exclude refactors, tests, tooling, dependencies, issue/PR numbers, URLs, rankings, marketing claims, and future work.
 - Do not mention another platform in platform-specific notes: no Android in `ios.txt`, no App Store in `android.txt`, and no macOS in either. `validate_notes` rejects all three.
 - Keep rendered bullets and newlines within 500 Unicode characters.
-- A platform's app history and store text must use exactly the same entries.
-
-Synchronize both apps after the canonical files are final:
-
-```bash
-python3 tools/release_notes.py sync --version <target> --date YYYY/MM/DD
-```
 
 ## 5. Validate and render
 

@@ -139,7 +139,6 @@
     <string name="i18n_home_privacyPolicy">Privacy Policy</string>
     <string name="i18n_home_freePromise">Taigi Keyboard will remain free and will not add paid features. I want everyone who wishes to learn or write Taiwanese to be able to use it without cost.</string>
     <string name="i18n_home_version">Current Version</string>
-    <string name="i18n_home_versionHistory">Version History</string>
     <string name="i18n_home_copyrightNotice">Acknowledgements</string>
     <string name="i18n_home_viewLicense">License</string>
     <string name="i18n_home_moeCopyright">© Ministry of Education</string>

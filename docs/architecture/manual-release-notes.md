@@ -2,7 +2,7 @@
 
 ## Goal
 
-Maintain one concise English What's New source per mobile platform, show the same content inside each app, and let the release owner paste it into App Store Connect or Google Play manually. No store API credentials or publishing automation are involved.
+Maintain one concise English What's New source per mobile platform and let the release owner paste it into App Store Connect or Google Play manually. The apps show no version history (USER 2026-09-20: users do not read it); the detailed record lives in `changelog/` only. No store API credentials or publishing automation are involved.
 
 ## Canonical sources
 
@@ -11,9 +11,9 @@ changelog/store/vMAJOR.MINOR.PATCH/ios.txt
 changelog/store/vMAJOR.MINOR.PATCH/android.txt
 ```
 
-Each non-empty line is one entry without a bullet marker. `tools/release_notes.py` validates the entries, adds bullets for store output, and mirrors them into the newest version-history entry on each platform.
+Each non-empty line is one entry without a bullet marker. `tools/release_notes.py` validates the entries and adds bullets for store output.
 
-Platform notes may differ when shipped behavior differs. For a given platform, its canonical notes, in-app version history, and manually pasted store text must contain the same entries.
+Platform notes may differ when shipped behavior differs. For a given platform, its canonical notes and manually pasted store text must contain the same entries.
 
 ## Two release trains
 
@@ -45,13 +45,7 @@ One train per invocation. Neither build number is a maintainer's problem: the iO
 
 ## Prepare notes
 
-Create both canonical files, then synchronize the apps:
-
-```bash
-python3 tools/release_notes.py sync --version vMAJOR.MINOR.PATCH --date YYYY/MM/DD
-```
-
-Validate the canonical files, generated app histories, and the mobile train's marketing versions:
+Create both canonical files, then validate them and the mobile train's marketing versions:
 
 ```bash
 python3 tools/release_notes.py check --version vMAJOR.MINOR.PATCH

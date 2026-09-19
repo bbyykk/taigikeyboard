@@ -49,7 +49,7 @@
 | `architecture/keyboard-body-invariants-android.md` | Android Compose keyboard-body geometry / touch-target invariants (refactor-freeze contract) | Active |
 | `architecture/data-artifacts-portability.md` | Binary artifacts + SQLite portability contract (iOS / Android §1–7, macOS / Windows stores §8, decision register) | Active |
 | `architecture/macos-roadmap.md` | macOS desktop IME (InputMethodKit over the shared engine) — design decisions D1–D11 incl. candidate-window port, PR table; shipped desktop v3.6.7/v3.6.8 | Reference |
-| `architecture/manual-release-notes.md` | Canonical English What's New, in-app history sync, validation, and manual store paste workflow | Active |
+| `architecture/manual-release-notes.md` | Canonical English What's New, validation, and manual store paste workflow | Active |
 | `architecture/desktop-release.md` | How a desktop version reaches a user: staged on a draft, tested, published by hand, announced automatically | Active |
 | `architecture/macos-release.md` | macOS Developer ID signing, notarization, and what only a Mac asserts about its `.pkg` | Active |
 | `architecture/windows-roadmap.md` | Windows desktop IME (TSF in Rust over the shared engine, macOS UX parity) — design W1–W17, PR table, reference alignment, dogfood run-book; shipped desktop v3.6.7/v3.6.8 | Reference |

@@ -146,7 +146,6 @@ enum class StringKey(
     HOME_PRIVACY_POLICY(R.string.i18n_home_privacyPolicy),
     HOME_FREE_PROMISE(R.string.i18n_home_freePromise),
     HOME_VERSION(R.string.i18n_home_version),
-    HOME_VERSION_HISTORY(R.string.i18n_home_versionHistory),
     HOME_COPYRIGHT_NOTICE(R.string.i18n_home_copyrightNotice),
     HOME_VIEW_LICENSE(R.string.i18n_home_viewLicense),
     HOME_MOE_COPYRIGHT(R.string.i18n_home_moeCopyright),

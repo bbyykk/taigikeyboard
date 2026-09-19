@@ -1,5 +1,5 @@
-"""Validate store release notes, mirror them into platform version history, and
-check or set a release train's version number.
+"""Validate store release notes and check or set a release train's version
+number.
 
 Two trains, two numbers: `mobile` (iOS + Android share one) and `desktop`
 (macOS + Windows share one). They move independently; within a train the
@@ -8,7 +8,6 @@ platforms cannot drift apart."""
 from __future__ import annotations
 
 import argparse
-import json
 import os
 import plistlib
 import re
@@ -140,6 +139,12 @@ def load_notes(repo_root: Path, version: str, platform: str) -> PlatformNotes:
     return notes
 
 
+def check_notes(repo_root: Path, version: str) -> None:
+    """Both mobile platforms' canonical notes exist and validate."""
+    for platform in ("ios", "android"):
+        load_notes(repo_root, version, platform)
+
+
 def validate_notes(notes: PlatformNotes, path: Path | None = None) -> None:
     label = str(path) if path is not None else notes.platform
     if not 1 <= len(notes.entries) <= MAX_ENTRIES:
@@ -183,212 +188,6 @@ def validate_notes(notes: PlatformNotes, path: Path | None = None) -> None:
             f"{label}: rendered What's New is {len(notes.store_text)} characters; "
             f"maximum is {MAX_STORE_CHARACTERS}",
         )
-
-
-def _swift_quoted(value: str) -> str:
-    return json.dumps(value, ensure_ascii=False)
-
-
-def _kotlin_quoted(value: str) -> str:
-    # JSON string escaping is otherwise compatible with a Kotlin regular string,
-    # but Kotlin treats an unescaped dollar sign as string interpolation.
-    return json.dumps(value, ensure_ascii=False).replace("$", "\\$")
-
-
-def render_swift_entry(
-    version: str, release_date: str, entries: tuple[str, ...]
-) -> str:
-    changes = "".join(f"            {_swift_quoted(entry)},\n" for entry in entries)
-    return (
-        f"        ({_swift_quoted(version)}, {_swift_quoted(release_date)}, [\n"
-        f"{changes}"
-        "        ]),\n"
-    )
-
-
-def render_kotlin_entry(
-    version: str, release_date: str, entries: tuple[str, ...]
-) -> str:
-    changes = "".join(
-        f"                    {_kotlin_quoted(entry)},\n" for entry in entries
-    )
-    return (
-        "            VersionEntry(\n"
-        f"                {_kotlin_quoted(version)},\n"
-        f"                {_kotlin_quoted(release_date)},\n"
-        "                listOf(\n"
-        f"{changes}"
-        "                ),\n"
-        "            ),\n"
-    )
-
-
-def _balanced_entry_span(source: str, start: int) -> tuple[int, int]:
-    opening = source.find("(", start)
-    if opening < 0:
-        raise ReleaseNotesError("version-history entry has no opening parenthesis")
-
-    depth = 0
-    in_string = False
-    escaped = False
-    for index in range(opening, len(source)):
-        character = source[index]
-        if in_string:
-            if escaped:
-                escaped = False
-            elif character == "\\":
-                escaped = True
-            elif character == '"':
-                in_string = False
-            continue
-        if character == '"':
-            in_string = True
-        elif character == "(":
-            depth += 1
-        elif character == ")":
-            depth -= 1
-            if depth == 0:
-                end = index + 1
-                if end < len(source) and source[end] == ",":
-                    end += 1
-                if end < len(source) and source[end] == "\n":
-                    end += 1
-                return start, end
-    raise ReleaseNotesError("unterminated version-history entry")
-
-
-def _replace_latest_entry(
-    source: str,
-    version: str,
-    rendered_entry: str,
-    list_marker: str,
-    entry_pattern: re.Pattern[str],
-) -> str:
-    marker_index = source.find(list_marker)
-    if marker_index < 0:
-        raise ReleaseNotesError(
-            f"version-history list marker not found: {list_marker!r}"
-        )
-    insert_at = marker_index + len(list_marker)
-
-    matches = list(entry_pattern.finditer(source))
-    matching_version = [match for match in matches if match.group("version") == version]
-    if len(matching_version) > 1:
-        raise ReleaseNotesError(f"duplicate version-history entries for {version}")
-    if matching_version:
-        start, end = _balanced_entry_span(source, matching_version[0].start())
-        source = source[:start] + source[end:]
-
-    return source[:insert_at] + rendered_entry + source[insert_at:]
-
-
-SWIFT_LIST_MARKER = (
-    "static let entries: [(version: String, date: String, changes: [String])] = [\n"
-)
-SWIFT_ENTRY_PATTERN = re.compile(
-    r'^        \("(?P<version>\d+\.\d+\.\d+)",', re.MULTILINE
-)
-KOTLIN_LIST_MARKER = "        listOf(\n"
-KOTLIN_ENTRY_PATTERN = re.compile(
-    r'^            VersionEntry\(\n                "(?P<version>\d+\.\d+\.\d+)",',
-    re.MULTILINE,
-)
-
-
-def sync_version_history(repo_root: Path, version: str, release_date: str) -> None:
-    ios_notes = load_notes(repo_root, version, "ios")
-    android_notes = load_notes(repo_root, version, "android")
-
-    swift_path = (
-        repo_root / "ios/Sources/TaigiKeyboard/App/Tabs/Home/VersionHistory.swift"
-    )
-    kotlin_path = (
-        repo_root
-        / "android/app/src/main/java/com/siansiansu/taigikeyboard/content/VersionHistory.kt"
-    )
-
-    original_swift_source = swift_path.read_text(encoding="utf-8")
-    original_kotlin_source = kotlin_path.read_text(encoding="utf-8")
-    swift_source = _replace_latest_entry(
-        original_swift_source,
-        version,
-        render_swift_entry(version, release_date, ios_notes.entries),
-        SWIFT_LIST_MARKER,
-        SWIFT_ENTRY_PATTERN,
-    )
-    kotlin_source = _replace_latest_entry(
-        original_kotlin_source,
-        version,
-        render_kotlin_entry(version, release_date, android_notes.entries),
-        KOTLIN_LIST_MARKER,
-        KOTLIN_ENTRY_PATTERN,
-    )
-    originals = {swift_path: original_swift_source, kotlin_path: original_kotlin_source}
-    written: list[Path] = []
-    try:
-        for path, rendered in (
-            (swift_path, swift_source),
-            (kotlin_path, kotlin_source),
-        ):
-            _write_atomically(path, rendered)
-            written.append(path)
-    except OSError:
-        # Keep the two generated histories aligned even if the second write fails.
-        _restore_files(originals, written)
-        raise
-
-
-def check_version_history(repo_root: Path, version: str) -> None:
-    checks = (
-        (
-            "ios",
-            repo_root / "ios/Sources/TaigiKeyboard/App/Tabs/Home/VersionHistory.swift",
-            SWIFT_LIST_MARKER,
-            SWIFT_ENTRY_PATTERN,
-        ),
-        (
-            "android",
-            repo_root
-            / "android/app/src/main/java/com/siansiansu/taigikeyboard/content/VersionHistory.kt",
-            KOTLIN_LIST_MARKER,
-            KOTLIN_ENTRY_PATTERN,
-        ),
-    )
-    for platform, path, marker, pattern in checks:
-        notes = load_notes(repo_root, version, platform)
-        source = path.read_text(encoding="utf-8")
-        expected = (
-            render_swift_entry(
-                version, _entry_date(source, version, pattern), notes.entries
-            )
-            if platform == "ios"
-            else render_kotlin_entry(
-                version, _entry_date(source, version, pattern), notes.entries
-            )
-        )
-        insert_at = source.find(marker) + len(marker)
-        if insert_at < len(marker) or not source.startswith(expected, insert_at):
-            raise ReleaseNotesError(
-                f"{path}: newest entry does not exactly match {notes_path(repo_root, version, platform)}",
-            )
-
-
-def _entry_date(source: str, version: str, pattern: re.Pattern[str]) -> str:
-    matches = [
-        match for match in pattern.finditer(source) if match.group("version") == version
-    ]
-    if len(matches) != 1:
-        raise ReleaseNotesError(
-            f"expected exactly one version-history entry for {version}"
-        )
-    _, end = _balanced_entry_span(source, matches[0].start())
-    entry = source[matches[0].start() : end]
-    date_match = re.search(r'"(\d{4}/\d{2}/\d{2})"', entry)
-    if date_match is None:
-        raise ReleaseNotesError(
-            f"version-history entry {version} has no YYYY/MM/DD date"
-        )
-    return date_match.group(1)
 
 
 def read_text_file(repo_root: Path, relative_path: str) -> str:
@@ -914,9 +713,7 @@ def _parse_args() -> argparse.Namespace:
         )
         return subparser
 
-    sync = add_command("sync", "Render the canonical notes into both app histories")
-    sync.add_argument("--date", help="Release date in YYYY/MM/DD form", required=True)
-    add_command("check", "Validate the canonical notes and both app histories")
+    add_command("check", "Validate both platforms' canonical notes")
     check_versions = add_command(
         "check-versions", "Check one release train's project versions"
     )
@@ -946,13 +743,8 @@ def main() -> int:
     try:
         version = normalize_version(args.version)
         repo_root = args.repo_root.resolve()
-        if args.command == "sync":
-            if re.fullmatch(r"\d{4}/\d{2}/\d{2}", args.date) is None:
-                raise ReleaseNotesError("sync requires --date YYYY/MM/DD")
-            sync_version_history(repo_root, version, args.date)
-            check_version_history(repo_root, version)
-        elif args.command == "check":
-            check_version_history(repo_root, version)
+        if args.command == "check":
+            check_notes(repo_root, version)
         elif args.command == "check-versions":
             check_project_versions(repo_root, version, args.train)
         elif args.command == "set-versions":

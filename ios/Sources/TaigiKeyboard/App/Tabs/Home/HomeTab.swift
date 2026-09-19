@@ -93,12 +93,6 @@ struct HomeTab: View {
                         Label(lang.string(.homeAboutDeveloper), systemImage: "info.circle")
                     }
 
-                    NavigationLink {
-                        VersionHistoryDetailView()
-                    } label: {
-                        Label(lang.string(.homeVersionHistory), systemImage: "clock.arrow.circlepath")
-                    }
-
                     // Version info
                     HStack {
                         Label(lang.string(.homeVersion), systemImage: "info.circle")
