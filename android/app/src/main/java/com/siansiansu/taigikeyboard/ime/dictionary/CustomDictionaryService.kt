@@ -6,6 +6,7 @@ import android.database.sqlite.SQLiteOpenHelper
 import android.net.Uri
 import androidx.core.database.sqlite.transaction
 import com.siansiansu.taigikeyboard.ime.core.db.rowCount
+import com.siansiansu.taigikeyboard.ime.core.db.upsert
 import com.siansiansu.taigikeyboard.ime.core.db.vacuumBestEffort
 import com.siansiansu.taigikeyboard.ime.core.logging.LoggerBackend
 import com.siansiansu.taigikeyboard.ime.core.logging.debug
@@ -46,6 +47,43 @@ class CustomDictionaryService(
             "CREATE INDEX IF NOT EXISTS idx_csk_lookup ON custom_search_key(family, form, key);"
         internal const val CREATE_SEARCH_KEY_ENTRY_INDEX_SQL =
             "CREATE INDEX IF NOT EXISTS idx_csk_entry ON custom_search_key(entry_id);"
+
+        /**
+         * Upsert pair shared by [save] and [importFromFile] via [executeUpsert]
+         * (`upsert`, SQLite 3.22 ceiling, §8a). Keyed on `id`; one arg tuple.
+         */
+        internal val UPSERT_UPDATE_SQL =
+            """
+            UPDATE ${Table.NAME}
+            SET ${Table.ROMAN} = ?,
+                ${Table.HANZI} = ?,
+                ${Table.NOTONE} = ?,
+                ${Table.ABBREV} = ?,
+                ${Table.ROMAN_NUM} = ?,
+                ${Table.UPDATED_AT} = CURRENT_TIMESTAMP
+            WHERE ${Table.ID} = ?
+            """.trimIndent()
+
+        internal val UPSERT_INSERT_SQL =
+            """
+            INSERT OR IGNORE INTO ${Table.NAME} (${Table.ROMAN}, ${Table.HANZI}, ${Table.NOTONE}, ${Table.ABBREV}, ${Table.ROMAN_NUM}, ${Table.ID}, ${Table.CREATED_AT}, ${Table.UPDATED_AT})
+            VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+            """.trimIndent()
+
+        /** One source for onCreate and the JVM SQL tests. */
+        internal val CREATE_TABLE_SQL =
+            """
+            CREATE TABLE ${Table.NAME} (
+                ${Table.ID} TEXT PRIMARY KEY,
+                ${Table.ROMAN} TEXT NOT NULL,
+                ${Table.HANZI} TEXT NOT NULL,
+                ${Table.NOTONE} TEXT DEFAULT '',
+                ${Table.ABBREV} TEXT DEFAULT '',
+                ${Table.ROMAN_NUM} TEXT DEFAULT '',
+                ${Table.CREATED_AT} TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                ${Table.UPDATED_AT} TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+            """.trimIndent()
 
         // CROSS-PLATFORM INVARIANT — mirrors ios/Sources/TaigiKeyboard/Lexicon/Database/CustomDictionaryRepository.swift query.
         // Drift causes silent divergence.
@@ -114,24 +152,6 @@ class CustomDictionaryService(
     private val initMutex = Mutex()
     private var isInitialized = false
 
-    /**
-     * UPSERT template shared between [save] and [importFromFile]. Both paths
-     * previously duplicated this SQL block verbatim (runtime-identical after
-     * `trimIndent()`). Single source of truth now.
-     */
-    private val UPSERT_SQL =
-        """
-        INSERT INTO ${Table.NAME} (${Table.ID}, ${Table.ROMAN}, ${Table.HANZI}, ${Table.NOTONE}, ${Table.ABBREV}, ${Table.ROMAN_NUM}, ${Table.CREATED_AT}, ${Table.UPDATED_AT})
-        VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-        ON CONFLICT(${Table.ID}) DO UPDATE SET
-            ${Table.ROMAN} = excluded.${Table.ROMAN},
-            ${Table.HANZI} = excluded.${Table.HANZI},
-            ${Table.NOTONE} = excluded.${Table.NOTONE},
-            ${Table.ABBREV} = excluded.${Table.ABBREV},
-            ${Table.ROMAN_NUM} = excluded.${Table.ROMAN_NUM},
-            ${Table.UPDATED_AT} = CURRENT_TIMESTAMP
-        """.trimIndent()
-
     private fun executeUpsert(
         db: SQLiteDatabase,
         entry: Entry,
@@ -140,7 +160,7 @@ class CustomDictionaryService(
         val abbrev = CustomDictionaryDerivation.generateAbbrev(entry.roman)
         val romanNum = CustomDictionaryDerivation.generateRomanNum(entry.roman)
         logger.debug(TAG) { "[UPSERT] roman='${entry.roman}' notone='$notone' abbrev='$abbrev' romanNum='$romanNum'" }
-        db.execSQL(UPSERT_SQL, arrayOf(entry.id, entry.roman, entry.hanzi, notone, abbrev, romanNum))
+        db.upsert(UPSERT_UPDATE_SQL, UPSERT_INSERT_SQL, entry.roman, entry.hanzi, notone, abbrev, romanNum, entry.id)
         // v3.6.1 R3 — refresh the cross-mode side-table keys for this entry.
         // The legacy notone/abbrev/roman_num columns above stay written for
         // backcompat / rollback; the side table is the NEW query path.
@@ -481,20 +501,7 @@ class CustomDictionaryService(
             DATABASE_VERSION,
         ) {
         override fun onCreate(db: SQLiteDatabase) {
-            db.execSQL(
-                """
-                CREATE TABLE ${Table.NAME} (
-                    ${Table.ID} TEXT PRIMARY KEY,
-                    ${Table.ROMAN} TEXT NOT NULL,
-                    ${Table.HANZI} TEXT NOT NULL,
-                    ${Table.NOTONE} TEXT DEFAULT '',
-                    ${Table.ABBREV} TEXT DEFAULT '',
-                    ${Table.ROMAN_NUM} TEXT DEFAULT '',
-                    ${Table.CREATED_AT} TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    ${Table.UPDATED_AT} TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                );
-                """.trimIndent(),
-            )
+            db.execSQL(CREATE_TABLE_SQL)
             db.execSQL("CREATE INDEX idx_custom_roman ON ${Table.NAME}(${Table.ROMAN});")
             db.execSQL("CREATE INDEX idx_custom_notone ON ${Table.NAME}(${Table.NOTONE});")
             db.execSQL("CREATE INDEX idx_custom_abbrev ON ${Table.NAME}(${Table.ABBREV});")

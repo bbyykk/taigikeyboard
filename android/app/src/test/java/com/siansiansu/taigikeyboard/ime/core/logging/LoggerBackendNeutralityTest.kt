@@ -1,5 +1,7 @@
 package com.siansiansu.taigikeyboard.ime.core.logging
 
+import com.siansiansu.taigikeyboard.locateMainSourceRoot
+import com.siansiansu.taigikeyboard.mainKotlinSources
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
@@ -132,31 +134,8 @@ class LoggerBackendNeutralityTest {
         )
     }
 
-    /**
-     * Run from either the repo root or the `android/` / `android/app`
-     * subdirectory — tests launched by Gradle typically set `user.dir`
-     * to the project module, while tests launched from IDE run-configs
-     * sometimes start at the repo root.
-     */
-    private fun locateMainSourceRoot(): File {
-        val candidates =
-            listOf(
-                "src/main/java",
-                "app/src/main/java",
-                "android/app/src/main/java",
-            )
-        for (rel in candidates) {
-            val f = File(rel)
-            if (f.isDirectory) return f.absoluteFile
-        }
-        fail("Could not locate `src/main/java` from working dir ${File(".").absolutePath}")
-        error("unreachable")
-    }
-
     private fun collectSharedCoreCandidates(root: File): List<File> =
-        root
-            .walkTopDown()
-            .filter { it.isFile && it.extension == "kt" }
+        mainKotlinSources(root)
             .filter { file ->
                 // The marker must appear near the top of the file to count.
                 file.bufferedReader().useLines { seq ->

@@ -32,14 +32,11 @@ android {
 
     defaultConfig {
         applicationId = "com.siansiansu.taigikeyboard"
-        // Android 11+. Raised from 28 (2026-08-17): API 28/29 bundle SQLite
-        // 3.22, which predates UPSERT (`ON CONFLICT … DO UPDATE`, SQLite 3.24)
-        // — the syntax all three user-data DBs use on every write, wrapped in
-        // fire-and-forget catches, so learning failed silently there. API 30
-        // bundles 3.28, which also clears window functions (3.25). Play Console
-        // at the time: Android 9 = 3 installs (<1%), Android 10 in the same
-        // band, against ~869 total.
-        minSdk = 30
+        // Android 9+. Fixes the SQLite dialect ceiling at 3.22 — see
+        // .claude/rules/android-guidelines.md §8a (rule + SqliteDialectCeilingTest
+        // gate). Was 30 from 2026-08-17 (#532) to 2026-09-19, lowered back after
+        // an Android 9 user could no longer install from Play.
+        minSdk = 28
         targetSdk = 36
         // versionCode = Unix epoch minutes — auto-monotonic, never collides
         // across test uploads (only collision risk = same-minute rebuild,

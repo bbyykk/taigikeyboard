@@ -3,6 +3,7 @@
 package com.siansiansu.taigikeyboard.ime.core.db
 
 import android.database.sqlite.SQLiteDatabase
+import android.database.sqlite.SQLiteStatement
 import com.siansiansu.taigikeyboard.ime.core.logging.LoggerBackend
 
 /**
@@ -39,3 +40,53 @@ internal fun SQLiteDatabase.rowCount(
     rawQuery("SELECT COUNT(*) FROM $table", null).use {
         if (it.moveToFirst()) it.getInt(0) else fallback
     }
+
+/** Bind [args] positionally (1-based); `Int` widens to `INTEGER`. */
+internal fun SQLiteStatement.bindArgs(vararg args: Any?) {
+    clearBindings()
+    args.forEachIndexed { index, arg ->
+        val i = index + 1
+        when (arg) {
+            null -> bindNull(i)
+            is String -> bindString(i, arg)
+            is Long -> bindLong(i, arg)
+            is Int -> bindLong(i, arg.toLong())
+            else -> throw IllegalArgumentException("Unsupported bind type: ${arg::class}")
+        }
+    }
+}
+
+/**
+ * Upsert without UPSERT: run [update], and only when it matched no row run
+ * [insert]. minSdk 28 bundles SQLite 3.22, which predates
+ * `ON CONFLICT … DO UPDATE` (3.24) — `.claude/rules/android-guidelines.md`
+ * §8a. Both statements bind the same [args] (write the INSERT column list in
+ * the UPDATE's bind order). Equivalent to UPSERT given a UNIQUE / PRIMARY
+ * KEY on the row key; the UPDATE keeps the rowid and any `created_at`.
+ *
+ * The caller holds the transaction so no other writer can slip between the
+ * two statements — the same thread-safety the single UPSERT statement had.
+ */
+internal fun upsert(
+    update: SQLiteStatement,
+    insert: SQLiteStatement,
+    vararg args: Any?,
+) {
+    update.bindArgs(*args)
+    if (update.executeUpdateDelete() == 0) {
+        insert.bindArgs(*args)
+        insert.executeInsert()
+    }
+}
+
+/** [upsert] for a one-off write; batch loops compile the pair once instead. */
+internal fun SQLiteDatabase.upsert(
+    updateSql: String,
+    insertSql: String,
+    vararg args: Any?,
+) {
+    check(inTransaction()) { "upsert needs the caller's transaction" }
+    compileStatement(updateSql).use { update ->
+        compileStatement(insertSql).use { insert -> upsert(update, insert, *args) }
+    }
+}

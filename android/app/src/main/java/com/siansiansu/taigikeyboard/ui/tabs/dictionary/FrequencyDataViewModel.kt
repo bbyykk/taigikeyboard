@@ -95,9 +95,9 @@ class FrequencyDataViewModel(
                     } ?: throw Exception("Cannot read file")
                 }
             // 3-column rows carry the reading; legacy 2-column rows decode to
-            // tl="" (the tolerant fallback bucket, #7). Upsert is
-            // ON CONFLICT(word, tl), so each (漢字, 羅馬字) reading merges
-            // into its own bucket.
+            // tl="" (the tolerant fallback bucket, #7). The merge is keyed on
+            // (word, tl), so each (漢字, 羅馬字) reading merges into its own
+            // bucket.
             val entries = DictionaryCsvCodec.decodeFrequencyCSV(csvString)
             val imported = withContext(Dispatchers.IO) { userFreq.batchImportMerge(entries) }
             val refreshed = withContext(Dispatchers.IO) { userFreq.getAllFrequencyRows() }
