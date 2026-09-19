@@ -960,9 +960,9 @@
         ]
       },
       "values": {
-        "hanji": "揤一个鍵…",
-        "tailo": "Tshi̍h tsi̍t ê kiān…",
-        "poj": "Chhi̍h chi̍t ê kiān…",
+        "hanji": "揤一个齒…",
+        "tailo": "Tshi̍h tsi̍t ê khí…",
+        "poj": "Chhi̍h chi̍t ê khí…",
         "en": "Press a key…",
         "ja": "キーを押してください…"
       }
@@ -998,9 +998,9 @@
         ]
       },
       "values": {
-        "hanji": "揀袂著鍵",
-        "tailo": "Kíng bē tio̍h kiān",
-        "poj": "Kéng bē tio̍h kiān",
+        "hanji": "揀袂著齒",
+        "tailo": "Kíng bē tio̍h khí",
+        "poj": "Kéng bē tio̍h khí",
         "en": "No key to record",
         "ja": "記録できるキーがありません"
       }
