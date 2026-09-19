@@ -112,7 +112,7 @@
       "values": { "hanji": "淡化", "tailo": "Tām-huà", "poj": "Tām-hòa", "en": "Fade", "ja": "淡くする" }
     },
     "gradientDirection": {
-      "comment": "Gradient direction. Android: theme editor row label above the eight arrow presets. iOS: VoiceOver label of the drag pointer over the preview (no visible row).",
+      "comment": "Gradient direction: the VoiceOver / TalkBack label of the drag pointer over the theme editor preview (no visible row on either platform).",
       "scope": { "platforms": ["android", "ios"], "surfaces": ["host"] },
       "values": { "hanji": "方向", "tailo": "Hong-hiòng", "poj": "Hong-hiòng", "en": "Direction", "ja": "方向" }
     },
