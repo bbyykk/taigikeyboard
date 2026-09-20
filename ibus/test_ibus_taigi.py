@@ -202,7 +202,183 @@ class IBusEventTest(unittest.TestCase):
         self.assertEqual(commands, ["append=Q"])
 
     def test_candidate_slot_labels_match_the_keys(self):
-        self.assertEqual(ibus_taigi.CANDIDATE_SLOT_KEYS, "qwdfzxvy;")
+        self.assertEqual(ibus_taigi.CANDIDATE_SLOT_KEYS, "qwdfzxvy")
+
+    def test_semicolon_shows_the_next_eight_candidates(self):
+        engine = ibus_taigi.TaigiEngine.__new__(ibus_taigi.TaigiEngine)
+        engine.language_mode = "taigi"
+        engine.composing = True
+        engine.candidates = [f"candidate-{index}" for index in range(12)]
+        engine.lookup_table = ibus_taigi.IBus.LookupTable.new(
+            ibus_taigi.CANDIDATE_PAGE_SIZE, 0, False, False
+        )
+        for candidate in engine.candidates:
+            engine.lookup_table.append_candidate(
+                ibus_taigi.IBus.Text.new_from_string(candidate)
+            )
+        shown = []
+        engine.update_lookup_table = lambda table, visible: shown.append(
+            (table.get_cursor_pos(), visible)
+        )
+        engine.shift_tap = ibus_taigi.ShiftTapTracker(clock=iter([]).__next__)
+
+        self.assertTrue(
+            engine.do_process_key_event(ibus_taigi.IBus.KEY_semicolon, 0, 0)
+        )
+        self.assertEqual(shown, [(8, True)])
+
+    def test_shift_page_down_shows_the_previous_page(self):
+        engine = ibus_taigi.TaigiEngine.__new__(ibus_taigi.TaigiEngine)
+        engine.language_mode = "taigi"
+        engine.composing = True
+        engine.candidates = [f"candidate-{index}" for index in range(12)]
+        engine.lookup_table = ibus_taigi.IBus.LookupTable.new(
+            ibus_taigi.CANDIDATE_PAGE_SIZE, 0, False, False
+        )
+        for candidate in engine.candidates:
+            engine.lookup_table.append_candidate(
+                ibus_taigi.IBus.Text.new_from_string(candidate)
+            )
+        engine.lookup_table.page_down()
+        shown = []
+        engine.update_lookup_table = lambda table, visible: shown.append(
+            (table.get_cursor_pos(), visible)
+        )
+        engine.shift_tap = ibus_taigi.ShiftTapTracker(clock=iter([]).__next__)
+
+        self.assertTrue(
+            engine.do_process_key_event(
+                ibus_taigi.IBus.KEY_Page_Down,
+                0,
+                ibus_taigi.IBus.ModifierType.SHIFT_MASK,
+            )
+        )
+        self.assertEqual(shown, [(0, True)])
+
+    def test_brackets_page_through_candidates(self):
+        engine = ibus_taigi.TaigiEngine.__new__(ibus_taigi.TaigiEngine)
+        engine.language_mode = "taigi"
+        engine.composing = True
+        engine.candidates = [f"candidate-{index}" for index in range(12)]
+        engine.lookup_table = ibus_taigi.IBus.LookupTable.new(
+            ibus_taigi.CANDIDATE_PAGE_SIZE, 0, False, False
+        )
+        for candidate in engine.candidates:
+            engine.lookup_table.append_candidate(
+                ibus_taigi.IBus.Text.new_from_string(candidate)
+            )
+        shown = []
+        engine.update_lookup_table = lambda table, visible: shown.append(
+            (table.get_cursor_pos(), visible)
+        )
+        engine.shift_tap = ibus_taigi.ShiftTapTracker(clock=iter([]).__next__)
+
+        self.assertTrue(
+            engine.do_process_key_event(ibus_taigi.IBus.KEY_bracketright, 0, 0)
+        )
+        self.assertEqual(shown, [(8, True)])
+
+        self.assertTrue(
+            engine.do_process_key_event(ibus_taigi.IBus.KEY_bracketleft, 0, 0)
+        )
+        self.assertEqual(shown, [(8, True), (0, True)])
+
+    def test_shifted_brackets_remain_text(self):
+        engine = ibus_taigi.TaigiEngine.__new__(ibus_taigi.TaigiEngine)
+        engine.language_mode = "taigi"
+        engine.composing = True
+        engine.candidates = ["candidate"]
+        engine.lookup_table = ibus_taigi.IBus.LookupTable.new(
+            ibus_taigi.CANDIDATE_PAGE_SIZE, 0, False, False
+        )
+        engine.lookup_table.append_candidate(
+            ibus_taigi.IBus.Text.new_from_string("candidate")
+        )
+        commands = []
+        engine.apply = commands.append
+        engine.shift_tap = ibus_taigi.ShiftTapTracker(clock=iter([]).__next__)
+
+        self.assertTrue(
+            engine.do_process_key_event(
+                ibus_taigi.IBus.KEY_bracketleft,
+                0,
+                ibus_taigi.IBus.ModifierType.SHIFT_MASK,
+            )
+        )
+        self.assertEqual(commands, ["append=["])
+
+    def test_candidate_key_selects_from_the_visible_page(self):
+        engine = ibus_taigi.TaigiEngine.__new__(ibus_taigi.TaigiEngine)
+        engine.language_mode = "taigi"
+        engine.composing = True
+        engine.candidates = [f"candidate-{index}" for index in range(12)]
+        engine.lookup_table = ibus_taigi.IBus.LookupTable.new(
+            ibus_taigi.CANDIDATE_PAGE_SIZE, 0, False, False
+        )
+        for candidate in engine.candidates:
+            engine.lookup_table.append_candidate(
+                ibus_taigi.IBus.Text.new_from_string(candidate)
+            )
+        engine.lookup_table.page_down()
+        commands = []
+        engine.apply = commands.append
+        engine.shift_tap = ibus_taigi.ShiftTapTracker(clock=iter([]).__next__)
+
+        self.assertTrue(engine.do_process_key_event(ord("q"), 0, 0))
+        self.assertEqual(commands, ["select=8"])
+
+    def test_candidate_click_is_relative_to_the_visible_page(self):
+        engine = ibus_taigi.TaigiEngine.__new__(ibus_taigi.TaigiEngine)
+        engine.candidates = [f"candidate-{index}" for index in range(12)]
+        engine.lookup_table = ibus_taigi.IBus.LookupTable.new(
+            ibus_taigi.CANDIDATE_PAGE_SIZE, 0, False, False
+        )
+        for candidate in engine.candidates:
+            engine.lookup_table.append_candidate(
+                ibus_taigi.IBus.Text.new_from_string(candidate)
+            )
+        engine.lookup_table.page_down()
+        commands = []
+        engine.apply = commands.append
+
+        engine.do_candidate_clicked(2, 1, 0)
+        self.assertEqual(commands, ["select=10"])
+
+    def test_ctrl_shift_d_opens_separate_online_candidate_list(self):
+        engine = ibus_taigi.TaigiEngine.__new__(ibus_taigi.TaigiEngine)
+        engine.language_mode = "taigi"
+        engine.composing = True
+        engine.preedit = "愛"
+        engine.candidates = ["local candidate"]
+        engine.local_candidates = []
+        engine.online_mode = False
+        engine.online_entries = []
+        engine.online_dictionary = mock.Mock()
+        engine.online_dictionary.lookup.return_value = [
+            {"display": "愛  thiànn", "commit": "愛"}
+        ]
+        engine.shift_tap = ibus_taigi.ShiftTapTracker(clock=iter([]).__next__)
+        engine.update_lookup_table = lambda table, visible: None
+        engine.apply = mock.Mock()
+        engine.commit_text = mock.Mock()
+
+        self.assertTrue(
+            engine.do_process_key_event(
+                ibus_taigi.IBus.KEY_d,
+                0,
+                ibus_taigi.IBus.ModifierType.CONTROL_MASK
+                | ibus_taigi.IBus.ModifierType.SHIFT_MASK,
+            )
+        )
+        self.assertEqual(engine.candidates, ["線上台日｜愛  thiànn"])
+        self.assertTrue(engine.online_mode)
+
+        self.assertTrue(engine.do_process_key_event(ord("q"), 0, 0))
+        engine.apply.assert_called_once_with("reset")
+        engine.commit_text.assert_called_once_with(
+            mock.ANY
+        )
+        self.assertFalse(engine.online_mode)
 
 
 if __name__ == "__main__":

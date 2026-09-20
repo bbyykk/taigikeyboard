@@ -54,10 +54,10 @@ RM = /usr/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/kianing/ai-workspace/ai-taigi-keyboard/linux
+CMAKE_SOURCE_DIR = /home/kianing/ai-taigi-keyboard/linux
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/kianing/ai-workspace/ai-taigi-keyboard/build/linux
+CMAKE_BINARY_DIR = /home/kianing/ai-taigi-keyboard/build/linux
 
 #=============================================================================
 # Directory level rules for the build root directory
@@ -85,14 +85,14 @@ clean: CMakeFiles/taigi.dir/clean
 CMakeFiles/taigi.dir/all:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/taigi.dir/build.make CMakeFiles/taigi.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/taigi.dir/build.make CMakeFiles/taigi.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/kianing/ai-workspace/ai-taigi-keyboard/build/linux/CMakeFiles --progress-num=1,2 "Built target taigi"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/kianing/ai-taigi-keyboard/build/linux/CMakeFiles --progress-num=1,2 "Built target taigi"
 .PHONY : CMakeFiles/taigi.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/taigi.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/kianing/ai-workspace/ai-taigi-keyboard/build/linux/CMakeFiles 2
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/kianing/ai-taigi-keyboard/build/linux/CMakeFiles 2
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/taigi.dir/all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/kianing/ai-workspace/ai-taigi-keyboard/build/linux/CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/kianing/ai-taigi-keyboard/build/linux/CMakeFiles 0
 .PHONY : CMakeFiles/taigi.dir/rule
 
 # Convenience name for target.
@@ -102,7 +102,7 @@ taigi: CMakeFiles/taigi.dir/rule
 # codegen rule for target.
 CMakeFiles/taigi.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/taigi.dir/build.make CMakeFiles/taigi.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/kianing/ai-workspace/ai-taigi-keyboard/build/linux/CMakeFiles --progress-num=1,2 "Finished codegen for target taigi"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/kianing/ai-taigi-keyboard/build/linux/CMakeFiles --progress-num=1,2 "Finished codegen for target taigi"
 .PHONY : CMakeFiles/taigi.dir/codegen
 
 # clean rule for target.

@@ -4,7 +4,7 @@
 # compile CXX with /usr/bin/c++
 CXX_DEFINES = -DTAIGI_DICT_DIR=\"/usr/share/taigi-keyboard/dictionaries\" -Dtaigi_EXPORTS
 
-CXX_INCLUDES = -isystem /usr/include/Fcitx5/Core -isystem /usr/include/Fcitx5/Config -isystem /usr/include/Fcitx5/Utils
+CXX_INCLUDES = 
 
 CXX_FLAGS = -O3 -DNDEBUG -std=gnu++20 -fPIC
 

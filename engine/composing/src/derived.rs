@@ -10,9 +10,10 @@
 //! see `docs/engine/continuous-input-ranking.md` §10.2 / §10.3 clarification β
 //! for the `rawInput` contract. User-typed hyphens are preserved as conversion
 //! boundaries (the tone-mark chain splits on `-`); the engine does NOT validate
-//! whether each chunk is a real syllable, and does not insert hyphens on its
-//! own. Engine-side syllabifier-driven auto-hyphenation is out of scope for
-//! v3.5.8 Item 2 (see §10.2 amendment 2026-05-13).
+//! whether each chunk is a real syllable. The one deterministic exception is a
+//! fully-toned numeric chain: tone digits close every syllable, so
+//! `lo5ma2ji7` can render as `lô-má-jī` without consulting the ranked lattice.
+//! Toneless and partial-tone input still receives no inferred boundaries.
 
 use protos::engine::AppConfig;
 
@@ -171,14 +172,19 @@ mod tests {
     }
 
     #[test]
-    fn raw_input_composing_tl_preserves_unhyphenated_input_verbatim() {
-        // §10.2 amendment 2026-05-13 — engine does NOT auto-insert syllable
-        // boundaries; if the user typed no hyphens, derived display has no
-        // boundary to convert and returns the raw single chunk.
+    fn raw_input_composing_tl_segments_fully_toned_numeric_chain() {
         let phase = Phase::Composing {
             raw: "goa2ai3li2".to_string(),
         };
-        assert_eq!(phase.raw_input(&config_tl()), "goa2ai3li2");
+        assert_eq!(phase.raw_input(&config_tl()), "goá-ài-lí");
+    }
+
+    #[test]
+    fn raw_input_composing_tl_keeps_partial_tone_chain_verbatim() {
+        let phase = Phase::Composing {
+            raw: "goa2aili".to_string(),
+        };
+        assert_eq!(phase.raw_input(&config_tl()), "goa2aili");
     }
 
     #[test]

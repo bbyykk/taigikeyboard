@@ -20,4 +20,5 @@ install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/taigi.conf" DESTINATION "share/fcitx5
 install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/../dictionaries/" DESTINATION "share/taigi-keyboard/dictionaries")
 install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/../dictionary/LICENSE" DESTINATION "share/doc/taigi-keyboard")
 install(PROGRAMS "${CMAKE_CURRENT_SOURCE_DIR}/../ibus/ibus-taigi" DESTINATION "libexec" RENAME "ibus-taigi")
+install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/../ibus/online_dictionary.py" DESTINATION "libexec")
 install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/../ibus/taigi.xml" DESTINATION "share/ibus/component")

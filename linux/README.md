@@ -29,6 +29,17 @@ letter does not switch modes. Caps Lock remains the desktop's letter-case
 control.
 While the candidate list is visible, `q w d f z x v y ;` select candidates 1–9;
 numeric keys remain available for TL/POJ tone input.
+Press `Ctrl+Shift+D` while composing to open a separate online lookup list for
+the current preedit. The prototype searches the 台日大辭典台語譯本 through
+Kemdict; Escape restores the local candidate list, and selecting a remote row
+commits its Hanji form. The network request is intentionally hotkey-triggered,
+not performed on every keystroke.
+
+Online sources are configured at
+`~/.config/taigi-keyboard/online-dictionaries.json` (or
+`$XDG_CONFIG_HOME/taigi-keyboard/online-dictionaries.json`). If the file does
+not exist, the built-in 台日 source is used. The cache is kept under
+`~/.cache/taigi-keyboard/online-dictionary.json`.
 
 The package currently installs the bundled dictionary artifacts and the
 `dictionary/LICENSE` file must accompany any redistribution. The repository's

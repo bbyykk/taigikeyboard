@@ -8,7 +8,7 @@ set(CMAKE_DEPENDS_LANGUAGES
 
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
-  "/home/kianing/ai-workspace/ai-taigi-keyboard/linux/taigi.cpp" "CMakeFiles/taigi.dir/taigi.cpp.o" "gcc" "CMakeFiles/taigi.dir/taigi.cpp.o.d"
+  "/home/kianing/ai-taigi-keyboard/linux/taigi.cpp" "CMakeFiles/taigi.dir/taigi.cpp.o" "gcc" "CMakeFiles/taigi.dir/taigi.cpp.o.d"
   "" "libtaigi.so" "gcc" "CMakeFiles/taigi.dir/link.d"
   )
 

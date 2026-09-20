@@ -1,7 +1,7 @@
 {
 	"InstallScripts" : 
 	[
-		"/home/kianing/ai-workspace/ai-taigi-keyboard/build/linux/cmake_install.cmake"
+		"/home/kianing/windows-c/kianing/pau1-hok8/ai-workspace/ai-taigi-keyboard/build/linux/cmake_install.cmake"
 	],
 	"Parallel" : false
 }

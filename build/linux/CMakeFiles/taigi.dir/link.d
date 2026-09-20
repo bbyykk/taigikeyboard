@@ -2,7 +2,7 @@ libtaigi.so: \
   /usr/lib/gcc/x86_64-linux-gnu/15/../../../x86_64-linux-gnu/crti.o \
   /usr/lib/gcc/x86_64-linux-gnu/15/crtbeginS.o \
   CMakeFiles/taigi.dir/taigi.cpp.o \
-  /home/kianing/ai-workspace/ai-taigi-keyboard/linux/../engine/target/release/liblinux_ffi.so \
+  /home/kianing/windows-c/kianing/pau1-hok8/ai-workspace/ai-taigi-keyboard/linux/../engine/target/release/liblinux_ffi.so \
   /usr/lib/x86_64-linux-gnu/libFcitx5Core.so \
   /usr/lib/x86_64-linux-gnu/libFcitx5Config.so \
   /usr/lib/x86_64-linux-gnu/libFcitx5Utils.so \
@@ -37,7 +37,7 @@ libtaigi.so: \
 
 CMakeFiles/taigi.dir/taigi.cpp.o:
 
-/home/kianing/ai-workspace/ai-taigi-keyboard/linux/../engine/target/release/liblinux_ffi.so:
+/home/kianing/windows-c/kianing/pau1-hok8/ai-workspace/ai-taigi-keyboard/linux/../engine/target/release/liblinux_ffi.so:
 
 /usr/lib/x86_64-linux-gnu/libFcitx5Core.so:
 

@@ -1,8 +1,8 @@
-# Install script for directory: /home/kianing/ai-workspace/ai-taigi-keyboard/linux
+# Install script for directory: /home/kianing/ai-taigi-keyboard/linux
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
-  set(CMAKE_INSTALL_PREFIX "/usr/local")
+  set(CMAKE_INSTALL_PREFIX "/usr")
 endif()
 string(REGEX REPLACE "/$" "" CMAKE_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
 
@@ -43,53 +43,61 @@ if(NOT DEFINED CMAKE_OBJDUMP)
 endif()
 
 if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
-  if(EXISTS "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/fcitx5/libtaigi.so" AND
-     NOT IS_SYMLINK "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/fcitx5/libtaigi.so")
+  if(EXISTS "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/x86_64-linux-gnu/fcitx5/libtaigi.so" AND
+     NOT IS_SYMLINK "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/x86_64-linux-gnu/fcitx5/libtaigi.so")
     file(RPATH_CHECK
-         FILE "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/fcitx5/libtaigi.so"
+         FILE "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/x86_64-linux-gnu/fcitx5/libtaigi.so"
          RPATH "\$ORIGIN/../taigi-keyboard")
   endif()
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/fcitx5" TYPE MODULE FILES "/home/kianing/ai-workspace/ai-taigi-keyboard/build/linux/libtaigi.so")
-  if(EXISTS "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/fcitx5/libtaigi.so" AND
-     NOT IS_SYMLINK "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/fcitx5/libtaigi.so")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/x86_64-linux-gnu/fcitx5" TYPE MODULE FILES "/home/kianing/ai-taigi-keyboard/build/linux/libtaigi.so")
+  if(EXISTS "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/x86_64-linux-gnu/fcitx5/libtaigi.so" AND
+     NOT IS_SYMLINK "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/x86_64-linux-gnu/fcitx5/libtaigi.so")
     file(RPATH_CHANGE
-         FILE "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/fcitx5/libtaigi.so"
-         OLD_RPATH "/home/kianing/ai-workspace/ai-taigi-keyboard/linux/../engine/target/release:"
+         FILE "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/x86_64-linux-gnu/fcitx5/libtaigi.so"
+         OLD_RPATH "/home/kianing/ai-taigi-keyboard/linux/../engine/target/release:"
          NEW_RPATH "\$ORIGIN/../taigi-keyboard")
     if(CMAKE_INSTALL_DO_STRIP)
-      execute_process(COMMAND "/usr/bin/strip" "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/fcitx5/libtaigi.so")
+      execute_process(COMMAND "/usr/bin/strip" "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/x86_64-linux-gnu/fcitx5/libtaigi.so")
     endif()
   endif()
 endif()
 
 if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
-  include("/home/kianing/ai-workspace/ai-taigi-keyboard/build/linux/CMakeFiles/taigi.dir/install-cxx-module-bmi-Release.cmake" OPTIONAL)
+  include("/home/kianing/ai-taigi-keyboard/build/linux/CMakeFiles/taigi.dir/install-cxx-module-bmi-Release.cmake" OPTIONAL)
 endif()
 
 if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/taigi-keyboard" TYPE FILE FILES "/home/kianing/ai-workspace/ai-taigi-keyboard/linux/../engine/target/release/liblinux_ffi.so")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/x86_64-linux-gnu/taigi-keyboard" TYPE FILE FILES "/home/kianing/ai-taigi-keyboard/linux/../engine/target/release/liblinux_ffi.so")
 endif()
 
 if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/fcitx5/addon" TYPE FILE FILES "/home/kianing/ai-workspace/ai-taigi-keyboard/linux/taigi-addon.conf")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/fcitx5/addon" TYPE FILE RENAME "taigi.conf" FILES "/home/kianing/ai-taigi-keyboard/linux/taigi-addon.conf")
 endif()
 
 if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/fcitx5/inputmethod" TYPE FILE FILES "/home/kianing/ai-workspace/ai-taigi-keyboard/linux/taigi.conf")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/fcitx5/inputmethod" TYPE FILE FILES "/home/kianing/ai-taigi-keyboard/linux/taigi.conf")
 endif()
 
 if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/taigi-keyboard/dictionaries" TYPE DIRECTORY FILES "/home/kianing/ai-workspace/ai-taigi-keyboard/linux/../dictionaries/")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/taigi-keyboard/dictionaries" TYPE DIRECTORY FILES "/home/kianing/ai-taigi-keyboard/linux/../dictionaries/")
 endif()
 
 if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/doc/taigi-keyboard" TYPE FILE FILES "/home/kianing/ai-workspace/ai-taigi-keyboard/linux/../dictionary/LICENSE")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/doc/taigi-keyboard" TYPE FILE FILES "/home/kianing/ai-taigi-keyboard/linux/../dictionary/LICENSE")
+endif()
+
+if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/libexec" TYPE PROGRAM RENAME "ibus-taigi" FILES "/home/kianing/ai-taigi-keyboard/linux/../ibus/ibus-taigi")
+endif()
+
+if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/ibus/component" TYPE FILE FILES "/home/kianing/ai-taigi-keyboard/linux/../ibus/taigi.xml")
 endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
 if(CMAKE_INSTALL_LOCAL_ONLY)
-  file(WRITE "/home/kianing/ai-workspace/ai-taigi-keyboard/build/linux/install_local_manifest.txt"
+  file(WRITE "/home/kianing/ai-taigi-keyboard/build/linux/install_local_manifest.txt"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")
 endif()
 if(CMAKE_INSTALL_COMPONENT)
@@ -105,6 +113,6 @@ else()
 endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
-  file(WRITE "/home/kianing/ai-workspace/ai-taigi-keyboard/build/linux/${CMAKE_INSTALL_MANIFEST}"
+  file(WRITE "/home/kianing/ai-taigi-keyboard/build/linux/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")
 endif()

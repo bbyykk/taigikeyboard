@@ -142,6 +142,8 @@ Add **Taigi Keyboard** to the active input-method group. Normal controls are:
 | Letters and punctuation | Extend composition |
 | Space | Select the first candidate |
 | Number keys | Select a visible candidate |
+| PageUp / PageDown | Previous / next candidate page |
+| `[` / `]` | Previous / next candidate page |
 | Candidate click | Select the clicked candidate |
 | Enter | Commit current preedit |
 | Backspace | Delete the previous composing character |
