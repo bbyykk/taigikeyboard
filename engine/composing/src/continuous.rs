@@ -25,12 +25,12 @@
 //!    `consumed_span`; presentation `roman` only —`display_text` / `hanji`
 //!    untouched).
 //! 4. `fetch_walker_slot0_inner(..) → Some(slot0)`: span-aware
-//!    retain-dedupe on `(roman, hanji, consumed_span)` then `insert(0,
-//!    raw_to_proto_slot0(slot0))`. The walker returns a [`WalkerSlot0`] —
-//!    **D3 honest type** — and the seam converts to `RawCandidate` with
-//!    `score = -(slot0.cost as f32)` (the negated-cost bridge IS the wire
-//!    contract, `CandidateMessage.score` proto field 5;
-//!    `frequency`/`bitmask` are walker-N/A and stay `0`).
+//!    retain-dedupe on `(roman, hanji, consumed_span)`, prepend the walker
+//!    fallback, then allow a learned full-span candidate to override it. The
+//!    walker returns a [`WalkerSlot0`] — **D3 honest type** — and the seam
+//!    converts to `RawCandidate` with `score = -(slot0.cost as f32)` (the
+//!    negated-cost bridge IS the wire contract, `CandidateMessage.score`
+//!    proto field 5; `frequency`/`bitmask` are walker-N/A and stay `0`).
 //!
 //!    **Step 4b — whole-input prefix-extension scan (else-branch only).**
 //!    After the walker slot-0 prepend, run
@@ -100,9 +100,10 @@ use ranking::FrequencyMap;
 /// the seam in [`assemble_candidates`] converts to the wire `RawCandidate`
 /// with `score = -(cost as f32)` (preserving the proto field 5 contract on
 /// `CandidateMessage`). `frequency` / `bitmask` are walker-N/A and stamped
-/// `0` at the seam — slot 0 is an explicit prepend, never sort-compared,
-/// so they are informational only. `form` is stamped `FORM_NOTONE` at the
-/// seam (walker always emits the toneless representation).
+/// `0` at the seam — the walker is the cold-start prepend, with learned
+/// full-span candidates allowed to override it, so these fields are
+/// informational only. `form` is stamped `FORM_NOTONE` at the seam (walker
+/// always emits the toneless representation).
 pub(crate) struct WalkerSlot0 {
     pub cost: f64,
     pub consumed_span: ConsumedSpan,
@@ -123,6 +124,40 @@ pub(crate) struct WalkerSlot0 {
 // ============================================================================
 // Pure helpers (no lexicon state)
 // ============================================================================
+
+/// Promote the strongest learned candidate that consumes the whole input.
+///
+/// The walker remains the cold-start fallback, but it must not be an absolute
+/// priority after the user has selected a competing full-span word. Keep the
+/// lookup pair-keyed through [`FrequencyMap::get`]: homographs with different
+/// canonical TL readings are independent learned words.
+fn promote_learned_full_span(
+    candidates: &mut Vec<RawCandidate>,
+    freq_map: &FrequencyMap,
+    raw_len: u32,
+) {
+    let learned_idx = candidates
+        .iter()
+        .enumerate()
+        .filter(|(_, candidate)| {
+            candidate.coverage_kind == COVERAGE_KIND_FULL
+                && candidate.consumed_span == (0, raw_len)
+                && freq_map
+                    .get(&candidate.display_text, &candidate.canonical_tl)
+                    .count
+                    > 0
+        })
+        .max_by_key(|(_, candidate)| {
+            let data = freq_map.get(&candidate.display_text, &candidate.canonical_tl);
+            (data.count, data.last_used_ms)
+        })
+        .map(|(index, _)| index);
+
+    if let Some(index) = learned_idx.filter(|&index| index > 0) {
+        let learned = candidates.remove(index);
+        candidates.insert(0, learned);
+    }
+}
 
 /// v3.5.8 S2 (Codex post-impl P1, 2026-05-16) — `consumed_span` for
 /// the synthesized slot-0 candidate, or `None` to suppress the synth.
@@ -1212,6 +1247,14 @@ pub(crate) fn assemble_candidates(
                                 && x.consumed_span == slot0.consumed_span)
                         });
                         c.insert(0, slot0);
+                        // Learned full-span candidates outrank the walker
+                        // only after an explicit user selection. This keeps
+                        // cold-start behavior unchanged while preventing the
+                        // synthesized corpus-best path from permanently
+                        // masking a user's preferred word. The helper uses
+                        // the same `(display_text, canonical_tl)` identity
+                        // that the platform writes to user_frequency.db.
+                        promote_learned_full_span(&mut c, freq_map, raw_len);
                     }
                 }
             }
@@ -1423,6 +1466,59 @@ mod tests {
     //! wire-level behavior-neutrality gate for the A2 extraction.
 
     use super::*;
+
+    fn test_candidate(display_text: &str, canonical_tl: &str) -> RawCandidate {
+        RawCandidate {
+            consumed_span: (0, 6),
+            syllable_count: 2,
+            display_text: display_text.to_string(),
+            roman: canonical_tl.to_string(),
+            hanji: Some(display_text.to_string()),
+            canonical_tl: canonical_tl.to_string(),
+            score: 0.0,
+            form: FORM_NOTONE,
+            frequency: 0,
+            bitmask: 0,
+            mode: lexicon::CandidateMode::Hant,
+            recency_rank: 1,
+            coverage_kind: COVERAGE_KIND_FULL,
+            is_custom: false,
+        }
+    }
+
+    #[test]
+    fn learned_full_span_candidate_overrides_walker_slot_zero() {
+        let mut candidates = vec![
+            test_candidate("只馬", "tsit-má"),
+            test_candidate("這馬", "tsit-má"),
+        ];
+        let mut frequencies = FrequencyMap::new();
+        frequencies.insert(
+            "這馬".to_string(),
+            "tsit-má".to_string(),
+            ranking::FrequencyData {
+                count: 1,
+                last_used_ms: 1,
+            },
+        );
+
+        promote_learned_full_span(&mut candidates, &frequencies, 6);
+
+        assert_eq!(candidates[0].display_text, "這馬");
+        assert_eq!(candidates[1].display_text, "只馬");
+    }
+
+    #[test]
+    fn cold_start_keeps_walker_slot_zero_first() {
+        let mut candidates = vec![
+            test_candidate("只馬", "tsit-má"),
+            test_candidate("這馬", "tsit-má"),
+        ];
+
+        promote_learned_full_span(&mut candidates, &FrequencyMap::new(), 6);
+
+        assert_eq!(candidates[0].display_text, "只馬");
+    }
 
     // v3.5.9 D / C-3b — `build_keys_tps` + `strip_trailing_tone_digit`
     // tests retired; TPS now exercises the shared

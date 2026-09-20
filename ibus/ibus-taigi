@@ -1,0 +1,398 @@
+#!/usr/bin/python3
+"""IBus frontend for the shared Taigi Keyboard Rust engine."""
+
+import ctypes
+import os
+import sys
+import time
+
+sys.path.insert(0, os.path.dirname(__file__))
+from online_dictionary import OnlineDictionary
+
+import gi
+gi.require_version("IBus", "1.0")
+from gi.repository import GLib, IBus
+
+
+if "--xml" in sys.argv:
+    print("""<engines>
+  <engine>
+    <name>taigi</name>
+    <longname>Taigi Keyboard</longname>
+    <description>Taiwanese input method</description>
+    <language>taigi</language>
+    <license>Apache-2.0</license>
+    <author>Taigi Keyboard contributors</author>
+    <icon>input-keyboard</icon>
+    <layout>us</layout>
+  </engine>
+</engines>""")
+    sys.exit(0)
+
+
+LIBRARY = "/usr/lib/x86_64-linux-gnu/taigi-keyboard/liblinux_ffi.so"
+DICTIONARIES = "/usr/share/taigi-keyboard/dictionaries"
+SHIFT_TAP_MAX_SECONDS = 0.5
+CANDIDATE_SLOT_KEYS = "qwdfzxvy"
+CANDIDATE_PAGE_SIZE = len(CANDIDATE_SLOT_KEYS)
+ONLINE_LOOKUP_KEY = IBus.KEY_d
+
+
+class ShiftTapTracker:
+    """Recognise a standalone short Shift press as a language-mode switch."""
+
+    def __init__(self, clock=time.monotonic):
+        self._clock = clock
+        self._pending = None
+
+    def key_down(self, keyval, *, other_modifier_held=False):
+        """Record a Shift press, or disqualify the pending press on any key."""
+        if keyval in (IBus.KEY_Shift_L, IBus.KEY_Shift_R):
+            if not other_modifier_held and self._pending is None:
+                self._pending = (keyval, self._clock())
+            else:
+                self._pending = None
+            return
+        self._pending = None
+
+    def key_up(self, keyval):
+        """Consume a release and report whether it completes a Shift tap."""
+        pending = self._pending
+        self._pending = None
+        if pending is None or pending[0] != keyval:
+            return False
+        return self._clock() - pending[1] < SHIFT_TAP_MAX_SECONDS
+
+    def clear(self):
+        self._pending = None
+
+
+class RustEngine:
+    def __init__(self):
+        self.lib = ctypes.CDLL(LIBRARY)
+        self.lib.taigi_linux_init.argtypes = [ctypes.c_char_p]
+        self.lib.taigi_linux_init.restype = ctypes.c_int
+        self.lib.taigi_linux_command.argtypes = [ctypes.c_char_p]
+        self.lib.taigi_linux_command.restype = ctypes.c_void_p
+        self.lib.taigi_linux_free.argtypes = [ctypes.c_void_p]
+        if not self.lib.taigi_linux_init(DICTIONARIES.encode()):
+            raise RuntimeError("Taigi dictionary initialization failed")
+
+    def command(self, value):
+        pointer = self.lib.taigi_linux_command(value.encode())
+        if not pointer:
+            return "error=engine\n"
+        try:
+            return ctypes.string_at(pointer).decode("utf-8")
+        finally:
+            self.lib.taigi_linux_free(pointer)
+
+
+def unescape(value):
+    result = []
+    escaped = False
+    for char in value:
+        if escaped:
+            result.append({"n": "\n", "t": "\t"}.get(char, char))
+            escaped = False
+        elif char == "\\":
+            escaped = True
+        else:
+            result.append(char)
+    return "".join(result)
+
+
+class TaigiEngine(IBus.Engine):
+    def __init__(self, bus, object_path):
+        super().__init__(connection=bus.get_connection(), object_path=object_path)
+        self.rust = RustEngine()
+        self.candidates = []
+        self.local_candidates = []
+        self.lookup_table = None
+        self.composing = False
+        self.preedit = ""
+        self.online_mode = False
+        self.online_entries = []
+        self.online_dictionary = OnlineDictionary()
+        self.language_mode = "taigi"
+        self.shift_tap = ShiftTapTracker()
+
+    def toggle_language_mode(self):
+        """Switch between Taigi composition and the host's normal English input."""
+        self.leave_online_mode()
+        if self.composing:
+            self.apply("reset")
+        self.language_mode = "english" if self.language_mode == "taigi" else "taigi"
+        self.candidates = []
+        self.lookup_table = None
+        self.composing = False
+
+    def _display_candidates(self, candidates):
+        """Replace only the visible IBus list; the Rust candidate list is untouched."""
+        self.candidates = list(candidates)
+        table = IBus.LookupTable.new(CANDIDATE_PAGE_SIZE, 0, False, False)
+        for candidate in self.candidates:
+            table.append_candidate(IBus.Text.new_from_string(candidate))
+        for index, label in enumerate(CANDIDATE_SLOT_KEYS):
+            table.set_label(index, IBus.Text.new_from_string(label))
+        self.lookup_table = table
+        self.update_lookup_table(table, bool(self.candidates))
+
+    def show_online_results(self):
+        """Show a separate, temporary list of remote dictionary results."""
+        if not self.composing or not self.preedit:
+            return False
+        if not self.online_mode:
+            self.local_candidates = list(self.candidates)
+        self.online_mode = True
+        self.online_entries = self.online_dictionary.lookup(self.preedit)
+        if self.online_entries:
+            visible = [
+                "線上台日｜" + entry["display"] for entry in self.online_entries
+            ]
+        else:
+            visible = ["線上台日｜查無結果／網路無法連線"]
+        self._display_candidates(visible)
+        return True
+
+    def leave_online_mode(self):
+        if not getattr(self, "online_mode", False):
+            return
+        self.online_mode = False
+        self.online_entries = []
+        self._display_candidates(self.local_candidates)
+
+    def select_online_candidate(self, index):
+        if not self.online_mode or not 0 <= index < len(self.online_entries):
+            return False
+        commit = self.online_entries[index]["commit"]
+        self.online_mode = False
+        self.online_entries = []
+        self.apply("reset")
+        self.commit_text(IBus.Text.new_from_string(commit))
+        return True
+
+    def current_page_start(self):
+        """Return the absolute index of the first candidate on the visible page."""
+        table = getattr(self, "lookup_table", None)
+        if table is None:
+            return 0
+        cursor = table.get_cursor_pos()
+        return cursor - cursor % CANDIDATE_PAGE_SIZE
+
+    def page_candidates(self, forward):
+        """Move the visible candidate page while an overflowing list is active."""
+        table = getattr(self, "lookup_table", None)
+        if not self.composing or table is None:
+            return False
+        moved = (
+            table.page_down()
+            if forward
+            else table.page_up()
+        )
+        if moved:
+            self.update_lookup_table(table, True)
+        return True
+
+    def candidate_slot_for_key(self, keyval, state):
+        """Return the Standard-tone candidate slot for an unmodified key."""
+        if not self.composing or not self.candidates:
+            return None
+        if state & (
+            IBus.ModifierType.SHIFT_MASK
+            | IBus.ModifierType.CONTROL_MASK
+            | IBus.ModifierType.MOD1_MASK
+            | IBus.ModifierType.SUPER_MASK
+        ):
+            return None
+        try:
+            return CANDIDATE_SLOT_KEYS.index(chr(keyval).lower())
+        except (ValueError, TypeError):
+            return None
+
+    def apply(self, command):
+        response = self.rust.command(command)
+        preedit = ""
+        candidates = []
+        composing = False
+        commit = []
+        delete_count = 0
+        for line in response.splitlines():
+            if line.startswith("preedit="):
+                preedit = unescape(line[8:])
+            elif line.startswith("composing="):
+                composing = line[10:] == "true"
+            elif line == "candidates_begin=1":
+                candidates = []
+            elif line.startswith("candidate=") and "\t" in line:
+                candidates.append(unescape(line.split("\t", 1)[1]))
+            elif line.startswith("commit="):
+                commit.append(unescape(line[7:]))
+            elif line == "delete=1":
+                delete_count += 1
+
+        for text in commit:
+            self.commit_text(IBus.Text.new_from_string(text))
+        for _ in range(delete_count):
+            self.delete_surrounding_text(-1, 1)
+        self.preedit = preedit
+        if not getattr(self, "online_mode", False):
+            self.local_candidates = list(candidates)
+        self.candidates = candidates
+        self.composing = composing
+        self.update_preedit_text(
+            IBus.Text.new_from_string(preedit), len(preedit), composing
+        )
+        table = IBus.LookupTable.new(CANDIDATE_PAGE_SIZE, 0, False, False)
+        for candidate in candidates:
+            table.append_candidate(IBus.Text.new_from_string(candidate))
+        for index, label in enumerate(CANDIDATE_SLOT_KEYS):
+            table.set_label(
+                index,
+                IBus.Text.new_from_string(label),
+            )
+        self.lookup_table = table
+        self.update_lookup_table(table, bool(candidates))
+
+    def do_process_key_event(self, keyval, keycode, state):
+        # IBus sends both press and release events. Only process the press;
+        # handling both makes every typed character appear twice.
+        is_release = bool(state & IBus.ModifierType.RELEASE_MASK)
+        is_shift = keyval in (IBus.KEY_Shift_L, IBus.KEY_Shift_R)
+        if is_release:
+            if is_shift and self.shift_tap.key_up(keyval):
+                self.toggle_language_mode()
+            return False
+
+        if is_shift:
+            self.shift_tap.key_down(
+                keyval,
+                other_modifier_held=bool(
+                    state
+                    & (
+                        IBus.ModifierType.CONTROL_MASK
+                        | IBus.ModifierType.MOD1_MASK
+                        | IBus.ModifierType.SUPER_MASK
+                    )
+                ),
+            )
+            return False
+
+        self.shift_tap.key_down(keyval)
+        if state & (IBus.ModifierType.CONTROL_MASK | IBus.ModifierType.MOD1_MASK | IBus.ModifierType.SUPER_MASK):
+            if (
+                keyval == ONLINE_LOOKUP_KEY
+                and state & IBus.ModifierType.CONTROL_MASK
+                and state & IBus.ModifierType.SHIFT_MASK
+            ):
+                return self.show_online_results()
+            self.leave_online_mode()
+            if state & IBus.ModifierType.CONTROL_MASK and state & IBus.ModifierType.SHIFT_MASK:
+                if keyval in (IBus.KEY_1, IBus.KEY_2, IBus.KEY_3):
+                    mode = {IBus.KEY_1: "tl", IBus.KEY_2: "poj", IBus.KEY_3: "tps"}[keyval]
+                    self.apply("mode=" + mode)
+                    return True
+            return False
+        if self.language_mode == "english":
+            return False
+        if keyval == IBus.KEY_Escape:
+            if getattr(self, "online_mode", False):
+                self.leave_online_mode()
+                return True
+            self.apply("reset")
+            return True
+        if getattr(self, "online_mode", False) and keyval in (IBus.KEY_Return, IBus.KEY_KP_Enter, IBus.KEY_space):
+            return self.select_online_candidate(self.current_page_start())
+        if keyval == IBus.KEY_BackSpace:
+            if self.composing:
+                self.leave_online_mode()
+                self.apply("backspace")
+                return True
+            return False
+        if keyval in (IBus.KEY_Return, IBus.KEY_KP_Enter):
+            if self.composing:
+                self.apply("commit")
+                return True
+            return False
+        if keyval == IBus.KEY_space:
+            if self.composing:
+                self.apply("select=0")
+                return True
+            return False
+        if (
+            keyval in (IBus.KEY_Page_Down, IBus.KEY_KP_Page_Down)
+            and state & IBus.ModifierType.SHIFT_MASK
+        ):
+            return self.page_candidates(forward=False)
+        if keyval in (IBus.KEY_Page_Down, IBus.KEY_KP_Page_Down):
+            return self.page_candidates(forward=True)
+        if keyval in (IBus.KEY_Page_Up, IBus.KEY_KP_Page_Up):
+            return self.page_candidates(forward=False)
+        # Brackets are the compact-keyboard aliases for candidate paging.
+        # Require the unshifted keys so `{` and `}` remain ordinary text.
+        if keyval == IBus.KEY_bracketleft and not state & IBus.ModifierType.SHIFT_MASK:
+            return self.page_candidates(forward=False)
+        if keyval == IBus.KEY_bracketright and not state & IBus.ModifierType.SHIFT_MASK:
+            return self.page_candidates(forward=True)
+        if keyval == IBus.KEY_semicolon and self.composing:
+            return self.page_candidates(forward=True)
+        index = self.candidate_slot_for_key(keyval, state)
+        absolute_index = self.current_page_start() + index if index is not None else None
+        if absolute_index is not None and absolute_index < len(self.candidates):
+            if getattr(self, "online_mode", False):
+                return self.select_online_candidate(absolute_index)
+            self.apply("select=" + str(absolute_index))
+            return True
+        if 0x20 <= keyval <= 0x7e:
+            self.leave_online_mode()
+            self.apply("append=" + chr(keyval))
+            return True
+        return False
+
+    def do_candidate_clicked(self, index, button, state):
+        absolute_index = self.current_page_start() + index
+        if getattr(self, "online_mode", False):
+            self.select_online_candidate(absolute_index)
+            return
+        if 0 <= absolute_index < len(self.candidates):
+            self.apply("select=" + str(absolute_index))
+
+    def do_reset(self):
+        self.shift_tap.clear()
+        self.leave_online_mode()
+        self.apply("reset")
+
+    def do_focus_out(self):
+        self.shift_tap.clear()
+        self.leave_online_mode()
+        self.apply("reset")
+
+
+class Factory(IBus.Factory):
+    def __init__(self, bus):
+        super().__init__(connection=bus.get_connection(), object_path=IBus.PATH_FACTORY)
+        self.bus = bus
+        self.counter = 0
+
+    def do_create_engine(self, engine_name):
+        self.counter += 1
+        path = "/com/taigikeyboard/IBus/Engine/{}".format(self.counter)
+        return TaigiEngine(self.bus, path)
+
+
+def main():
+    IBus.init()
+    bus = IBus.Bus()
+    factory = Factory(bus)
+    # IBus starts this process from taigi.xml, which already registers the
+    # component. Claim its name so IBus can find this factory on first use.
+    bus.request_name("org.taigikeyboard.IBus", 0)
+    GLib.MainLoop().run()
+
+
+if __name__ == "__main__":
+    try:
+        main()
+    except Exception as error:
+        print("ibus-taigi: {}".format(error), file=sys.stderr)
+        raise

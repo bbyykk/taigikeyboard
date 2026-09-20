@@ -375,9 +375,9 @@ fn adopt_collapsed_dict_identity(literal: &mut RawCandidate, candidates: &[RawCa
 /// with `roman == display_text ==` the preedit literal (except the identity
 /// it inherits under a single-script display — `adopt_collapsed_dict_identity`)
 /// — WYSIWYG with the underline (§30 literal-no-fold: tone marks only, no spelling fold). It
-/// mirrors the preedit EXACTLY, so a tone-1/4 syllable or an unhyphenated
-/// multi-syllable blob keeps its raw digits as the underline shows them
-/// (`tai1`, `goa2ai3li2` — the engine does not auto-syllabify, §10.2). It
+/// mirrors the preedit EXACTLY, including deterministic boundaries inferred
+/// from a fully-toned numeric chain (`lo5ma2ji7` → `lô-má-jī`). Toneless and
+/// partial-tone chains stay verbatim because their boundaries are ambiguous. It
 /// carries `canonical_tl` via `canonical_tl_form` so 詞頻 / 詞關聯 learn the
 /// canonical `(∅, TL)` identity on commit (Core Principle #7; §24/§28).
 fn literal_roman_candidate(
@@ -768,17 +768,21 @@ mod tests {
     }
 
     #[test]
-    fn literal_roman_candidate_mirrors_preedit_verbatim_with_digits() {
-        // The candidate is EXACTLY the preedit (§30 / §10.2): a tone-1/4
-        // syllable and an unhyphenated multi-syllable blob keep their raw
-        // digits as the underline shows them — the engine does not
-        // auto-syllabify, and the candidate must not diverge from the
-        // underline (consistency).
+    fn literal_roman_candidate_mirrors_inferred_fully_toned_preedit() {
+        // The candidate remains EXACTLY the preedit (§30 / §10.2), including
+        // deterministic digit-delimited boundaries. Partial-tone input stays
+        // verbatim because the remaining boundary is ambiguous.
         let cfg = config_tl();
-        for raw in ["tai1", "goa2ai3li2", "tai5gi2"] {
+        for raw in ["tai1", "goa2ai3li2", "tai5gi2", "goa2aili"] {
             let cand = literal_roman_candidate(raw, &cfg, phonetics::InputMode::Tl).unwrap();
             assert_eq!(cand.roman, crate::derived::derived_display(raw, &cfg));
         }
+        assert_eq!(
+            literal_roman_candidate("lo5ma2ji7", &cfg, phonetics::InputMode::Tl)
+                .unwrap()
+                .roman,
+            "lô-má-jī"
+        );
     }
 
     #[test]

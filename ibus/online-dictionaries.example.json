@@ -1,0 +1,13 @@
+{
+  "sources": [
+    {
+      "id": "taijittoasutian",
+      "name": "台日大辭典台語譯本",
+      "type": "kemdict_html",
+      "search_url": "https://kemdict.com/search",
+      "dictionary_id": "chhoetaigi_taijittoasutian",
+      "mode": "prefix",
+      "enabled": true
+    }
+  ]
+}

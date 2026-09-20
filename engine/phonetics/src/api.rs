@@ -159,9 +159,46 @@ fn convert_nasal_double_n(input: &str) -> String {
 /// dispatch arm and `composing::derived` both call this directly. Plan §3.2a.
 pub fn normalize_tone(input: &str, config: &AppConfig) -> String {
     let mode = parse_input_mode(&config.input_mode);
-    let preprocessed = preprocess_for_normalize_tone(input, mode, config);
+    let segmented =
+        fully_toned_numeric_segments(input, mode).unwrap_or_else(|| input.to_string());
+    let preprocessed = preprocess_for_normalize_tone(&segmented, mode, config);
     let tone_marked = to_tone_marks(&preprocessed, mode);
     adjust_nasal_marker_case(&tone_marked)
+}
+
+/// Insert display hyphens when ASCII tone digits make every syllable boundary
+/// explicit. This is deliberately narrower than general auto-syllabification:
+/// `lo5ma2ji7` has one unambiguous cut after each digit, while `lomaji` and
+/// mixed `lo5maji` still require a lattice/ranking decision and stay verbatim.
+/// Every group must also be a valid TL/POJ-shaped syllable, so invalid input is
+/// never reformatted merely because it happens to match `letters+digit`.
+fn fully_toned_numeric_segments(input: &str, mode: InputMode) -> Option<String> {
+    if !matches!(mode, InputMode::Tl | InputMode::Poj) || input.contains('-') {
+        return None;
+    }
+
+    let mut start = 0;
+    let mut groups = Vec::new();
+    for (index, byte) in input.bytes().enumerate() {
+        if byte.is_ascii_alphabetic() {
+            continue;
+        }
+        if !matches!(byte, b'1'..=b'9') || index == start {
+            return None;
+        }
+        let end = index + 1;
+        let group = &input[start..end];
+        if !crate::syllable::is_valid_syllable(group) {
+            return None;
+        }
+        groups.push(group);
+        start = end;
+    }
+
+    if start != input.len() || groups.len() < 2 {
+        return None;
+    }
+    Some(groups.join("-"))
 }
 
 /// `true` if the text contains TPS (Taiwanese Phonetic Symbols / Zhuyin)
@@ -618,6 +655,23 @@ mod tests {
         assert_eq!(to_tone_marks("xyz2", InputMode::Tl), "xyz2");
         // Unhyphenated multi-syllable stays verbatim (no auto-syllabify).
         assert_eq!(to_tone_marks("goa2ai3li2", InputMode::Tl), "goa2ai3li2");
+    }
+
+    #[test]
+    fn normalize_tone_segments_only_valid_fully_toned_numeric_input() {
+        let tl = AppConfig {
+            input_mode: "tl".to_string(),
+            ..AppConfig::default()
+        };
+        assert_eq!(normalize_tone("lo5ma2ji7", &tl), "lô-má-jī");
+        assert_eq!(normalize_tone("tai1gi2", &tl), "tai1-gí");
+
+        // Toneless, partial-tone, invalid, and already-separated input do not
+        // enter the inferred-boundary path.
+        assert_eq!(normalize_tone("lomaji", &tl), "lomaji");
+        assert_eq!(normalize_tone("lo5maji", &tl), "lo5maji");
+        assert_eq!(normalize_tone("xyz2abc3", &tl), "xyz2abc3");
+        assert_eq!(normalize_tone("lo5-ma2-ji7", &tl), "lô-má-jī");
     }
 
     // trace: derive_notone lowercases, folds ⁿ→nn, NFD, drops combining

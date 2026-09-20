@@ -1,0 +1,21 @@
+<component>
+  <name>org.taigikeyboard.IBus</name>
+  <description>Taigi Keyboard IBus Engine</description>
+  <version>0.1.0</version>
+  <license>Apache-2.0</license>
+  <author>Taigi Keyboard contributors</author>
+  <homepage>https://github.com/taigikeyboard/taigikeyboard</homepage>
+  <exec>/usr/libexec/ibus-taigi</exec>
+  <engines>
+    <engine>
+      <name>taigi</name>
+      <longname>Taigi Keyboard</longname>
+      <description>Taiwanese input method</description>
+      <language>taigi</language>
+      <license>Apache-2.0</license>
+      <author>Taigi Keyboard contributors</author>
+      <icon>input-keyboard</icon>
+      <layout>us</layout>
+    </engine>
+  </engines>
+</component>
